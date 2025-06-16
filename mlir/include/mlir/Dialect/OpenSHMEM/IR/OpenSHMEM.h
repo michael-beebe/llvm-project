@@ -1,30 +1,33 @@
-//===- OpenSHMEM.h - OpenSHMEM dialect declaration ------------*- C++ -*-===//
+//===- OpenSHMEM.h - OpenSHMEM dialect -------------------------*- C++-*-==//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+#ifndef MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEM_H_
+#define MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEM_H_
 
-#ifndef MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEM_H
-#define MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEM_H
-
+#include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/IR/Dialect.h"
+#include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
 
-namespace mlir {
-namespace openshmem {
+//===----------------------------------------------------------------------===//
+// OpenSHMEMDialect
+//===----------------------------------------------------------------------===//
 
-class OpenSHMEMDialect : public Dialect {
-public:
-  static constexpr StringLiteral getDialectNamespace() { return "openshmem"; }
+#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMDialect.h.inc"
 
-  explicit OpenSHMEMDialect(MLIRContext *context);
+#define GET_TYPEDEF_CLASSES
+#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMTypesGen.h.inc"
 
-  /// Initialize the dialect.
-  void initialize();
-};
+#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMEnums.h.inc"
 
-} // namespace openshmem
-} // namespace mlir
+#define GET_ATTRDEF_CLASSES
+#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMAttrDefs.h.inc"
 
-#endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEM_H
+#define GET_OP_CLASSES
+#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMOps.h.inc"
+
+#endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEM_H_

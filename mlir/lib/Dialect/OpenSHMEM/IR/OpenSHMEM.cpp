@@ -7,8 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.h"
-#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMOps.h"
-#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMTypes.h"
 
 using namespace mlir;
 using namespace mlir::openshmem;

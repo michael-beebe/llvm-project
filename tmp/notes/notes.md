@@ -14,3 +14,6 @@
 - Created C++ implementation files: OpenSHMEM.cpp, OpenSHMEMOps.cpp
 - Created header files: OpenSHMEM.h, OpenSHMEMOps.h, OpenSHMEMTypes.h
 - Basic dialect structure now in place for build to succeed
+
+### Pushed to GitHub at 11am
+
