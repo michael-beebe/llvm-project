@@ -1,5 +1,5 @@
 add_mlir_dialect(OpenSHMEM openshmem)
-add_mlir_doc(OpenSHMEMOps OpenSHMEM Dialects/ -gen-dialect-doc)
+add_mlir_doc(OpenSHMEMDialect OpenSHMEM Dialects/ -gen-dialect-doc)
 
 # Add OpenSHMEM operations
 set(LLVM_TARGET_DEFINITIONS OpenSHMEMOps.td)

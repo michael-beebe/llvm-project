@@ -962,6 +962,21 @@ def ConvertOpenMPToLLVMPass : Pass<"convert-openmp-to-llvm", "ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// OpenSHMEMToLLVM
+//===----------------------------------------------------------------------===//
+
+def ConvertOpenSHMEMToLLVMPass : Pass<"convert-openshmem-to-llvm", "ModuleOp"> {
+  let summary = "Convert OpenSHMEM dialect to LLVM dialect";
+  let description = [{
+    This pass converts OpenSHMEM operations to LLVM function calls to the
+    OpenSHMEM runtime library. It transforms high-level OpenSHMEM operations
+    like init, finalize, put, get, malloc, and free into corresponding
+    shmem_* function calls.
+  }];
+  let dependentDialects = ["LLVM::LLVMDialect"];
+}
+
+//===----------------------------------------------------------------------===//
 // PDLToPDLInterp
 //===----------------------------------------------------------------------===//
 

@@ -63,6 +63,7 @@
 #include "mlir/Dialect/NVGPU/IR/NVGPUDialect.h"
 #include "mlir/Dialect/OpenACC/OpenACC.h"
 #include "mlir/Dialect/OpenMP/OpenMPDialect.h"
+#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.h"
 #include "mlir/Dialect/PDL/IR/PDL.h"
 #include "mlir/Dialect/PDLInterp/IR/PDLInterp.h"
 #include "mlir/Dialect/Ptr/IR/PtrDialect.h"
@@ -135,6 +136,7 @@ inline void registerAllDialects(DialectRegistry &registry) {
                   nvgpu::NVGPUDialect,
                   NVVM::NVVMDialect,
                   omp::OpenMPDialect,
+                  openshmem::OpenSHMEMDialect,
                   pdl::PDLDialect,
                   pdl_interp::PDLInterpDialect,
                   ptr::PtrDialect,

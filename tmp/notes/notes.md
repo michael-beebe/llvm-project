@@ -15,4 +15,22 @@
 - Created header file: OpenSHMEM.h
 - Basic dialect structure now in place for build to succeed
 
+### Pushed to GitHub at 11am
+
+### First Operations Implementation
+- Replaced placeholder with shmem_init and shmem_finalize operations
+- Following MPI dialect pattern for operation structure
+- Operations ready for conversion to LLVM IR calls
+
+### Testing Setup
+- Created comprehensive test in openshmemops.mlir that converts MLIR to LLVM IR
+- Simplified test.sh script to focus on conversion pipeline
+- Test validates that OpenSHMEM operations can be lowered to actual library calls
+
+### Conversion Pass Implementation
+- Created OpenSHMEMToLLVM conversion pass following MPI pattern
+- Implemented conversion patterns for shmem_init and shmem_finalize operations
+- Added proper build system integration in Conversion CMakeLists.txt
+- Pass converts OpenSHMEM operations to LLVM function calls (shmem_init(), shmem_finalize())
+
 
