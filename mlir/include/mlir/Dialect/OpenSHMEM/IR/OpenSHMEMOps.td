@@ -17,15 +17,33 @@ class OpenSHMEM_Op<string mnemonic, list<Trait> traits = []>
     : Op<OpenSHMEM_Dialect, mnemonic, traits>;
 
 //===----------------------------------------------------------------------===//
-// Placeholder operation - will be replaced with actual OpenSHMEM operations
+// shmem_init
 //===----------------------------------------------------------------------===//
 
-// TODO: replace this with actual OpenSHMEM operations
-def OpenSHMEM_PlaceholderOp : OpenSHMEM_Op<"placeholder", []> {
-  let summary = "Placeholder operation for OpenSHMEM dialect";
+def OpenSHMEM_InitOp : OpenSHMEM_Op<"init", []> {
+  let summary =
+      "Initialize the OpenSHMEM library, equivalent to `shmem_init()`";
   let description = [{
-    This is a placeholder operation to get the build system working.
-    It will be replaced with actual OpenSHMEM operations like put, get, fence, etc.
+    This operation initializes the OpenSHMEM library and must be called before
+    most OpenSHMEM operations. It sets up the partitioned global address space
+    and initializes the processing element (PE) environment.
+  }];
+
+  let results = (outs);
+
+  let assemblyFormat = "attr-dict";
+}
+
+//===----------------------------------------------------------------------===//
+// shmem_finalize
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_FinalizeOp : OpenSHMEM_Op<"finalize", []> {
+  let summary = "Finalize the OpenSHMEM library, equivalent to `shmem_finalize()`";
+  let description = [{
+    This operation finalizes the OpenSHMEM library and should be called at the
+    end of the program to clean up resources and properly terminate the
+    partitioned global address space.
   }];
 
   let results = (outs);
