@@ -13,6 +13,18 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.td"
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMTypes.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
+include "mlir/IR/BuiltinTypes.td"
+
+//===----------------------------------------------------------------------===//
+// Traits
+//===----------------------------------------------------------------------===//
+
+// TODO: add traits for collective, etc.
+
+//===----------------------------------------------------------------------===//
+// Base OpenSHMEM operation
+//===----------------------------------------------------------------------===//
+
 class OpenSHMEM_Op<string mnemonic, list<Trait> traits = []>
     : Op<OpenSHMEM_Dialect, mnemonic, traits>;
 
@@ -86,7 +98,7 @@ def OpenSHMEM_NPesOp : OpenSHMEM_Op<"n_pes", []> {
 }
 
 //===----------------------------------------------------------------------===//
-// MallocOp
+// MallocOp - Simplified for basic type
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
@@ -102,6 +114,9 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
     
     Arguments:
     - size: Number of bytes to allocate (i64)
+    
+    Results:
+    - ptr: A symmetric memory reference containing the allocated memory
     
     Equivalent to `shmem_malloc()`.
     
@@ -121,7 +136,7 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
 }
 
 //===----------------------------------------------------------------------===//
-// FreeOp
+// FreeOp - Simplified for basic type
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
@@ -152,7 +167,7 @@ def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
 }
 
 //===----------------------------------------------------------------------===//
-// PutOp
+// PutOp - Simplified for basic type
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
@@ -164,7 +179,7 @@ def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
     
     Arguments:
     - dest: Destination memory reference on the target PE (symmetric memory)
-    - src: Source memory reference on the calling PE  
+    - src: Source memory reference on the calling PE (any type)
     - size: Number of elements to transfer (i64)
     - pe: Target PE number (i32)
     
@@ -176,20 +191,21 @@ def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
 
   let arguments = (ins 
     OpenSHMEM_SymmetricMemRef:$dest,
-    AnyMemRef:$src, 
+    AnyType:$src, 
     I64:$size,
     I32:$pe
   );
-  
+
   let results = (outs Optional<OpenSHMEM_Retval>:$retval);
-  
-  let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($src) `,` type($size) `,` type($pe) "
-                       "(`->` type($retval)^)?";
+
+  let assemblyFormat =
+      "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
+      "type($dest) `,` type($src) `,` type($size) `,` type($pe) "
+      "(`->` type($retval)^)?";
 }
 
 //===----------------------------------------------------------------------===//
-// GetOp  
+// GetOp - Simplified for basic type
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
@@ -200,7 +216,7 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
     the calling PE. The operation copies `size` elements.
     
     Arguments:
-    - dest: Destination memory reference on the calling PE
+    - dest: Destination memory reference on the calling PE (any type)
     - src: Source memory reference on the target PE (symmetric memory)
     - size: Number of elements to transfer (i64)
     - pe: Target PE number (i32)
@@ -212,7 +228,7 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
   }];
 
   let arguments = (ins
-    AnyMemRef:$dest,
+    AnyType:$dest,
     OpenSHMEM_SymmetricMemRef:$src,
     I64:$size, 
     I32:$pe
@@ -225,61 +241,30 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
                        "(`->` type($retval)^)?";
 }
 
-def OpenSHMEM_SymmetricCastOp
-    : OpenSHMEM_Op<"symmetric_cast", []> {
-  let summary = "Cast a memory reference to symmetric memory";
+//===----------------------------------------------------------------------===//
+// SymmetricCastOp - Simplified for basic type
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_SymmetricCastOp : OpenSHMEM_Op<"symmetric_cast", []> {
+  let summary = "Cast a value to symmetric memory";
   let description = [{
-    This operation casts a memory reference to symmetric memory. This should only
-    be used when the programmer knows the memory reference points to symmetric
+    This operation casts a value to symmetric memory. This should only
+    be used when the programmer knows the value points to symmetric
     memory (e.g., memory allocated with openshmem.malloc).
     
     This is a compiler hint operation that doesn't generate runtime code but
     changes the type information for better type safety and optimization.
     
     Arguments:
-    - memref: Memory reference to cast
+    - value: Value to cast
     
     Results:
-    - symmetric_memref: The same memory reference as symmetric memory
+    - symmetric_memref: The same value as symmetric memory
   }];
 
-  let arguments = (ins AnyMemRef:$memref);
+  let arguments = (ins AnyType:$value);
   let results = (outs OpenSHMEM_SymmetricMemRef:$symmetric_memref);
-  let assemblyFormat = "`(` $memref `)` attr-dict `:` type($memref) `->` type($symmetric_memref)";
-}
-
-def OpenSHMEM_ConstantPeOp : OpenSHMEM_Op<"constant_pe", []> {
-  let summary = "Create a constant PE value";
-  let description = [{
-    This operation creates a constant PE (Processing Element) value from an integer.
-    
-    Arguments:
-    - value: Integer value for the PE number
-    
-    Results:
-    - pe: The PE value
-  }];
-
-  let arguments = (ins I32Attr:$value);
-  let results = (outs OpenSHMEM_PE:$pe);
-  let assemblyFormat = "$value attr-dict `:` type($pe)";
-}
-
-def OpenSHMEM_ConstantSizeOp : OpenSHMEM_Op<"constant_size", []> {
-  let summary = "Create a constant size value";
-  let description = [{
-    This operation creates a constant size value from an integer.
-    
-    Arguments:
-    - value: Integer value for the size
-    
-    Results:
-    - size: The size value
-  }];
-
-  let arguments = (ins I64Attr:$value);
-  let results = (outs OpenSHMEM_Size:$size);
-  let assemblyFormat = "$value attr-dict `:` type($size)";
+  let assemblyFormat = "`(` $value `)` attr-dict `:` type($value) `->` type($symmetric_memref)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMOPS_TD

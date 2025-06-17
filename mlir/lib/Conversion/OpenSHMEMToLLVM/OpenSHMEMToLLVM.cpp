@@ -76,6 +76,10 @@ std::pair<Value, Value> getRawPtrAndSize(const Location loc,
 // Conversion patterns for OpenSHMEM operations
 //===----------------------------------------------------------------------===//
 
+//===----------------------------------------------------------------------===//
+// InitOp Lowering
+//===----------------------------------------------------------------------===//
+
 struct InitOpLowering : public ConvertOpToLLVMPattern<openshmem::InitOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
@@ -101,6 +105,10 @@ struct InitOpLowering : public ConvertOpToLLVMPattern<openshmem::InitOp> {
     return success();
   }
 };
+
+//===----------------------------------------------------------------------===//
+// FinalizeOp Lowering
+//===----------------------------------------------------------------------===//
 
 struct FinalizeOpLowering
     : public ConvertOpToLLVMPattern<openshmem::FinalizeOp> {
@@ -129,6 +137,10 @@ struct FinalizeOpLowering
   }
 };
 
+//===----------------------------------------------------------------------===//
+// MyPeOp Lowering
+//===----------------------------------------------------------------------===//
+
 struct MyPeOpLowering : public ConvertOpToLLVMPattern<openshmem::MyPeOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
@@ -150,6 +162,10 @@ struct MyPeOpLowering : public ConvertOpToLLVMPattern<openshmem::MyPeOp> {
     return success();
   }
 };
+
+//===----------------------------------------------------------------------===//
+// NPesOp Lowering
+//===----------------------------------------------------------------------===//
 
 struct NPesOpLowering : public ConvertOpToLLVMPattern<openshmem::NPesOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
@@ -173,6 +189,10 @@ struct NPesOpLowering : public ConvertOpToLLVMPattern<openshmem::NPesOp> {
   }
 };
 
+//===----------------------------------------------------------------------===//
+// MallocOp Lowering
+//===----------------------------------------------------------------------===//
+
 struct MallocOpLowering : public ConvertOpToLLVMPattern<openshmem::MallocOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
@@ -193,19 +213,10 @@ struct MallocOpLowering : public ConvertOpToLLVMPattern<openshmem::MallocOp> {
     auto callOp = rewriter.create<LLVM::CallOp>(loc, funcDecl,
                                                 ValueRange{adaptor.getSize()});
 
-    // Convert the result memref type to LLVM struct type
-    auto memrefType = cast<MemRefType>(op.getResult(0).getType());
-    auto convertedType = typeConverter->convertType(memrefType);
-    if (!convertedType)
-      return failure();
-
-    // Create a memref descriptor from the malloc'd pointer
-    auto memrefDescriptor = MemRefDescriptor::fromStaticShape(
-        rewriter, loc, *static_cast<const LLVMTypeConverter *>(typeConverter),
-        memrefType, callOp.getResult());
-
+    // For now, just return the pointer directly
+    // In a more sophisticated implementation, we'd create a proper memref descriptor
     SmallVector<Value> replacements;
-    replacements.push_back(memrefDescriptor);
+    replacements.push_back(callOp.getResult());
     if (op.getRetval()) {
       // Return success (0) for now
       Value success = rewriter.create<arith::ConstantIntOp>(loc, 0, 32);
@@ -216,6 +227,10 @@ struct MallocOpLowering : public ConvertOpToLLVMPattern<openshmem::MallocOp> {
     return success();
   }
 };
+
+//===----------------------------------------------------------------------===//
+// FreeOp Lowering
+//===----------------------------------------------------------------------===//
 
 struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
@@ -233,9 +248,9 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, "shmem_free", funcType);
 
-    // Extract pointer from memref
-    Value dataPtr = rewriter.create<LLVM::ExtractValueOp>(loc, ptrType,
-                                                          adaptor.getPtr(), 1);
+    // For now, assume the symmetric memref is just a pointer
+    // In a more sophisticated implementation, we'd extract the pointer from a memref descriptor
+    Value dataPtr = adaptor.getPtr();
 
     // Replace with function call
     auto callOp =
@@ -250,6 +265,10 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
   }
 };
 
+//===----------------------------------------------------------------------===//
+// PutOp Lowering
+//===----------------------------------------------------------------------===//
+
 struct PutOpLowering : public ConvertOpToLLVMPattern<openshmem::PutOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
@@ -259,13 +278,11 @@ struct PutOpLowering : public ConvertOpToLLVMPattern<openshmem::PutOp> {
     Location loc = op.getLoc();
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-    Type elemType = op.getDest().getType().getElementType();
 
-    // Extract pointers and size
-    auto [destPtr, destSize] =
-        getRawPtrAndSize(loc, rewriter, adaptor.getDest(), elemType);
-    auto [srcPtr, srcSize] =
-        getRawPtrAndSize(loc, rewriter, adaptor.getSrc(), elemType);
+    // For now, assume symmetric memref is just a pointer
+    // In a more sophisticated implementation, we'd extract pointers from memref descriptors
+    Value destPtr = adaptor.getDest();
+    Value srcPtr = adaptor.getSrc();
 
     // void shmem_put_nbi(void *dest, const void *source, size_t nelems, int pe)
     auto funcType = LLVM::LLVMFunctionType::get(
@@ -288,6 +305,10 @@ struct PutOpLowering : public ConvertOpToLLVMPattern<openshmem::PutOp> {
   }
 };
 
+//===----------------------------------------------------------------------===//
+// GetOp Lowering
+//===----------------------------------------------------------------------===//
+
 struct GetOpLowering : public ConvertOpToLLVMPattern<openshmem::GetOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
@@ -297,13 +318,11 @@ struct GetOpLowering : public ConvertOpToLLVMPattern<openshmem::GetOp> {
     Location loc = op.getLoc();
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-    Type elemType = op.getDest().getType().getElementType();
 
-    // Extract pointers and size
-    auto [destPtr, destSize] =
-        getRawPtrAndSize(loc, rewriter, adaptor.getDest(), elemType);
-    auto [srcPtr, srcSize] =
-        getRawPtrAndSize(loc, rewriter, adaptor.getSrc(), elemType);
+    // For now, assume symmetric memref is just a pointer
+    // In a more sophisticated implementation, we'd extract pointers from memref descriptors
+    Value destPtr = adaptor.getDest();
+    Value srcPtr = adaptor.getSrc();
 
     // void shmem_get_nbi(void *dest, const void *source, size_t nelems, int pe)
     auto funcType = LLVM::LLVMFunctionType::get(
@@ -326,6 +345,10 @@ struct GetOpLowering : public ConvertOpToLLVMPattern<openshmem::GetOp> {
   }
 };
 
+//===----------------------------------------------------------------------===//
+// SymmetricCastOp Lowering
+//===----------------------------------------------------------------------===//
+
 struct SymmetricCastOpLowering
     : public ConvertOpToLLVMPattern<openshmem::SymmetricCastOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
@@ -334,7 +357,7 @@ struct SymmetricCastOpLowering
   matchAndRewrite(openshmem::SymmetricCastOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     // This is just a type cast operation, so we just pass through the value
-    rewriter.replaceOp(op, adaptor.getMemref());
+    rewriter.replaceOp(op, adaptor.getValue());
     return success();
   }
 };
@@ -369,8 +392,6 @@ struct ConvertOpenSHMEMToLLVMPass
   }
 };
 
-} // namespace
-
 //===----------------------------------------------------------------------===//
 // ConvertToLLVMPatternInterface implementation
 //===----------------------------------------------------------------------===//
@@ -387,6 +408,7 @@ struct OpenSHMEMToLLVMDialectInterface : public ConvertToLLVMPatternInterface {
                                                          patterns);
   }
 };
+} // namespace
 
 //===----------------------------------------------------------------------===//
 // Pattern population and pass creation
@@ -396,20 +418,17 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
     LLVMTypeConverter &converter, RewritePatternSet &patterns) {
 
   // Add type conversions for OpenSHMEM types
-  // Note: We no longer need conversions for PEType and SizeType since we use
-  // standard types now
-
   converter.addConversion([](openshmem::RetvalType type) -> Type {
     return IntegerType::get(type.getContext(),
                             32); // return values are typically int
   });
 
   converter.addConversion([](openshmem::SymmetricMemRefType type) -> Type {
-    return LLVM::LLVMPointerType::get(
-        type.getContext()); // symmetric memref becomes a pointer
+    // Convert symmetric memref to LLVM pointer type for now
+    // This is a simplified approach - in a full implementation we'd want proper memref handling
+    return LLVM::LLVMPointerType::get(type.getElementType().getContext());
   });
 
-  // Remove constant operations since we use arith.constant now
   patterns.add<InitOpLowering, FinalizeOpLowering, MyPeOpLowering,
                NPesOpLowering, MallocOpLowering, FreeOpLowering, PutOpLowering,
                GetOpLowering, SymmetricCastOpLowering>(converter);

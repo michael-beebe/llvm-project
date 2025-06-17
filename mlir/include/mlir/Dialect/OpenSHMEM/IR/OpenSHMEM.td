@@ -14,7 +14,6 @@ include "mlir/IR/OpBase.td"
 include "mlir/IR/EnumAttr.td"
 
 def OpenSHMEM_Dialect : Dialect {
-  // TODO:
   let name = "openshmem";
   let cppNamespace = "::mlir::openshmem";
   let description = [{

@@ -61,10 +61,9 @@ def OpenSHMEM_Retval : OpenSHMEM_Type<"Retval", "retval"> {
 // Symmetric memory type
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", 
-                     "symmetric_memref" > {
-    let summary = "Symmetric memory reference";
-    let description = [{
+def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_memref"> {
+  let summary = "Symmetric memory reference";
+  let description = [{
     Represents a reference to symmetric memory that is accessible from all PEs.
     This memory has the same virtual address on all PEs and can be used in
     one-sided communication operations.
@@ -76,16 +75,5 @@ def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef",
   
   let assemblyFormat = "`<` $elementType `>`";
 }
-
-//===----------------------------------------------------------------------===//
-// Type constraints for operations
-//===----------------------------------------------------------------------===//
-
-// // Valid types for OpenSHMEM data operations
-// def OpenSHMEM_DataType : AnyTypeOf<[
-//   I8, I16, I32, I64,
-//   F16, F32, F64,
-//   Index
-// ], "OpenSHMEM-compatible data type">;
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMTYPES_TD
