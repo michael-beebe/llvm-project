@@ -62,11 +62,14 @@ def OpenSHMEM_Retval : OpenSHMEM_Type<"Retval", "retval"> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_memref"> {
-  let summary = "Symmetric memory reference";
+  l et summary = "Symmetric memory reference (distinct from memref)";
   let description = [{
     Represents a reference to symmetric memory that is accessible from all PEs.
-    This memory has the same virtual address on all PEs and can be used in
-    one-sided communication operations.
+    This type is distinct from standard memref: it is only produced by openshmem.malloc
+    and is required for all OpenSHMEM operations that use symmetric memory (e.g., put, get, free).
+    Symmetric memory has the same virtual address on all PEs and can be used in
+    one-sided communication operations. Only values of this type are valid for
+    OpenSHMEM symmetric memory operations.
   }];
   
   let parameters = (ins

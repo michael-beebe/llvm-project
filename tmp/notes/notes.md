@@ -34,6 +34,24 @@
 - Pass converts OpenSHMEM operations to LLVM function calls (shmem_init(), shmem_finalize())
 
 
-## 06/17/2025
+## 06/18/2025
+
+### OpenSHMEM Dialect Refinement
+- Removed `OpenSHMEM_SymmetricCastOp` from the dialect; all symmetric memory is now produced only by `openshmem.malloc`.
+- Clarified that `!openshmem.symmetric_memref<T>` is a distinct type, not interchangeable with standard `memref<T>`.
+- Updated lowering: all OpenSHMEM ops treat `symmetric_memref` as a pointer at the LLVM level.
+- Standard MLIR memref operations (e.g., `memref.atomic_rmw`) do **not** apply to `symmetric_memref`.
+- All OpenSHMEM put/get/free ops require `symmetric_memref` for symmetric memory arguments.
+
+
+## 06/19/2025
+
+### Symmetric Heap Support Finalization
+- Updated OpenSHMEM dialect to use blocking put/get operations matching the OpenSHMEM C API.
+- Ensured `openshmem.malloc` returns a pointer type (`!llvm.ptr`) representing symmetric memory.
+- Lowered all symmetric memory operations (put/get/free) to use raw pointers in LLVM IR.
+- Validated the lowering pipeline with tests: all OpenSHMEM ops are correctly converted, and the final LLVM IR uses only pointers for symmetric memory, matching the C API.
+- Removed unused code (e.g., `getRawPtrAndSize`) and ensured no memref or dialect-specific types remain after lowering.
+- Confirmed that the symmetric heap is now fully and correctly supported in the dialect and lowering pipeline.
 
 

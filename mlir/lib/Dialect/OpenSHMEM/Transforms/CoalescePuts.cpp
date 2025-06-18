@@ -36,18 +36,18 @@ struct CoalesceConsecutivePuts : public OpRewritePattern<PutOp> {
 
   LogicalResult matchAndRewrite(PutOp putOp,
                                 PatternRewriter &rewriter) const override {
-    // Look for another PutOp immediately following this one
-    Operation *nextOp = putOp->getNextNode();
-    if (!nextOp)
-      return failure();
+    // // Look for another PutOp immediately following this one
+    // Operation *nextOp = putOp->getNextNode();
+    // if (!nextOp)
+    //   return failure();
 
-    auto nextPut = dyn_cast<PutOp>(nextOp);
-    if (!nextPut)
-      return failure();
+    // auto nextPut = dyn_cast<PutOp>(nextOp);
+    // if (!nextPut)
+    //   return failure();
 
-    // Check if they target the same PE
-    if (putOp.getPe() != nextPut.getPe())
-      return failure();
+    // // Check if they target the same PE
+    // if (putOp.getPe() != nextPut.getPe())
+    //   return failure();
 
     // For now, just report that we found the pattern
     // TODO: Implement actual coalescing logic that:

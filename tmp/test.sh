@@ -73,19 +73,15 @@ echo "✅ Tools found"
 echo "📝 Running OpenSHMEM test (mode: $TEST_MODE)..."
 echo
 
+INTERMEDIATE_MLIR="/tmp/openshmem-lowered.mlir"
+
 case $TEST_MODE in
 "mlir")
 	echo "Generated MLIR after lowering OpenSHMEM dialect to MLIR LLVM dialect (no LLVM IR):"
 	echo "-----------------------------------------------------------------------------------"
-	# Capture output and check for errors
-	OUTPUT=$("$MLIR_OPT" "$TEST_FILE" --convert-openshmem-to-llvm --convert-func-to-llvm --reconcile-unrealized-casts 2>&1)
-	EXIT_CODE=$?
-	
-	echo "$OUTPUT"
-	
-	if [ $EXIT_CODE -eq 0 ]; then
-		# Check if output contains function definitions (not just module metadata)
-		if echo "$OUTPUT" | grep -q "llvm.func\|func.func"; then
+	if "$MLIR_OPT" "$TEST_FILE" --convert-openshmem-to-llvm --convert-func-to-llvm --reconcile-unrealized-casts > "$INTERMEDIATE_MLIR" 2>&1; then
+		cat "$INTERMEDIATE_MLIR"
+		if grep -q "llvm.func\|func.func" "$INTERMEDIATE_MLIR"; then
 			echo
 			echo "✅ Test PASSED - Successfully lowered OpenSHMEM to MLIR LLVM dialect"
 			exit 0
@@ -97,32 +93,42 @@ case $TEST_MODE in
 	else
 		echo
 		echo "❌ Test FAILED - OpenSHMEM to MLIR LLVM dialect conversion failed"
+		cat "$INTERMEDIATE_MLIR"
 		exit 1
 	fi
 	;;
 "llvm"|"full")
 	echo "Generated LLVM IR (no OpenSHMEM dialect remains):"
 	echo "--------------------------------------------------"
-	# Capture output and check for errors
-	OUTPUT=$("$MLIR_OPT" "$TEST_FILE" --convert-openshmem-to-llvm --convert-func-to-llvm --reconcile-unrealized-casts 2>/dev/null | "$MLIR_TRANSLATE" --mlir-to-llvmir 2>&1)
-	EXIT_CODE=$?
-	
-	echo "$OUTPUT"
-	
-	if [ $EXIT_CODE -eq 0 ]; then
-		# Check if output contains function definitions (not just module metadata)
-		if echo "$OUTPUT" | grep -q "define\|declare"; then
-			echo
-			echo "✅ Test PASSED - Successfully generated final LLVM IR"
-			exit 0
+	if "$MLIR_OPT" "$TEST_FILE" --convert-openshmem-to-llvm --convert-func-to-llvm --reconcile-unrealized-casts > "$INTERMEDIATE_MLIR" 2>&1; then
+		if grep -q "llvm.func\|func.func" "$INTERMEDIATE_MLIR"; then
+			if "$MLIR_TRANSLATE" "$INTERMEDIATE_MLIR" --mlir-to-llvmir > /tmp/openshmem.ll 2>&1; then
+				cat /tmp/openshmem.ll
+				if grep -q "define\|declare" /tmp/openshmem.ll; then
+					echo
+					echo "✅ Test PASSED - Successfully generated final LLVM IR"
+					exit 0
+				else
+					echo
+					echo "❌ Test FAILED - Conversion produced empty output (no functions found)"
+					exit 1
+				fi
+			else
+				echo
+				echo "❌ Test FAILED - LLVM IR generation failed"
+				cat /tmp/openshmem.ll
+				exit 1
+			fi
 		else
 			echo
-			echo "❌ Test FAILED - Conversion produced empty output (no functions found)"
+			echo "❌ Test FAILED - Lowered MLIR does not contain any functions."
+			cat "$INTERMEDIATE_MLIR"
 			exit 1
 		fi
 	else
 		echo
-		echo "❌ Test FAILED - LLVM IR generation failed"
+		echo "❌ Test FAILED - OpenSHMEM to MLIR LLVM dialect conversion failed"
+		cat "$INTERMEDIATE_MLIR"
 		exit 1
 	fi
 	;;

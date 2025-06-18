@@ -98,7 +98,10 @@ def OpenSHMEM_NPesOp : OpenSHMEM_Op<"n_pes", []> {
 }
 
 //===----------------------------------------------------------------------===//
-// MallocOp - Simplified for basic type
+// MallocOp
+// TODO: this should use memref
+// FIXME: shmem_malloc does not return anything. I don't think we should have
+//        it return an OpenSHMEM_Retval.
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
@@ -136,7 +139,8 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
 }
 
 //===----------------------------------------------------------------------===//
-// FreeOp - Simplified for basic type
+// FreeOp
+// TODO: this should use memref
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
@@ -167,26 +171,26 @@ def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
 }
 
 //===----------------------------------------------------------------------===//
-// PutOp - Simplified for basic type
+// PutOp
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
-  let summary = "Perform a one-sided put operation";
+  let summary = "Blocking put operation (matches shmem_put C API)";
   let description = [{
-    This operation performs a one-sided put, copying data from the source
-    memory region on the calling PE to the destination memory region on 
-    the target PE. The operation copies `size` elements.
+    This operation performs a blocking put, copying data from the source
+    memory region on the calling PE to the destination symmetric memory region on 
+    the target PE. The operation copies `size` elements and returns only after the
+    data has been copied out of the source array on the local PE.
     
     Arguments:
-    - dest: Destination memory reference on the target PE (symmetric memory)
-    - src: Source memory reference on the calling PE (any type)
+    - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
+    - src: Source local memory reference on the calling PE (any type)
     - size: Number of elements to transfer (i64)
     - pe: Target PE number (i32)
     
-    Equivalent to `shmem_put_nbi()` or similar OpenSHMEM put routines.
+    Equivalent to `shmem_put()` in the C API.
     
-    This operation can optionally return an `!openshmem.retval` value that can be used
-    to check for errors.
+    This operation has no return value.
   }];
 
   let arguments = (ins 
@@ -196,35 +200,32 @@ def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
     I32:$pe
   );
 
-  let results = (outs Optional<OpenSHMEM_Retval>:$retval);
-
   let assemblyFormat =
       "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
-      "type($dest) `,` type($src) `,` type($size) `,` type($pe) "
-      "(`->` type($retval)^)?";
+      "type($dest) `,` type($src) `,` type($size) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
-// GetOp - Simplified for basic type
+// GetOp
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
-  let summary = "Perform a one-sided get operation";
+  let summary = "Blocking get operation (matches shmem_get C API)";
   let description = [{
-    This operation performs a one-sided get, copying data from the source
-    memory region on the target PE to the destination memory region on
-    the calling PE. The operation copies `size` elements.
+    This operation performs a blocking get, copying data from the source
+    symmetric memory region on the target PE to the destination local memory region on
+    the calling PE. The operation copies `size` elements and returns only after the
+    data has been delivered to the destination array on the local PE.
     
     Arguments:
-    - dest: Destination memory reference on the calling PE (any type)
-    - src: Source memory reference on the target PE (symmetric memory)
+    - dest: Destination local memory reference on the calling PE (any type)
+    - src: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
     - size: Number of elements to transfer (i64)
     - pe: Target PE number (i32)
     
-    Equivalent to `shmem_get_nbi()` or similar OpenSHMEM get routines.
+    Equivalent to `shmem_get()` in the C API.
     
-    This operation can optionally return an `!openshmem.retval` value that can be used
-    to check for errors.
+    This operation has no return value.
   }];
 
   let arguments = (ins
@@ -233,38 +234,9 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
     I64:$size, 
     I32:$pe
   );
-  
-  let results = (outs Optional<OpenSHMEM_Retval>:$retval);
-  
+
   let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($src) `,` type($size) `,` type($pe) "
-                       "(`->` type($retval)^)?";
-}
-
-//===----------------------------------------------------------------------===//
-// SymmetricCastOp - Simplified for basic type
-//===----------------------------------------------------------------------===//
-
-def OpenSHMEM_SymmetricCastOp : OpenSHMEM_Op<"symmetric_cast", []> {
-  let summary = "Cast a value to symmetric memory";
-  let description = [{
-    This operation casts a value to symmetric memory. This should only
-    be used when the programmer knows the value points to symmetric
-    memory (e.g., memory allocated with openshmem.malloc).
-    
-    This is a compiler hint operation that doesn't generate runtime code but
-    changes the type information for better type safety and optimization.
-    
-    Arguments:
-    - value: Value to cast
-    
-    Results:
-    - symmetric_memref: The same value as symmetric memory
-  }];
-
-  let arguments = (ins AnyType:$value);
-  let results = (outs OpenSHMEM_SymmetricMemRef:$symmetric_memref);
-  let assemblyFormat = "`(` $value `)` attr-dict `:` type($value) `->` type($symmetric_memref)";
+                       "type($dest) `,` type($src) `,` type($size) `,` type($pe)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMOPS_TD
