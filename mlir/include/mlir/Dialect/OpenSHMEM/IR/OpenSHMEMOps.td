@@ -37,13 +37,10 @@ def OpenSHMEM_InitOp : OpenSHMEM_Op<"init", []> {
   let description = [{
     This operation initializes the OpenSHMEM runtime environment.
     It must be called before any other OpenSHMEM operations.
-    
-    This operation can optionally return an `!openshmem.retval` value that can be used
-    to check for errors.
+    Equivalent to `shmem_init()`.
+    This operation has no return value.
   }];
-
-  let results = (outs Optional<OpenSHMEM_Retval>:$retval);
-  let assemblyFormat = "attr-dict (`:` type($retval)^)?";
+  let assemblyFormat = "attr-dict";
 }
 
 //===----------------------------------------------------------------------===//
@@ -55,13 +52,10 @@ def OpenSHMEM_FinalizeOp : OpenSHMEM_Op<"finalize", []> {
   let description = [{
     This operation finalizes the OpenSHMEM runtime environment.
     It should be called before program termination.
-    
-    This operation can optionally return an `!openshmem.retval` value that can be used
-    to check for errors.
+    Equivalent to `shmem_finalize()`.
+    This operation has no return value.
   }];
-
-  let results = (outs Optional<OpenSHMEM_Retval>:$retval);
-  let assemblyFormat = "attr-dict (`:` type($retval)^)?";
+  let assemblyFormat = "attr-dict";
 }
 
 //===----------------------------------------------------------------------===//
@@ -87,21 +81,19 @@ def OpenSHMEM_MyPeOp : OpenSHMEM_Op<"my_pe", []> {
 
 def OpenSHMEM_NPesOp : OpenSHMEM_Op<"n_pes", []> {
   let summary = "Get the total number of PEs";
-  let description = [{
-    This operation returns the total number of PEs in the OpenSHMEM program.
-    
-    Equivalent to `shmem_n_pes()`.
-  }];
+  let description = [{ This operation returns the total number of PEs in the
+                        OpenSHMEM program
+                            .
 
-  let results = (outs I32:$n_pes);
-  let assemblyFormat = "attr-dict `:` type($n_pes)";
+                    Equivalent to `shmem_n_pes()`.
+}];
+
+let results = (outs I32 : $n_pes);
+let assemblyFormat = "attr-dict `:` type($n_pes)";
 }
 
 //===----------------------------------------------------------------------===//
 // MallocOp
-// TODO: this should use memref
-// FIXME: shmem_malloc does not return anything. I don't think we should have
-//        it return an OpenSHMEM_Retval.
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
@@ -140,7 +132,6 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
 
 //===----------------------------------------------------------------------===//
 // FreeOp
-// TODO: this should use memref
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
@@ -149,25 +140,15 @@ def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
     This operation frees symmetric memory that was previously allocated with
     openshmem.malloc. The memory reference must point to symmetric memory
     allocated by a previous malloc operation.
-    
     This is a collective operation - all PEs must participate and free the
     same symmetric memory allocation.
-    
     Arguments:
     - ptr: Memory reference to free (must be symmetric memory)
-    
     Equivalent to `shmem_free()`.
-    
-    This operation can optionally return an `!openshmem.retval` value that can be used
-    to check for errors.
+    This operation has no return value.
   }];
-
   let arguments = (ins OpenSHMEM_SymmetricMemRef:$ptr);
-  
-  let results = (outs Optional<OpenSHMEM_Retval>:$retval);
-  
-  let assemblyFormat = "`(` $ptr `)` attr-dict `:` type($ptr) "
-                       "(`->` type($retval)^)?";
+  let assemblyFormat = "`(` $ptr `)` attr-dict `:` type($ptr)";
 }
 
 //===----------------------------------------------------------------------===//

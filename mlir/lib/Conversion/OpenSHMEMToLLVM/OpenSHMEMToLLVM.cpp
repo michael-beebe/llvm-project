@@ -70,19 +70,15 @@ struct InitOpLowering : public ConvertOpToLLVMPattern<openshmem::InitOp> {
     Location loc = op.getLoc();
     auto moduleOp = op->getParentOfType<ModuleOp>();
 
-    // int shmem_init(void)
-    auto funcType = LLVM::LLVMFunctionType::get(rewriter.getI32Type(), {});
+    // void shmem_init(void)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()), {});
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, "shmem_init", funcType);
 
     // Replace with function call
-    auto callOp = rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{});
-
-    if (op.getRetval())
-      rewriter.replaceOp(op, callOp.getResult());
-    else
-      rewriter.eraseOp(op);
-
+    rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{});
+    rewriter.eraseOp(op);
     return success();
   }
 };
@@ -102,18 +98,14 @@ struct FinalizeOpLowering
     auto moduleOp = op->getParentOfType<ModuleOp>();
 
     // void shmem_finalize(void)
-    auto funcType = LLVM::LLVMFunctionType::get(rewriter.getI32Type(), {});
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()), {});
     LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(moduleOp, loc, rewriter,
                                                     "shmem_finalize", funcType);
 
     // Replace with function call
-    auto callOp = rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{});
-
-    if (op.getRetval())
-      rewriter.replaceOp(op, callOp.getResult());
-    else
-      rewriter.eraseOp(op);
-
+    rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{});
+    rewriter.eraseOp(op);
     return success();
   }
 };
@@ -223,8 +215,8 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
 
     // void shmem_free(void *ptr)
-    auto funcType =
-        LLVM::LLVMFunctionType::get(rewriter.getI32Type(), {ptrType});
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()), {ptrType});
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, "shmem_free", funcType);
 
@@ -232,14 +224,8 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
     Value dataPtr = adaptor.getPtr();
 
     // Replace with function call
-    auto callOp =
-        rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{dataPtr});
-
-    if (op.getRetval())
-      rewriter.replaceOp(op, callOp.getResult());
-    else
-      rewriter.eraseOp(op);
-
+    rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{dataPtr});
+    rewriter.eraseOp(op);
     return success();
   }
 };
