@@ -14,8 +14,6 @@
 #ifndef MLIR_INITALLPASSES_H_
 #define MLIR_INITALLPASSES_H_
 
-// TODO: add OpenSHMEM to InitAllPasses.h
-
 #include "mlir/Conversion/Passes.h"
 #include "mlir/Dialect/AMDGPU/Transforms/Passes.h"
 #include "mlir/Dialect/Affine/Passes.h"
@@ -37,6 +35,7 @@
 #include "mlir/Dialect/Mesh/Transforms/Passes.h"
 #include "mlir/Dialect/NVGPU/Transforms/Passes.h"
 #include "mlir/Dialect/OpenACC/Transforms/Passes.h"
+#include "mlir/Dialect/OpenSHMEM/Transforms/Passes.h"
 #include "mlir/Dialect/Quant/Transforms/Passes.h"
 #include "mlir/Dialect/SCF/Transforms/Passes.h"
 #include "mlir/Dialect/SPIRV/Transforms/Passes.h"
@@ -79,6 +78,7 @@ inline void registerAllPasses() {
   registerGPUPasses();
   registerLinalgPasses();
   registerNVGPUPasses();
+  openshmem::registerOpenSHMEMPasses();
   registerSparseTensorPasses();
   LLVM::registerLLVMPasses();
   math::registerMathPasses();

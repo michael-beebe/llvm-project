@@ -90,5 +90,14 @@ std::unique_ptr<Pass> createCoalescePutsPass() {
   return std::make_unique<CoalescePutsPass>();
 }
 
+//===----------------------------------------------------------------------===//
+// Pass Registration
+//===----------------------------------------------------------------------===//
+
+void registerOpenSHMEMTransformPasses() {
+  // Register all OpenSHMEM transform passes
+  // This function is called to register the passes with the pass manager
+}
+
 } // namespace openshmem
 } // namespace mlir

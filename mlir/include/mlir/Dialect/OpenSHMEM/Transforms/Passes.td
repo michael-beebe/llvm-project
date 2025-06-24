@@ -31,4 +31,19 @@ def CoalescePuts : Pass<"openshmem-coalesce-puts"> {
   let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
 }
 
-#endif // MLIR_DIALECT_OPENSHMEM_TRANSFORMS_PASSES_TD 
+def InjectNumPEs : Pass<"openshmem-inject-num-pes"> {
+  let summary = "Injects or overrides the openshmem.num_pes module attribute";
+  let description = [{
+    This pass injects or overrides the `openshmem.num_pes` module attribute.
+    Use this to specify the number of PEs for optimization or analysis without
+    modifying the input MLIR file.
+  }];
+  let options = [
+    Option<"numPEs", "num-pes", "int", "-1",
+           "Number of PEs to inject as a module attribute">
+  ];
+  let constructor = "mlir::openshmem::createInjectNumPEsPass()";
+  let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
+}
+
+#endif // MLIR_DIALECT_OPENSHMEM_TRANSFORMS_PASSES_TD

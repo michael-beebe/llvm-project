@@ -24,6 +24,11 @@ namespace openshmem {
 /// performance.
 std::unique_ptr<Pass> createCoalescePutsPass();
 
+/// Create a pass that injects or overrides the openshmem.num_pes module attribute.
+/// This pass allows specifying the number of PEs at compile time for optimization
+/// purposes, even though the actual number is determined at runtime.
+std::unique_ptr<Pass> createInjectNumPEsPass();
+
 //===----------------------------------------------------------------------===//
 // Registration
 //===----------------------------------------------------------------------===//
