@@ -42,8 +42,8 @@ def InjectNumPEs : Pass<"openshmem-inject-num-pes"> {
     Option<"numPEs", "num-pes", "int", "-1",
            "Number of PEs to inject as a module attribute">
   ];
-  let constructor = "mlir::openshmem::createInjectNumPEsPass()";
-  let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
+  let constructor = "mlir::openshmem::createInjectNumPEsPass() ";
+      let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_TRANSFORMS_PASSES_TD

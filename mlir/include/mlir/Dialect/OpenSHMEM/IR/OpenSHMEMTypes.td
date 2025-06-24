@@ -23,6 +23,8 @@ class OpenSHMEM_Type<string name, string typeMnemonic, list<Trait> traits = []>
 
 //===----------------------------------------------------------------------===//
 // Processing Element (PE) type
+//
+// FIXME: I don't think this is needed.
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_PE : OpenSHMEM_Type<"PE", "pe"> {
@@ -35,6 +37,8 @@ def OpenSHMEM_PE : OpenSHMEM_Type<"PE", "pe"> {
 
 //===----------------------------------------------------------------------===//
 // Size type for memory operations
+//
+// FIXME: I don't think this is needed.
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_Size : OpenSHMEM_Type<"Size", "size"> {
@@ -66,12 +70,30 @@ def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_mem
   let description = [{
     Represents a reference to symmetric memory that is accessible from all PEs.
     This type is distinct from standard memref: it is only produced by openshmem.malloc
-    and is required for all OpenSHMEM operations that use symmetric memory (e.g., put, get, free).
+    and is required for all OpenSHMEM operations that use symmetric memory (e.g., putmem, getmem, free).
     Symmetric memory has the same virtual address on all PEs and can be used in
     one-sided communication operations. Only values of this type are valid for
     OpenSHMEM symmetric memory operations.
   }];
   
+  let parameters = (ins
+    "Type":$elementType
+  );
+  
+  let assemblyFormat = "`<` $elementType `>`";
+}
+
+//===----------------------------------------------------------------------===//
+// Team type
+//===----------------------------------------------------------------------===//
+
+// TODO: implement teams
+
+def OpenSHMEM_Team : OpenSHMEM_Type<"Team", "team"> {
+  let summary = "Team type for OpenSHMEM operations";
+  let description = [{
+    Represents a team of PEs in an OpenSHMEM program.
+  }];
   let parameters = (ins
     "Type":$elementType
   );

@@ -20,7 +20,8 @@ namespace openshmem {
 /// Create a pass that coalesces consecutive OpenSHMEM put operations.
 std::unique_ptr<Pass> createCoalescePutsPass();
 
-/// Create a pass that injects or overrides the openshmem.num_pes module attribute.
+/// Create a pass that injects or overrides the openshmem.num_pes module
+/// attribute.
 std::unique_ptr<Pass> createInjectNumPEsPass();
 
 /// Generate the code for registering passes.
@@ -30,4 +31,4 @@ std::unique_ptr<Pass> createInjectNumPEsPass();
 } // namespace openshmem
 } // namespace mlir
 
-#endif // MLIR_DIALECT_OPENSHMEM_TRANSFORMS_PASSES_H 
+#endif // MLIR_DIALECT_OPENSHMEM_TRANSFORMS_PASSES_H

@@ -11,9 +11,9 @@ declare void @shmem_free(ptr)
 
 declare void @shmem_quiet()
 
-declare void @shmem_get(ptr, ptr, i64, i32)
+declare void @shmem_getmem(ptr, ptr, i64, i32)
 
-declare void @shmem_put(ptr, ptr, i64, i32)
+declare void @shmem_putmem(ptr, ptr, i64, i32)
 
 declare void @shmem_barrier_all()
 
@@ -38,8 +38,8 @@ define void @main() {
   %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
   call void @shmem_barrier_all()
   %10 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
-  call void @shmem_put(ptr %3, ptr %10, i64 10, i32 1)
-  call void @shmem_get(ptr %10, ptr %3, i64 10, i32 1)
+  call void @shmem_putmem(ptr %3, ptr %10, i64 40, i32 1)
+  call void @shmem_getmem(ptr %10, ptr %3, i64 40, i32 1)
   call void @shmem_quiet()
   %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
   call void @free(ptr %11)

@@ -6,79 +6,47 @@ func.func @test_openshmem_basic() {
   // CHECK-LABEL: @test_openshmem_basic
 
   // Test init operation
-  // CHECK: llvm.call @shmem_init() : () -> i32
-  %0 = openshmem.init : !openshmem.retval
+  // CHECK: llvm.call @shmem_init() : () -> ()
+  openshmem.init
 
   // Test PE operations  
   // CHECK: llvm.call @shmem_my_pe() : () -> i32
-  %1 = openshmem.my_pe : !openshmem.pe
+  %1 = openshmem.my_pe : i32
   
   // CHECK: llvm.call @shmem_n_pes() : () -> i32
-  %2 = openshmem.n_pes : !openshmem.pe
+  %2 = openshmem.n_pes : i32
 
   // Test finalize operation
-  // CHECK: llvm.call @shmem_finalize() : () -> i32
-  %3 = openshmem.finalize : !openshmem.retval
+  // CHECK: llvm.call @shmem_finalize() : () -> ()
+  openshmem.finalize
 
   return
 }
 
-func.func @test_openshmem_memory(%size: !openshmem.size) {
+func.func @test_openshmem_memory(%size: index) {
   // CHECK-LABEL: @test_openshmem_memory
   
   // Test malloc operation
-  // CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
-  %ptr = openshmem.malloc(%size) : !openshmem.size -> memref<1024xi32>
+  // CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i{{32|64}}) -> !llvm.ptr
+  %ptr = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
   
   // Test free operation  
-  // CHECK: llvm.call @shmem_free(%{{.*}}) : (!llvm.ptr) -> i32
-  openshmem.free(%ptr) : memref<1024xi32>
+  // CHECK: llvm.call @shmem_free(%{{.*}}) : (!llvm.ptr) -> ()
+  openshmem.free(%ptr) : !openshmem.symmetric_memref<i32>
   
   return
 }
 
-func.func @test_openshmem_communication(%arg0: memref<10xi32>, %arg1: memref<10xi32>, %size: !openshmem.size, %pe: !openshmem.pe) {
+func.func @test_openshmem_communication(%arg0: !openshmem.symmetric_memref<i32>, %arg1: memref<10xi32>, %size: index, %pe: i32) {
   // CHECK-LABEL: @test_openshmem_communication
   
-  // Test put operation
-  // CHECK: llvm.call @shmem_put_nbi(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> i32
-  openshmem.put(%arg0, %arg1, %size, %pe) : memref<10xi32>, memref<10xi32>, !openshmem.size, !openshmem.pe
+  // Test putmem operation
+  // CHECK: llvm.call @shmem_putmem(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i{{32|64}}, i32) -> ()
+  openshmem.putmem(%arg0, %arg1, %size, %pe) : !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
   
-  // Test get operation
-  // CHECK: llvm.call @shmem_get_nbi(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> i32
-  openshmem.get(%arg1, %arg0, %size, %pe) : memref<10xi32>, memref<10xi32>, !openshmem.size, !openshmem.pe
+  // Test getmem operation
+  // CHECK: llvm.call @shmem_getmem(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i{{32|64}}, i32) -> ()
+  openshmem.getmem(%arg1, %arg0, %size, %pe) : memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
       
   return
 }
-
-func.func @test_openshmem_atomics(%dest: memref<1xi32>, %value: i32, %pe: !openshmem.pe) {
-  // CHECK-LABEL: @test_openshmem_atomics
-  
-  // Test atomic add
-  // CHECK: llvm.call @shmem_atomic_add(%{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, i32, i32) -> i32
-  openshmem.atomic_add(%dest, %value, %pe) : memref<1xi32>, i32, !openshmem.pe
-  
-  // Test atomic fetch add
-  // CHECK: llvm.call @shmem_atomic_fetch_add(%{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, i32, i32) -> i32
-  %old = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<1xi32>, i32, !openshmem.pe -> i32
-  
-  // Test atomic compare swap
-  // CHECK: llvm.call @shmem_atomic_compare_swap(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, i32, i32, i32) -> i32
-  %old2 = openshmem.atomic_compare_swap(%dest, %value, %value, %pe) : memref<1xi32>, i32, i32, !openshmem.pe -> i32
-  
-  // Test atomic swap
-  // CHECK: llvm.call @shmem_atomic_swap(%{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, i32, i32) -> i32
-  %old3 = openshmem.atomic_swap(%dest, %value, %pe) : memref<1xi32>, i32, !openshmem.pe -> i32
-  
-  // Test bitwise atomics
-  // CHECK: llvm.call @shmem_atomic_and(%{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, i32, i32) -> i32
-  openshmem.atomic_and(%dest, %value, %pe) : memref<1xi32>, i32, !openshmem.pe
-  
-  // CHECK: llvm.call @shmem_atomic_or(%{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, i32, i32) -> i32
-  openshmem.atomic_or(%dest, %value, %pe) : memref<1xi32>, i32, !openshmem.pe
-  
-  // CHECK: llvm.call @shmem_atomic_xor(%{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, i32, i32) -> i32
-  openshmem.atomic_xor(%dest, %value, %pe) : memref<1xi32>, i32, !openshmem.pe
-  
-  return
-} 

@@ -1,4 +1,4 @@
-//===- CoalescePuts.cpp - Coalesce consecutive OpenSHMEM puts -------------===//
+//===- CoalescePuts.cpp - Coalesce consecutive OpenSHMEM putmem -----------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file implements a pass that coalesces consecutive OpenSHMEM put
+// This file implements a pass that coalesces consecutive OpenSHMEM putmem
 // operations targeting the same PE into fewer, larger transfers.
 //
 //===----------------------------------------------------------------------===//
@@ -29,19 +29,19 @@ namespace {
 // Coalescing Patterns
 //===----------------------------------------------------------------------===//
 
-/// Pattern to coalesce consecutive put operations to the same PE.
+/// Pattern to coalesce consecutive putmem operations to the same PE.
 /// This is the core optimization for stencil communication patterns.
-struct CoalesceConsecutivePuts : public OpRewritePattern<PutOp> {
-  using OpRewritePattern<PutOp>::OpRewritePattern;
+struct CoalesceConsecutivePuts : public OpRewritePattern<PutmemOp> {
+  using OpRewritePattern<PutmemOp>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(PutOp putOp,
+  LogicalResult matchAndRewrite(PutmemOp putOp,
                                 PatternRewriter &rewriter) const override {
-    // // Look for another PutOp immediately following this one
+    // // Look for another PutmemOp immediately following this one
     // Operation *nextOp = putOp->getNextNode();
     // if (!nextOp)
     //   return failure();
 
-    // auto nextPut = dyn_cast<PutOp>(nextOp);
+    // auto nextPut = dyn_cast<PutmemOp>(nextOp);
     // if (!nextPut)
     //   return failure();
 
@@ -52,7 +52,7 @@ struct CoalesceConsecutivePuts : public OpRewritePattern<PutOp> {
     // For now, just report that we found the pattern
     // TODO: Implement actual coalescing logic that:
     // 1. Checks if memory regions are contiguous or can be made contiguous
-    // 2. Combines into a single larger put operation
+    // 2. Combines into a single larger putmem operation
     // 3. Updates size and memory references accordingly
     // 4. Handles any intermediate operations that might interfere
 
@@ -74,7 +74,7 @@ struct CoalescePutsPass : public impl::CoalescePutsBase<CoalescePutsPass> {
     RewritePatternSet patterns(context);
     patterns.add<CoalesceConsecutivePuts>(context);
 
-    if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns)))) {
+    if (failed(applyPatternsGreedily(op, std::move(patterns)))) {
       signalPassFailure();
     }
   }
