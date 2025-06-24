@@ -83,3 +83,105 @@
 - Uses `Builder::getI32IntegerAttr()` to create the integer attribute value
 - Follows MLIR pass infrastructure patterns for option handling and registration
 - Pass syntax: `--openshmem-inject-num-pes="num-pes=N"` where N is the desired PE count
+
+## 06/24/2025
+
+### Operation Specification Compliance and Type System Refinement
+
+#### Corrected size_t Representation
+- **Issue Identified**: Operations were inconsistently using `I64` vs `Index` types for `size_t` parameters
+- **Solution**: Standardized all `size_t` parameters to use `Index` type, which correctly represents platform-specific pointer width
+- **Operations Updated**: `MallocOp`, `PutOp`/`PutmemOp`, `GetOp`/`GetmemOp`
+- **Rationale**: `Index` type is MLIR's standard for representing `size_t`-like values and automatically converts to appropriate width (32-bit or 64-bit) during LLVM lowering
+
+#### Put/Get vs Putmem/Getmem Distinction
+- **Critical Correction**: Renamed operations from `put`/`get` to `putmem`/`getmem` to accurately reflect implementation
+- **Key Difference**: 
+  - `shmem_put`/`shmem_get`: Typed operations, transfer N elements of specific type
+  - `shmem_putmem`/`shmem_getmem`: Raw memory operations, transfer N bytes
+- **Current Implementation**: Raw memory operations (putmem/getmem) since we transfer arbitrary byte counts
+- **Operations Renamed**: `OpenSHMEM_PutOp` → `OpenSHMEM_PutmemOp`, `OpenSHMEM_GetOp` → `OpenSHMEM_GetmemOp`
+
+#### Lowering Pass Updates
+- **Updated Pattern Names**: `PutOpLowering` → `PutmemOpLowering`, `GetOpLowering` → `GetmemOpLowering`
+- **Function Calls**: Now correctly generate `shmem_putmem()` and `shmem_getmem()` calls instead of `shmem_put()`/`shmem_get()`
+- **Type Conversion**: All size parameters now use `getTypeConverter()->getIndexType()` for proper platform-specific sizing
+- **Pattern Registration**: Updated pattern registration to include new operation lowering classes
+
+#### Transform Pass Compatibility
+- **Fixed CoalescePuts.cpp**: Updated to reference `PutmemOp` instead of obsolete `PutOp`
+- **Updated Comments**: Changed references from "put operations" to "putmem operations" throughout
+- **Deprecated Function**: Replaced `applyPatternsAndFoldGreedily()` with `applyPatternsGreedily()`
+
+#### Test File Corrections
+- **Byte Semantics**: Updated all test files to use correct byte counts instead of element counts
+- **openshmemops.mlir**: Changed size parameters from 10 elements to 40 bytes (10 × 4-byte i32)
+- **inject-num-pes-optimization-example.mlir**: Updated to use 400 bytes (100 × 4-byte f32)
+- **openshmem-to-llvm.mlir**: Fixed function signatures and removed non-existent atomic operations
+- **CHECK Patterns**: Updated to verify `shmem_putmem`/`shmem_getmem` calls with platform-agnostic size types
+
+#### OpenSHMEM Specification Compliance
+- **Verified Collective Operations**: Confirmed `shmem_malloc` and `shmem_free` are collective operations per OpenSHMEM spec
+- **Restored Collective Descriptions**: Re-added collective operation requirements in TableGen descriptions
+- **Parameter Clarification**: Added notes explaining that for putmem/getmem, `nelems` parameter represents bytes, not elements
+- **Function Signatures**: All signatures now exactly match OpenSHMEM specification
+- **Documentation**: Fixed typos, formatting issues, and ensured consistent terminology throughout
+
+#### Technical Improvements
+- **Type Safety**: Proper distinction between symmetric memory (`!openshmem.symmetric_memref<T>`) and local memory (`memref<T>`)
+- **Platform Independence**: Size parameters automatically adapt to 32-bit or 64-bit platforms via `Index` type
+- **Specification Accuracy**: All operation descriptions now precisely match OpenSHMEM API documentation
+- **Build Compatibility**: Fixed all compilation errors caused by operation name changes
+
+#### Future Preparedness
+- **Typed Operations**: Current putmem/getmem implementation provides foundation for future typed put/get operations
+- **Type System**: Established clear patterns for handling symmetric vs local memory types
+- **Lowering Framework**: Robust conversion infrastructure ready for additional OpenSHMEM operations
+- **Testing Infrastructure**: Comprehensive test suite validates both MLIR dialect and LLVM IR generation
+
+## 06/25/2025
+
+### CoalescePuts Optimization Pass Implementation
+
+#### Pass Architecture and Design
+- **Implemented CoalescePuts.cpp**: Complete optimization pass for coalescing consecutive putmem operations
+- **Two-Level Optimization Strategy**: 
+  1. `CoalesceConsecutivePuts`: Merges immediately adjacent putmem operations targeting same PE
+  2. `CoalesceBlockPuts`: Merges putmem operations within same basic block targeting same PE (even with intervening operations)
+- **Conservative Safety**: Only coalesces operations with identical source/destination memrefs and target PEs
+- **Size Calculation**: Uses `arith::AddIOp` to dynamically compute total transfer sizes
+
+#### Build System Integration
+- **Added Dependencies**: Updated CMakeLists.txt to include `MLIRArithDialect` and `MLIRMemRefDialect` for arithmetic operations
+- **Const Correctness**: Fixed parameter types from `ArrayRef<PutmemOp>` to `SmallVectorImpl<PutmemOp>&` to resolve compilation errors
+- **Pass Registration**: Properly integrated with existing OpenSHMEM transform pass infrastructure
+
+#### Comprehensive Stencil Test Suite
+- **Created stencil-01.mlir**: Multi-scenario test file covering realistic HPC communication patterns
+- **Test Scenarios**:
+  - **Consecutive Coalescing**: 3 operations → 1 operation (4+4+4 = 12 bytes)
+  - **Different PE Safety**: Operations to different PEs remain separate (correct behavior)
+  - **Block-Level Coalescing**: Operations with intervening code still coalesced (4+4 = 8 bytes)
+  - **2D Halo Exchange**: Realistic stencil pattern with 3 operations → 1 operation (40+40+40 = 120 bytes)
+
+#### Validation and Results
+- **Successful Compilation**: Pass builds correctly with all dependencies resolved
+- **Functional Verification**: All test cases produce expected optimization results
+- **Performance Impact**: Demonstrated 3:1 reduction in communication operations for typical stencil patterns
+- **Type Safety**: Correct handling of `!openshmem.symmetric_memref<f32>` types throughout optimization
+
+#### Technical Implementation Details
+- **Pattern Matching**: Uses MLIR's `OpRewritePattern` framework for systematic operation replacement
+- **Memory Safety**: Validates that operations use same source/destination memrefs before coalescing
+- **PE Target Validation**: Ensures only operations targeting identical PEs are merged
+- **Size Aggregation**: Creates arithmetic operations to sum transfer sizes dynamically
+- **Operation Ordering**: Preserves program semantics while optimizing communication efficiency
+
+#### Real-World Applicability
+- **Stencil Computations**: Direct applicability to finite difference, finite element, and image processing kernels
+- **Halo Exchange Optimization**: Reduces communication overhead in domain decomposition applications
+- **Bandwidth Utilization**: Larger transfers achieve better network bandwidth utilization than multiple small transfers
+- **Latency Reduction**: Fewer communication operations reduce overall synchronization overhead
+
+This implementation provides a solid foundation for optimizing OpenSHMEM communication patterns commonly found in HPC applications, particularly those using stencil-based algorithms.
+

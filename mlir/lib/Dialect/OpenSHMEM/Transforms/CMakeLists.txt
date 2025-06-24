@@ -7,6 +7,8 @@ add_mlir_dialect_library(MLIROpenSHMEMTransforms
   MLIROpenSHMEMTransformsIncGen
 
   LINK_LIBS PUBLIC
+  MLIRArithDialect
+  MLIRMemRefDialect
   MLIROpenSHMEMDialect
   MLIRPass
   MLIRTransforms
