@@ -1,4 +1,4 @@
-module {
+module attributes {openshmem.num_pes = 8 : i32} {
   llvm.func @free(!llvm.ptr)
   llvm.func @malloc(i64) -> !llvm.ptr
   llvm.func @shmem_finalize()

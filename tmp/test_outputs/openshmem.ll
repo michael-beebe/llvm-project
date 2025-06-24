@@ -9,6 +9,8 @@ declare void @shmem_finalize()
 
 declare void @shmem_free(ptr)
 
+declare void @shmem_barrier_all()
+
 declare void @shmem_get(ptr, ptr, i64, i32)
 
 declare void @shmem_put(ptr, ptr, i64, i32)
@@ -35,6 +37,7 @@ define void @main() {
   %10 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
   call void @shmem_put(ptr %3, ptr %10, i64 10, i32 1)
   call void @shmem_get(ptr %10, ptr %3, i64 10, i32 1)
+  call void @shmem_barrier_all()
   %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
   call void @free(ptr %11)
   call void @shmem_free(ptr %3)

@@ -18,7 +18,7 @@ The following tasks are required to complete the project, mapped to `llvm-projec
    - Post RFC on LLVM Discourse (https://discourse.llvm.org).
    - _Directory_: None (repository root).
 
-2. **Define Operations** [NOT STARTED]
+2. **Define Operations** [COMPLETE]
 
    - Define `shmem_put` and `shmem_get` in TableGen (e.g., `shmem.put dest, src, size, pe`).
    - Implement the symmetric heap somehow (IMPORTANT)
@@ -26,11 +26,11 @@ The following tasks are required to complete the project, mapped to `llvm-projec
    - Reference MPI dialect (`mlir/include/mlir/Dialect/MPI/MPIOps.td`).
    - _Directory_: `mlir/include/mlir/Dialect/OpenSHMEM` (`OpenSHMEMOps.td`, `OpenSHMEMOps.h`).
 
-3. **Design Type System** [NOT STARTED]
+3. **Design Type System** [COMPLETE]
 
    - _Directory_: `mlir/include/mlir/Dialect/OpenSHMEM` (`OpenSHMEMTypes.td`, `OpenSHMEMTypes.h`).
 
-4. **Implement Operation Semantics** [NOT STARTED]
+4. **Implement Operation Semantics** [COMPLETE]
 
    - **NOT STARTED**: Full C++ implementation for parsing, verification, and canonicalization.
    - **NOT STARTED**: Follow MPI dialect patterns for operation structure and verification.

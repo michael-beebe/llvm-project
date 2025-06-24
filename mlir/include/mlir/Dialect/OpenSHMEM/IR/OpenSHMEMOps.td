@@ -220,4 +220,22 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
                        "type($dest) `,` type($src) `,` type($size) `,` type($pe)";
 }
 
+//===----------------------------------------------------------------------===//
+// BarrierAllOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_BarrierAllOp : OpenSHMEM_Op<"barrier_all", []> {
+  let summary = "Barrier operation (matches shmem_barrier_all C API)";
+  let description = [{
+    This operation performs a barrier operation on all PEs in the program.
+    It is a collective operation - all PEs must participate.
+
+    Equivalent to `shmem_barrier_all()` in the C API.
+
+    This operation has no return value.
+  }];
+
+  let assemblyFormat = "attr-dict";
+}
+
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMOPS_TD

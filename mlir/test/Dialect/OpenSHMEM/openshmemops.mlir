@@ -29,6 +29,9 @@ module {
     openshmem.get(%local_data, %sym_mem, %get_size, %target_pe) : 
       memref<10xi32>, !openshmem.symmetric_memref<i32>, i64, i32
 
+    // Barrier all PEs
+    openshmem.barrier_all
+
     // Free local memory
     memref.dealloc %local_data : memref<10xi32>
     

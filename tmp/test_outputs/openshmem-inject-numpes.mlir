@@ -1,4 +1,4 @@
-module {
+module attributes {openshmem.num_pes = 4 : i32} {
   func.func @main() {
     openshmem.init
     %0 = openshmem.my_pe : i32

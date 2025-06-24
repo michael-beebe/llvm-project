@@ -299,6 +299,33 @@ struct GetOpLowering : public ConvertOpToLLVMPattern<openshmem::GetOp> {
 };
 
 //===----------------------------------------------------------------------===//
+// BarrierAllOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct BarrierAllOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::BarrierAllOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::BarrierAllOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+
+    // void shmem_barrier_all(void)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()), {});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_barrier_all", funcType);
+
+    // Replace with function call
+    rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
 // Pass and conversion setup
 //===----------------------------------------------------------------------===//
 
@@ -366,10 +393,17 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
     return LLVM::LLVMPointerType::get(type.getElementType().getContext());
   });
 
-  patterns
-      .add<InitOpLowering, FinalizeOpLowering, MyPeOpLowering, NPesOpLowering,
-           MallocOpLowering, FreeOpLowering, PutOpLowering, GetOpLowering>(
-          converter);
+  patterns.add<
+      InitOpLowering,
+      FinalizeOpLowering,
+      MyPeOpLowering,
+      NPesOpLowering,
+      MallocOpLowering,
+      FreeOpLowering,
+      PutOpLowering,
+      GetOpLowering,
+      BarrierAllOpLowering
+  >(converter);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(
