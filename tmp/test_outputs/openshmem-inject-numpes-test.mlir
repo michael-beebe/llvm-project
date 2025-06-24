@@ -8,10 +8,11 @@ module {
     %alloc = memref.alloc() : memref<10xi32>
     %c10_i64 = arith.constant 10 : i64
     %c1_i32 = arith.constant 1 : i32
+    openshmem.barrier_all
     openshmem.put(%ptr, %alloc, %c10_i64, %c1_i32) : <i32>, memref<10xi32>, i64, i32
     %c10_i64_0 = arith.constant 10 : i64
     openshmem.get(%alloc, %ptr, %c10_i64_0, %c1_i32) : memref<10xi32>, <i32>, i64, i32
-    openshmem.barrier_all
+    openshmem.quiet
     memref.dealloc %alloc : memref<10xi32>
     openshmem.free(%ptr) : <i32>
     openshmem.finalize

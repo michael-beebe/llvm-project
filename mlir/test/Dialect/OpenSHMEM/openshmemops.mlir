@@ -20,6 +20,9 @@ module {
     %put_size = arith.constant 10 : i64
     %target_pe = arith.constant 1 : i32
 
+    // Barrier all PEs
+    openshmem.barrier_all
+
     // Put data to PE 1 (no result)
     openshmem.put(%sym_mem, %local_data, %put_size, %target_pe) : 
       !openshmem.symmetric_memref<i32>, memref<10xi32>, i64, i32
@@ -29,8 +32,8 @@ module {
     openshmem.get(%local_data, %sym_mem, %get_size, %target_pe) : 
       memref<10xi32>, !openshmem.symmetric_memref<i32>, i64, i32
 
-    // Barrier all PEs
-    openshmem.barrier_all
+    // Quiet all PEs
+    openshmem.quiet
 
     // Free local memory
     memref.dealloc %local_data : memref<10xi32>
@@ -49,8 +52,10 @@ module {
 // CHECK: call i32 @shmem_my_pe()
 // CHECK: call i32 @shmem_n_pes()
 // CHECK: call i8* @shmem_malloc(i64 40)
+// CHECK: call void @shmem_barrier_all()
 // CHECK: call void @shmem_put(i8* %{{.*}}, i8* %{{.*}}, i64 10, i32 1)
 // CHECK: call void @shmem_get(i8* %{{.*}}, i8* %{{.*}}, i64 10, i32 1)
+// CHECK: call void @shmem_quiet()
 // CHECK: call i32 @shmem_free(i8* %{{.*}})
 // CHECK: call i32 @shmem_finalize()
 // CHECK: ret void

@@ -3,9 +3,10 @@ module attributes {openshmem.num_pes = 8 : i32} {
   llvm.func @malloc(i64) -> !llvm.ptr
   llvm.func @shmem_finalize()
   llvm.func @shmem_free(!llvm.ptr)
-  llvm.func @shmem_barrier_all()
+  llvm.func @shmem_quiet()
   llvm.func @shmem_get(!llvm.ptr, !llvm.ptr, i64, i32)
   llvm.func @shmem_put(!llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_barrier_all()
   llvm.func @shmem_malloc(i64) -> !llvm.ptr
   llvm.func @shmem_n_pes() -> i32
   llvm.func @shmem_my_pe() -> i32
@@ -31,10 +32,11 @@ module attributes {openshmem.num_pes = 8 : i32} {
     %16 = llvm.insertvalue %15, %14[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
     %17 = llvm.insertvalue %6, %16[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
     %18 = llvm.insertvalue %7, %17[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_barrier_all() : () -> ()
     %19 = llvm.extractvalue %18[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
     llvm.call @shmem_put(%5, %19, %1, %0) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
     llvm.call @shmem_get(%19, %5, %1, %0) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
-    llvm.call @shmem_barrier_all() : () -> ()
+    llvm.call @shmem_quiet() : () -> ()
     %20 = llvm.extractvalue %18[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
     llvm.call @free(%20) : (!llvm.ptr) -> ()
     llvm.call @shmem_free(%5) : (!llvm.ptr) -> ()

@@ -238,4 +238,22 @@ def OpenSHMEM_BarrierAllOp : OpenSHMEM_Op<"barrier_all", []> {
   let assemblyFormat = "attr-dict";
 }
 
+//===----------------------------------------------------------------------===//
+// QuietOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_QuietOp : OpenSHMEM_Op<"quiet", []> {
+  let summary = "Quiet operation (matches shmem_quiet C API)";
+  let description = [{
+    This operation performs a quiet operation on the calling PE.
+    It is a collective operation - all PEs must participate.
+
+    Equivalent to `shmem_quiet()` in the C API.
+
+    This operation has no return value.
+  }];
+
+  let assemblyFormat = "attr-dict";
+}
+
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMOPS_TD
