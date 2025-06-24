@@ -1,19 +1,18 @@
 module {
-  func.func @main() {
+  func.func @test_coalesce_puts(%arg0: memref<100xi32>, %arg1: !openshmem.symmetric_memref<i32>) {
     %c1_i32 = arith.constant 1 : i32
-    %c40 = arith.constant 40 : index
-    openshmem.init
-    %0 = openshmem.my_pe : i32
-    %1 = openshmem.n_pes : i32
-    %ptr = openshmem.malloc(%c40) : index -> <i32>
-    %alloc = memref.alloc() : memref<10xi32>
-    openshmem.barrier_all
-    openshmem.putmem(%ptr, %alloc, %c40, %c1_i32) : <i32>, memref<10xi32>, index, i32
-    openshmem.getmem(%alloc, %ptr, %c40, %c1_i32) : memref<10xi32>, <i32>, index, i32
-    openshmem.quiet
-    memref.dealloc %alloc : memref<10xi32>
-    openshmem.free(%ptr) : <i32>
-    openshmem.finalize
+    %c12 = arith.constant 12 : index
+    openshmem.putmem(%arg1, %arg0, %c12, %c1_i32) : <i32>, memref<100xi32>, index, i32
+    return
+  }
+  func.func @test_different_pes(%arg0: memref<100xi32>, %arg1: !openshmem.symmetric_memref<i32>) {
+    %c0_i32 = arith.constant 0 : i32
+    %c1_i32 = arith.constant 1 : i32
+    %c2_i32 = arith.constant 2 : i32
+    %c4 = arith.constant 4 : index
+    openshmem.putmem(%arg1, %arg0, %c4, %c0_i32) : <i32>, memref<100xi32>, index, i32
+    openshmem.putmem(%arg1, %arg0, %c4, %c1_i32) : <i32>, memref<100xi32>, index, i32
+    openshmem.putmem(%arg1, %arg0, %c4, %c2_i32) : <i32>, memref<100xi32>, index, i32
     return
   }
 }

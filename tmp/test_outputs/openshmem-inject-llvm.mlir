@@ -12,33 +12,36 @@ module attributes {openshmem.num_pes = 8 : i32} {
   llvm.func @shmem_my_pe() -> i32
   llvm.func @shmem_init()
   llvm.func @main() {
-    %0 = llvm.mlir.constant(1 : i32) : i32
-    %1 = llvm.mlir.constant(40 : index) : i64
     llvm.call @shmem_init() : () -> ()
-    %2 = llvm.call @shmem_my_pe() : () -> i32
-    %3 = llvm.call @shmem_n_pes() : () -> i32
-    %4 = llvm.call @shmem_malloc(%1) : (i64) -> !llvm.ptr
-    %5 = llvm.mlir.constant(10 : index) : i64
-    %6 = llvm.mlir.constant(1 : index) : i64
-    %7 = llvm.mlir.zero : !llvm.ptr
-    %8 = llvm.getelementptr %7[%5] : (!llvm.ptr, i64) -> !llvm.ptr, i32
-    %9 = llvm.ptrtoint %8 : !llvm.ptr to i64
-    %10 = llvm.call @malloc(%9) : (i64) -> !llvm.ptr
-    %11 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
-    %12 = llvm.insertvalue %10, %11[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    %13 = llvm.insertvalue %10, %12[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    %14 = llvm.mlir.constant(0 : index) : i64
-    %15 = llvm.insertvalue %14, %13[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    %16 = llvm.insertvalue %5, %15[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    %17 = llvm.insertvalue %6, %16[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %0 = llvm.call @shmem_my_pe() : () -> i32
+    %1 = llvm.call @shmem_n_pes() : () -> i32
+    %2 = llvm.mlir.constant(40 : index) : i64
+    %3 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %4 = llvm.mlir.constant(10 : index) : i64
+    %5 = llvm.mlir.constant(1 : index) : i64
+    %6 = llvm.mlir.zero : !llvm.ptr
+    %7 = llvm.getelementptr %6[%4] : (!llvm.ptr, i64) -> !llvm.ptr, i32
+    %8 = llvm.ptrtoint %7 : !llvm.ptr to i64
+    %9 = llvm.call @malloc(%8) : (i64) -> !llvm.ptr
+    %10 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %11 = llvm.insertvalue %9, %10[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.insertvalue %9, %11[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %13 = llvm.mlir.constant(0 : index) : i64
+    %14 = llvm.insertvalue %13, %12[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %5, %15[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(40 : index) : i64
+    %18 = llvm.mlir.constant(1 : i32) : i32
     llvm.call @shmem_barrier_all() : () -> ()
-    %18 = llvm.extractvalue %17[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    llvm.call @shmem_putmem(%4, %18, %1, %0) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
-    llvm.call @shmem_getmem(%18, %4, %1, %0) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    %19 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_putmem(%3, %19, %17, %18) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    %20 = llvm.mlir.constant(40 : index) : i64
+    %21 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_getmem(%21, %3, %20, %18) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
     llvm.call @shmem_quiet() : () -> ()
-    %19 = llvm.extractvalue %17[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    llvm.call @free(%19) : (!llvm.ptr) -> ()
-    llvm.call @shmem_free(%4) : (!llvm.ptr) -> ()
+    %22 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @free(%22) : (!llvm.ptr) -> ()
+    llvm.call @shmem_free(%3) : (!llvm.ptr) -> ()
     llvm.call @shmem_finalize() : () -> ()
     llvm.return
   }

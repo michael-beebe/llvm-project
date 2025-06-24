@@ -20,16 +20,18 @@ echo "=========================================="
 build/bin/mlir-opt mlir/test/Dialect/OpenSHMEM/stencil-01.mlir -openshmem-coalesce-puts -split-input-file
 
 echo
-echo "Running pass without FileCheck (FileCheck not built)..."
-echo "======================================================="
-echo "If the pass runs without errors, it's working!"
+echo "Running FileCheck to validate optimization..."
+echo "============================================"
+build/bin/mlir-opt mlir/test/Dialect/OpenSHMEM/stencil-01.mlir -openshmem-coalesce-puts -split-input-file | build/bin/FileCheck mlir/test/Dialect/OpenSHMEM/stencil-01.mlir
 
 if [ $? -eq 0 ]; then
     echo
-    echo "SUCCESS: CoalescePuts pass ran successfully!"
+    echo "SUCCESS: CoalescePuts pass correctly optimized stencil patterns!"
+    echo "All FileCheck patterns matched - optimization working as expected!"
 else
     echo
-    echo "FAILED: CoalescePuts pass failed to run!"
+    echo "FAILED: CoalescePuts pass test failed!"
+    echo "FileCheck validation failed - optimization not working correctly!"
     exit 1
 fi
 

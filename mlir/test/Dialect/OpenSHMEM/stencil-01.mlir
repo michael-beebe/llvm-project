@@ -18,10 +18,8 @@ func.func @stencil_1d_consecutive(%local_data: memref<100xf32>,
 }
 
 // CHECK-LABEL: func.func @stencil_1d_consecutive
-// CHECK: %[[SIZE:.*]] = arith.constant 4 : index
-// CHECK: %[[TOTAL_SIZE:.*]] = arith.addi %[[SIZE]], %[[SIZE]] : index
-// CHECK: %[[FINAL_SIZE:.*]] = arith.addi %[[TOTAL_SIZE]], %[[SIZE]] : index
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[FINAL_SIZE]], %{{.*}}) : !openshmem.symmetric_memref<f32>, memref<100xf32>, index, i32
+// CHECK: %[[FINAL_SIZE:.*]] = arith.constant 12 : index
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[FINAL_SIZE]], %{{.*}}) : <f32>, memref<100xf32>, index, i32
 // CHECK-NOT: openshmem.putmem
 
 // -----
@@ -43,9 +41,9 @@ func.func @stencil_different_pes(%local_data: memref<100xf32>,
 }
 
 // CHECK-LABEL: func.func @stencil_different_pes
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %{{.*}}, %c0) : !openshmem.symmetric_memref<f32>, memref<100xf32>, index, i32
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %{{.*}}, %c1) : !openshmem.symmetric_memref<f32>, memref<100xf32>, index, i32
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %{{.*}}, %c2) : !openshmem.symmetric_memref<f32>, memref<100xf32>, index, i32
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %{{.*}}, %c0_i32) : <f32>, memref<100xf32>, index, i32
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %{{.*}}, %c1_i32) : <f32>, memref<100xf32>, index, i32
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %{{.*}}, %c2_i32) : <f32>, memref<100xf32>, index, i32
 
 // -----
 
@@ -69,10 +67,8 @@ func.func @stencil_block_coalescing(%local_data: memref<100xf32>,
 }
 
 // CHECK-LABEL: func.func @stencil_block_coalescing
-// CHECK: %[[SIZE:.*]] = arith.constant 4 : index
-// CHECK: %[[TOTAL_SIZE:.*]] = arith.addi %[[SIZE]], %[[SIZE]] : index
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[TOTAL_SIZE]], %{{.*}}) : !openshmem.symmetric_memref<f32>, memref<100xf32>, index, i32
-// CHECK: arith.addi
+// CHECK: %[[TOTAL_SIZE:.*]] = arith.constant 8 : index
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[TOTAL_SIZE]], %{{.*}}) : <f32>, memref<100xf32>, index, i32
 // CHECK-NOT: openshmem.putmem
 
 // -----
@@ -102,10 +98,9 @@ func.func @stencil_2d_halo_exchange(%local_grid: memref<10x10xf32>,
 }
 
 // CHECK-LABEL: func.func @stencil_2d_halo_exchange
+// CHECK: %[[TRIPLE_SIZE:.*]] = arith.constant 120 : index
 // CHECK: %[[ROW_SIZE:.*]] = arith.constant 40 : index
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[ROW_SIZE]], %c0) : !openshmem.symmetric_memref<f32>, memref<10x10xf32>, index, i32
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[ROW_SIZE]], %c2) : !openshmem.symmetric_memref<f32>, memref<10x10xf32>, index, i32
-// CHECK: %[[DOUBLE_SIZE:.*]] = arith.addi %[[ROW_SIZE]], %[[ROW_SIZE]] : index
-// CHECK: %[[TRIPLE_SIZE:.*]] = arith.addi %[[DOUBLE_SIZE]], %[[ROW_SIZE]] : index
-// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[TRIPLE_SIZE]], %c3) : !openshmem.symmetric_memref<f32>, memref<10x10xf32>, index, i32
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[ROW_SIZE]], %c0_i32) : <f32>, memref<10x10xf32>, index, i32
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[ROW_SIZE]], %c2_i32) : <f32>, memref<10x10xf32>, index, i32
+// CHECK: openshmem.putmem(%{{.*}}, %{{.*}}, %[[TRIPLE_SIZE]], %c3_i32) : <f32>, memref<10x10xf32>, index, i32
 // CHECK-NOT: openshmem.putmem 

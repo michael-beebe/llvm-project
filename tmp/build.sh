@@ -8,7 +8,7 @@ JOBS=$(($(nproc) / 2))
 
 # Default projects and targets
 PROJECTS="mlir;clang;lld"
-TARGETS="mlir-opt mlir-translate clang"
+TARGETS="mlir-opt mlir-translate clang FileCheck"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -19,26 +19,26 @@ while [[ $# -gt 0 ]]; do
     ;;
   --mlir)
     PROJECTS="mlir"
-    TARGETS="mlir-opt mlir-translate"
+    TARGETS="mlir-opt mlir-translate FileCheck"
     echo "Building MLIR only"
     ;;
   --clang)
     PROJECTS="mlir;clang;clang-tools-extra"
-    TARGETS="mlir-opt mlir-translate clang clang-tidy clang-format"
+    TARGETS="mlir-opt mlir-translate clang clang-tidy clang-format FileCheck"
     echo "Building MLIR + Clang + Tools"
     ;;
   --all)
     PROJECTS="mlir;clang;clang-tools-extra;lld"
-    TARGETS="mlir-opt mlir-translate clang clang-tidy clang-format lld"
+    TARGETS="mlir-opt mlir-translate clang clang-tidy clang-format lld FileCheck"
     echo "Building MLIR + Clang + Tools + LLD"
     ;;
   --help | -h)
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  --clean   Clean build directory"
-    echo "  --mlir    Build MLIR only"
-    echo "  --clang   Build MLIR + Clang"
-    echo "  --all     Build MLIR + Clang + LLD (default)"
+    echo "  --mlir    Build MLIR only (includes FileCheck)"
+    echo "  --clang   Build MLIR + Clang (includes FileCheck)"
+    echo "  --all     Build MLIR + Clang + LLD (includes FileCheck, default)"
     echo "  --help    Show this help"
     exit 0
     ;;

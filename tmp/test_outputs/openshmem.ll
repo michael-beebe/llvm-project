@@ -39,10 +39,11 @@ define void @main() {
   call void @shmem_barrier_all()
   %10 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
   call void @shmem_putmem(ptr %3, ptr %10, i64 40, i32 1)
-  call void @shmem_getmem(ptr %10, ptr %3, i64 40, i32 1)
-  call void @shmem_quiet()
   %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
-  call void @free(ptr %11)
+  call void @shmem_getmem(ptr %11, ptr %3, i64 40, i32 1)
+  call void @shmem_quiet()
+  %12 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @free(ptr %12)
   call void @shmem_free(ptr %3)
   call void @shmem_finalize()
   ret void
