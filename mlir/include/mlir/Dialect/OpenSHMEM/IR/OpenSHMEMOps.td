@@ -90,7 +90,7 @@ def OpenSHMEM_MyPeOp : OpenSHMEM_Op<"my_pe", []> {
 
 def OpenSHMEM_NPesOp : OpenSHMEM_Op<"n_pes", []> {
   let summary = "Get the total number of PEs";
-  let de scription = [{
+  let description = [{
     This operation returns the total number of PEs in the OpenSHMEM program.
     
     Signature:
@@ -186,17 +186,16 @@ def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
     Arguments:
     - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
     - src: Source local memory reference on the calling PE (any type)
-    - size: Number o f bytes to transfer(index) -
-                     pe : Target PE number(i32)
-
-                              Signature :
-    ```c void shmem_putmem(void * dest, const void * src, size_t nelems,
-                              int pe);
-  ```
-
-      Note : For putmem operations,
-             nelems represents the number of bytes to transfer.
-}];
+    - size: Number of bytes to transfer (index)
+    - pe: Target PE number (i32)
+    
+    Signature:
+    ```c
+    void shmem_putmem(void *dest, const void *src, size_t nelems, int pe);
+    ```
+    
+    Note: For putmem operations, nelems represents the number of bytes to transfer.
+  }];
 
 let arguments = (ins OpenSHMEM_SymmetricMemRef
                  : $dest, AnyType

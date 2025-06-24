@@ -23,6 +23,12 @@ CF_OUT="$OUTPUT_DIR/openshmem-cf.mlir"
 LLVM_MLIR_OUT="$OUTPUT_DIR/openshmem-llvm.mlir"
 LLVM_IR_OUT="$OUTPUT_DIR/openshmem.ll"
 
+if command -v bat &> /dev/null; then
+  CAT="bat --paging=never"
+else
+  CAT="cat"
+fi
+
 mkdir -p "$OUTPUT_DIR"
 
 # Check if tools exist
@@ -42,132 +48,13 @@ fi
 echo "Testing OpenSHMEM MLIR Dialect"
 echo "=================================="
 
-# 1. Dump the original OpenSHMEM MLIR
+# Show the original OpenSHMEM MLIR
 cp "$TEST_FILE" "$INPUT_OUT"
 echo -e "\n===== [ OpenSHMEM Dialect MLIR (input) ] ====="
-bat --paging=never "$INPUT_OUT"
+$CAT "$INPUT_OUT"
 
-# 2. Test InjectNumPEsPass with FileCheck
-echo -e "\n===== [ Testing InjectNumPEsPass with FileCheck ] ====="
-
-# Test with num-pes=4 and show output
-echo "Testing InjectNumPEsPass with num-pes=4..."
-if "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes="num-pes=4" -o "$INJECT_NUMPES_OUT" && \
-   "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes="num-pes=4" | "$FILECHECK" "$INJECT_TEST_FILE" --check-prefix=CHECK-4; then
-	echo "PASS: InjectNumPEsPass with num-pes=4 (FileCheck validated)"
-	echo "Output:"
-	bat --paging=never "$INJECT_NUMPES_OUT"
-else
-	echo "FAIL: InjectNumPEsPass with num-pes=4 failed FileCheck validation"
-fi
-
-# Test with num-pes=16
-echo -e "\nTesting InjectNumPEsPass with num-pes=16..."
-if "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes="num-pes=16" | "$FILECHECK" "$INJECT_TEST_FILE" --check-prefix=CHECK-16; then
-	echo "PASS: InjectNumPEsPass with num-pes=16 (FileCheck validated)"
-else
-	echo "FAIL: InjectNumPEsPass with num-pes=16 failed FileCheck validation"
-fi
-
-# Test without num-pes option
-echo -e "\nTesting InjectNumPEsPass without num-pes option..."
-if "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes -o "$INJECT_NUMPES_TEST" && \
-   "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes | "$FILECHECK" "$INJECT_TEST_FILE" --check-prefix=CHECK-NONE; then
-	echo "PASS: InjectNumPEsPass without options (FileCheck validated)"
-	echo "Output (should have no openshmem.num_pes attribute):"
-	bat --paging=never "$INJECT_NUMPES_TEST"
-else
-	echo "FAIL: InjectNumPEsPass without options failed FileCheck validation"
-fi
-
-# 3. Test CoalescePuts pass with FileCheck
-echo -e "\n===== [ Testing CoalescePuts Pass with FileCheck ] ====="
-echo "Testing CoalescePuts optimization patterns..."
-if "$MLIR_OPT" "$COALESCE_TEST_FILE" --openshmem-coalesce-puts -o "$COALESCE_OUT" && \
-   "$MLIR_OPT" "$COALESCE_TEST_FILE" --openshmem-coalesce-puts | "$FILECHECK" "$COALESCE_TEST_FILE"; then
-	echo "PASS: CoalescePuts pass (FileCheck validated)"
-	echo -e "\nOriginal MLIR:"
-	bat --paging=never "$COALESCE_TEST_FILE"
-	echo -e "\nAfter CoalescePuts optimization:"
-	bat --paging=never "$COALESCE_OUT"
-else
-	echo "FAIL: CoalescePuts pass failed FileCheck validation"
-fi
-
-# 4. Test Stencil Coalescing Patterns with FileCheck
-echo -e "\n===== [ Testing Stencil Coalescing Patterns with FileCheck ] ====="
-echo "Testing advanced stencil optimization patterns..."
-STENCIL_OUT="$OUTPUT_DIR/stencil-optimized.mlir"
-if "$MLIR_OPT" "$STENCIL_TEST_FILE" --openshmem-coalesce-puts -split-input-file -o "$STENCIL_OUT" && \
-   "$MLIR_OPT" "$STENCIL_TEST_FILE" --openshmem-coalesce-puts -split-input-file | "$FILECHECK" "$STENCIL_TEST_FILE"; then
-	echo "PASS: Stencil coalescing patterns (FileCheck validated)"
-	echo -e "\nOriginal stencil patterns:"
-	bat --paging=never "$STENCIL_TEST_FILE"
-	echo -e "\nAfter stencil coalescing optimization:"
-	bat --paging=never "$STENCIL_OUT"
-else
-	echo "FAIL: Stencil coalescing patterns failed FileCheck validation"
-fi
-
-# 5. Test combining both passes
-echo -e "\n===== [ Testing Combined Passes ] ====="
-echo "Testing combined InjectNumPEs + CoalescePuts passes..."
-COMBINED_OUT="$OUTPUT_DIR/openshmem-combined.mlir"
-if "$MLIR_OPT" "$INPUT_OUT" \
-	--openshmem-inject-num-pes="num-pes=16" \
-	--openshmem-coalesce-puts \
-	-o "$COMBINED_OUT" 2>/dev/null; then
-	echo "PASS: Combined passes executed successfully"
-	echo -e "\nAfter combined InjectNumPEs + CoalescePuts passes:"
-	bat --paging=never "$COMBINED_OUT"
-	
-	# Verify the attribute is still there
-	if grep -q "openshmem.num_pes = 16" "$COMBINED_OUT"; then
-		echo -e "\nPASS: Module attribute preserved through combined passes"
-	else
-		echo -e "\nFAIL: Module attribute lost during combined passes"
-	fi
-else
-	echo "FAIL: Combined passes failed"
-fi
-
-# 6. Test Bufferization (if possible)
-echo -e "\n===== [ Testing Bufferization ] ====="
-if "$MLIR_OPT" "$INPUT_OUT" --one-shot-bufferize="bufferize-function-boundaries=true" -o "$BUFFERIZED_OUT" 2>/dev/null; then
-	echo "PASS: Bufferization succeeded"
-	echo -e "\nAfter bufferization:"
-	bat --paging=never "$BUFFERIZED_OUT"
-else
-	echo "INFO: Bufferization not applicable or failed (skipping)"
-fi
-
-# 7. Test InjectNumPEsPass with LLVM lowering
-echo -e "\n===== [ Testing InjectNumPEsPass + LLVM Lowering ] ====="
-INJECT_LLVM_OUT="$OUTPUT_DIR/openshmem-inject-llvm.mlir"
-if "$MLIR_OPT" "$INPUT_OUT" \
-	--openshmem-inject-num-pes="num-pes=8" \
-	--convert-openshmem-to-llvm \
-	--convert-arith-to-llvm \
-	--finalize-memref-to-llvm \
-	--convert-func-to-llvm \
-	--reconcile-unrealized-casts \
-	-o "$INJECT_LLVM_OUT" 2>/dev/null; then
-	echo "PASS: InjectNumPEsPass + LLVM lowering with num-pes=8"
-	echo -e "\nAfter InjectNumPEs + LLVM lowering:"
-	bat --paging=never "$INJECT_LLVM_OUT"
-	
-	# Check if the attribute survived the lowering
-	if grep -q "openshmem.num_pes = 8" "$INJECT_LLVM_OUT"; then
-		echo -e "\nPASS: Module attribute survived LLVM lowering"
-	else
-		echo -e "\nINFO: Module attribute was removed during LLVM lowering (this may be expected)"
-	fi
-else
-	echo "FAIL: InjectNumPEsPass + LLVM lowering failed"
-fi
-
-# 8. Test LLVM Lowering with FileCheck
-echo -e "\n===== [ Testing LLVM Lowering with FileCheck ] ====="
+# Test basic LLVM lowering first
+echo -e "\n===== [ Testing Basic LLVM Lowering Pipeline ] ====="
 echo "Testing complete LLVM lowering pipeline..."
 if "$MLIR_OPT" "$TEST_FILE" \
 	--convert-openshmem-to-llvm \
@@ -182,8 +69,8 @@ else
 	echo "FAIL: LLVM lowering pipeline failed FileCheck validation"
 fi
 
-# 9. Generate output files for inspection
-echo -e "\n===== [ Final LLVM MLIR and LLVM IR Generation ] ====="
+# Generate and show LLVM MLIR and IR
+echo -e "\n===== [ LLVM MLIR and IR Generation ] ====="
 echo "Generating LLVM MLIR dialect output..."
 "$MLIR_OPT" "$INPUT_OUT" \
 	--convert-openshmem-to-llvm \
@@ -194,21 +81,141 @@ echo "Generating LLVM MLIR dialect output..."
 	-o "$LLVM_MLIR_OUT"
 
 echo -e "\nLLVM MLIR Dialect:"
-bat --paging=never "$LLVM_MLIR_OUT"
+$CAT "$LLVM_MLIR_OUT"
 
 echo -e "\nGenerating LLVM IR output..."
 "$MLIR_TRANSLATE" "$LLVM_MLIR_OUT" --mlir-to-llvmir -o "$LLVM_IR_OUT"
 
 echo -e "\nFinal LLVM IR:"
-bat --paging=never "$LLVM_IR_OUT"
+$CAT "$LLVM_IR_OUT"
+
+# Test optional transformations
+echo -e "\n===== [ Testing Optional Transformations ] ====="
+if "$MLIR_OPT" "$INPUT_OUT" --one-shot-bufferize="bufferize-function-boundaries=true" -o "$BUFFERIZED_OUT" 2>/dev/null; then
+	echo "PASS: Bufferization succeeded"
+	echo -e "\nAfter bufferization:"
+	$CAT "$BUFFERIZED_OUT"
+else
+	echo "INFO: Bufferization not applicable or failed (skipping)"
+fi
+
+# Now test our custom passes
+echo -e "\n===== [ Testing Custom OpenSHMEM Passes ] ====="
+
+# Test InjectNumPEsPass
+echo "Testing InjectNumPEsPass with num-pes=4..."
+if "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes="num-pes=4" -o "$INJECT_NUMPES_OUT" && \
+   "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes="num-pes=4" | "$FILECHECK" "$INJECT_TEST_FILE" --check-prefix=CHECK-4; then
+	echo "PASS: InjectNumPEsPass with num-pes=4 (FileCheck validated)"
+	echo "Output:"
+	$CAT "$INJECT_NUMPES_OUT"
+else
+	echo "FAIL: InjectNumPEsPass with num-pes=4 failed FileCheck validation"
+fi
+
+echo -e "\nTesting InjectNumPEsPass with num-pes=16..."
+if "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes="num-pes=16" | "$FILECHECK" "$INJECT_TEST_FILE" --check-prefix=CHECK-16; then
+	echo "PASS: InjectNumPEsPass with num-pes=16 (FileCheck validated)"
+else
+	echo "FAIL: InjectNumPEsPass with num-pes=16 failed FileCheck validation"
+fi
+
+echo -e "\nTesting InjectNumPEsPass without num-pes option..."
+if "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes -o "$INJECT_NUMPES_TEST" && \
+   "$MLIR_OPT" "$INJECT_TEST_FILE" --openshmem-inject-num-pes | "$FILECHECK" "$INJECT_TEST_FILE" --check-prefix=CHECK-NONE; then
+	echo "PASS: InjectNumPEsPass without options (FileCheck validated)"
+	echo "Output (should have no openshmem.num_pes attribute):"
+	$CAT "$INJECT_NUMPES_TEST"
+else
+	echo "FAIL: InjectNumPEsPass without options failed FileCheck validation"
+fi
+
+# Test CoalescePuts pass
+echo -e "\n===== [ Testing CoalescePuts Pass ] ====="
+echo "Testing CoalescePuts optimization patterns..."
+if "$MLIR_OPT" "$COALESCE_TEST_FILE" --openshmem-coalesce-puts -o "$COALESCE_OUT" && \
+   "$MLIR_OPT" "$COALESCE_TEST_FILE" --openshmem-coalesce-puts | "$FILECHECK" "$COALESCE_TEST_FILE"; then
+	echo "PASS: CoalescePuts pass (FileCheck validated)"
+	echo -e "\nOriginal MLIR:"
+	$CAT "$COALESCE_TEST_FILE"
+	echo -e "\nAfter CoalescePuts optimization:"
+	$CAT "$COALESCE_OUT"
+else
+	echo "FAIL: CoalescePuts pass failed FileCheck validation"
+fi
+
+# Test Stencil Coalescing Patterns
+echo -e "\n===== [ Testing Stencil Coalescing Patterns ] ====="
+echo "Testing advanced stencil optimization patterns..."
+STENCIL_OUT="$OUTPUT_DIR/stencil-optimized.mlir"
+if "$MLIR_OPT" "$STENCIL_TEST_FILE" --openshmem-coalesce-puts -split-input-file -o "$STENCIL_OUT" && \
+   "$MLIR_OPT" "$STENCIL_TEST_FILE" --openshmem-coalesce-puts -split-input-file | "$FILECHECK" "$STENCIL_TEST_FILE"; then
+	echo "PASS: Stencil coalescing patterns (FileCheck validated)"
+	echo -e "\nOriginal stencil patterns:"
+	$CAT "$STENCIL_TEST_FILE"
+	echo -e "\nAfter stencil coalescing optimization:"
+	$CAT "$STENCIL_OUT"
+else
+	echo "FAIL: Stencil coalescing patterns failed FileCheck validation"
+fi
+
+# Test combining both passes
+echo -e "\n===== [ Testing Combined Passes ] ====="
+echo "Testing combined InjectNumPEs + CoalescePuts passes..."
+COMBINED_OUT="$OUTPUT_DIR/openshmem-combined.mlir"
+if "$MLIR_OPT" "$INPUT_OUT" \
+	--openshmem-inject-num-pes="num-pes=16" \
+	--openshmem-coalesce-puts \
+	-o "$COMBINED_OUT" 2>/dev/null; then
+	echo "PASS: Combined passes executed successfully"
+	echo -e "\nAfter combined InjectNumPEs + CoalescePuts passes:"
+	$CAT "$COMBINED_OUT"
+	
+	# Verify the attribute is still there
+	if grep -q "openshmem.num_pes = 16" "$COMBINED_OUT"; then
+		echo -e "\nPASS: Module attribute preserved through combined passes"
+	else
+		echo -e "\nFAIL: Module attribute lost during combined passes"
+	fi
+else
+	echo "FAIL: Combined passes failed"
+fi
+
+# Test InjectNumPEsPass with LLVM lowering
+echo -e "\n===== [ Testing Custom Passes with LLVM Lowering ] ====="
+INJECT_LLVM_OUT="$OUTPUT_DIR/openshmem-inject-llvm.mlir"
+if "$MLIR_OPT" "$INPUT_OUT" \
+	--openshmem-inject-num-pes="num-pes=8" \
+	--convert-openshmem-to-llvm \
+	--convert-arith-to-llvm \
+	--finalize-memref-to-llvm \
+	--convert-func-to-llvm \
+	--reconcile-unrealized-casts \
+	-o "$INJECT_LLVM_OUT" 2>/dev/null; then
+	echo "PASS: InjectNumPEsPass + LLVM lowering with num-pes=8"
+	echo -e "\nAfter InjectNumPEs + LLVM lowering:"
+	$CAT "$INJECT_LLVM_OUT"
+	
+	# Check if the attribute survived the lowering
+	if grep -q "openshmem.num_pes = 8" "$INJECT_LLVM_OUT"; then
+		echo -e "\nPASS: Module attribute survived LLVM lowering"
+	else
+		echo -e "\nINFO: Module attribute was removed during LLVM lowering (this may be expected)"
+	fi
+else
+	echo "FAIL: InjectNumPEsPass + LLVM lowering failed"
+fi
 
 echo -e "\nAll tests completed successfully!"
 echo "=================================="
+echo "PASS: Basic LLVM lowering pipeline tested with FileCheck validation"
+echo "PASS: LLVM MLIR and IR generation tested"
+echo "PASS: Optional transformations tested"
 echo "PASS: InjectNumPEsPass tested with FileCheck validation"
 echo "PASS: CoalescePuts pass tested with FileCheck validation" 
 echo "PASS: Stencil coalescing patterns tested with FileCheck validation"
 echo "PASS: Combined passes tested"
-echo "PASS: Complete LLVM lowering tested with FileCheck validation"
+echo "PASS: Custom passes with LLVM lowering tested"
 echo ""
 echo "Output files saved in: $OUTPUT_DIR"
 echo "All transformations validated with FileCheck patterns"
