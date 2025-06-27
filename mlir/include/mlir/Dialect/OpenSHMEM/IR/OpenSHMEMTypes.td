@@ -66,7 +66,7 @@ def OpenSHMEM_Retval : OpenSHMEM_Type<"Retval", "retval"> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_memref"> {
-  l et summary = "Symmetric memory reference (distinct from memref)";
+  let summary = "Symmetric memory reference (distinct from memref)";
   let description = [{
     Represents a reference to symmetric memory that is accessible from all PEs.
     This type is distinct from standard memref: it is only produced by openshmem.malloc

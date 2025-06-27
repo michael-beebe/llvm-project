@@ -184,7 +184,8 @@ def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
     data has been copied out of the source array on the local PE.
     
     Arguments:
-    - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
+    - dest: Destination symmetric memory reference on the target 
+      PE (!openshmem.symmetric_memref<T>)
     - src: Source local memory reference on the calling PE (any type)
     - size: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -221,7 +222,8 @@ def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (any type)
-    - src: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
+    - src: Source symmetric memory reference on the target
+      PE (!openshmem.symmetric_memref<T>)
     - size: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
