@@ -75,6 +75,8 @@ inline bool isSingleScalar(const VPValue *VPV) {
     return PreservesUniformity(WidenR->getOpcode()) &&
            all_of(WidenR->operands(), isSingleScalar);
   }
+  if (auto *WidenR = dyn_cast<VPWidenSelectRecipe>(VPV))
+    return all_of(WidenR->operands(), isSingleScalar);
   if (auto *VPI = dyn_cast<VPInstruction>(VPV))
     return VPI->isSingleScalar() || VPI->isVectorToScalar() ||
            (PreservesUniformity(VPI->getOpcode()) &&
@@ -232,13 +234,8 @@ public:
   /// single edge between \p From and \p To.
   static void insertOnEdge(VPBlockBase *From, VPBlockBase *To,
                            VPBlockBase *BlockPtr) {
-    auto &Successors = From->getSuccessors();
-    auto &Predecessors = To->getPredecessors();
-    assert(count(Successors, To) == 1 && count(Predecessors, From) == 1 &&
-           "must have single between From and To");
-    unsigned SuccIdx = std::distance(Successors.begin(), find(Successors, To));
-    unsigned PredIx =
-        std::distance(Predecessors.begin(), find(Predecessors, From));
+    unsigned SuccIdx = From->getIndexForSuccessor(To);
+    unsigned PredIx = To->getIndexForPredecessor(From);
     VPBlockUtils::connectBlocks(From, BlockPtr, -1, SuccIdx);
     VPBlockUtils::connectBlocks(BlockPtr, To, PredIx, -1);
   }
