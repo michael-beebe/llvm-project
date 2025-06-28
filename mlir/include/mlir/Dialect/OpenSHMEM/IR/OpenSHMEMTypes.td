@@ -87,18 +87,17 @@ def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_mem
 // Team type
 //===----------------------------------------------------------------------===//
 
-// TODO: implement teams
-
 def OpenSHMEM_Team : OpenSHMEM_Type<"Team", "team"> {
   let summary = "Team type for OpenSHMEM operations";
   let description = [{
-    Represents a team of PEs in an OpenSHMEM program.
+    Represents a team of PEs in an OpenSHMEM program. Teams are subsets of PEs
+    that can perform collective operations independently. A team is created by
+    splitting an existing team (or the world team) and can be used for scoped
+    collective operations like barriers, broadcasts, and reductions.
+    
+    Teams provide a way to organize PEs into logical groups for communication
+    and synchronization. Each PE can be a member of multiple teams simultaneously.
   }];
-  let parameters = (ins
-    "Type":$elementType
-  );
-  
-  let assemblyFormat = "`<` $elementType `>`";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMTYPES_TD
