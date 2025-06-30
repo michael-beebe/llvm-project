@@ -5,8 +5,7 @@ set -e
 BUILD_DIR="build"
 TEST_FILE="mlir/test/Dialect/OpenSHMEM/openshmemops.mlir"
 INJECT_TEST_FILE="mlir/test/Dialect/OpenSHMEM/inject-num-pes.mlir"
-COALESCE_TEST_FILE="mlir/test/Dialect/OpenSHMEM/coalesce-puts.mlir"
-STENCIL_TEST_FILE="mlir/test/Dialect/OpenSHMEM/stencil-01.mlir"
+
 MLIR_OPT="$BUILD_DIR/bin/mlir-opt"
 MLIR_TRANSLATE="$BUILD_DIR/bin/mlir-translate"
 FILECHECK="$BUILD_DIR/bin/FileCheck"
@@ -14,7 +13,7 @@ OUTPUT_DIR="tmp/test_outputs"
 INPUT_OUT="$OUTPUT_DIR/openshmem-input.mlir"
 INJECT_NUMPES_OUT="$OUTPUT_DIR/openshmem-inject-numpes.mlir"
 INJECT_NUMPES_TEST="$OUTPUT_DIR/openshmem-inject-numpes-test.mlir"
-COALESCE_OUT="$OUTPUT_DIR/openshmem-coalesce.mlir"
+
 COMBINED_OUT="$OUTPUT_DIR/openshmem-combined.mlir"
 BUFFERIZED_OUT="$OUTPUT_DIR/openshmem-bufferized.mlir"
 AFFINE_OUT="$OUTPUT_DIR/openshmem-affine.mlir"
@@ -130,33 +129,20 @@ else
 	echo "FAIL: InjectNumPEsPass without options failed FileCheck validation"
 fi
 
-# Test CoalescePuts pass
-echo -e "\n===== [ Testing CoalescePuts Pass ] ====="
-echo "Testing CoalescePuts optimization patterns..."
-if "$MLIR_OPT" "$COALESCE_TEST_FILE" --openshmem-coalesce-puts -o "$COALESCE_OUT" && \
-   "$MLIR_OPT" "$COALESCE_TEST_FILE" --openshmem-coalesce-puts | "$FILECHECK" "$COALESCE_TEST_FILE"; then
-	echo "PASS: CoalescePuts pass (FileCheck validated)"
-	echo -e "\nOriginal MLIR:"
-	$CAT "$COALESCE_TEST_FILE"
-	echo -e "\nAfter CoalescePuts optimization:"
-	$CAT "$COALESCE_OUT"
+# Test Coalescing Passes using specialized scripts
+echo -e "\n===== [ Testing Coalescing Passes ] ====="
+echo "Running CoalescePuts pass tests..."
+if ./tmp/test-coalesce-puts.sh; then
+	echo "PASS: CoalescePuts tests completed successfully"
 else
-	echo "FAIL: CoalescePuts pass failed FileCheck validation"
+	echo "FAIL: CoalescePuts tests failed"
 fi
 
-# Test Stencil Coalescing Patterns
-echo -e "\n===== [ Testing Stencil Coalescing Patterns ] ====="
-echo "Testing advanced stencil optimization patterns..."
-STENCIL_OUT="$OUTPUT_DIR/stencil-optimized.mlir"
-if "$MLIR_OPT" "$STENCIL_TEST_FILE" --openshmem-coalesce-puts -split-input-file -o "$STENCIL_OUT" && \
-   "$MLIR_OPT" "$STENCIL_TEST_FILE" --openshmem-coalesce-puts -split-input-file | "$FILECHECK" "$STENCIL_TEST_FILE"; then
-	echo "PASS: Stencil coalescing patterns (FileCheck validated)"
-	echo -e "\nOriginal stencil patterns:"
-	$CAT "$STENCIL_TEST_FILE"
-	echo -e "\nAfter stencil coalescing optimization:"
-	$CAT "$STENCIL_OUT"
+echo -e "\nRunning CoalesceGets pass tests..."
+if ./tmp/test-coalesce-gets.sh; then
+	echo "PASS: CoalesceGets tests completed successfully"
 else
-	echo "FAIL: Stencil coalescing patterns failed FileCheck validation"
+	echo "FAIL: CoalesceGets tests failed"
 fi
 
 # Test combining both passes
@@ -212,10 +198,13 @@ echo "PASS: Basic LLVM lowering pipeline tested with FileCheck validation"
 echo "PASS: LLVM MLIR and IR generation tested"
 echo "PASS: Optional transformations tested"
 echo "PASS: InjectNumPEsPass tested with FileCheck validation"
-echo "PASS: CoalescePuts pass tested with FileCheck validation" 
-echo "PASS: Stencil coalescing patterns tested with FileCheck validation"
+echo "PASS: Coalescing passes (CoalescePuts and CoalesceGets) tested with specialized scripts"
 echo "PASS: Combined passes tested"
 echo "PASS: Custom passes with LLVM lowering tested"
 echo ""
 echo "Output files saved in: $OUTPUT_DIR"
 echo "All transformations validated with FileCheck patterns"
+echo ""
+echo "Individual pass testing available via:"
+echo "  - ./tmp/test-coalesce-puts.sh (CoalescePuts + Stencil patterns)"
+echo "  - ./tmp/test-coalesce-gets.sh (CoalesceGets patterns)"

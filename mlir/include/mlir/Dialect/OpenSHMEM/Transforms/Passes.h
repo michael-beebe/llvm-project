@@ -20,6 +20,9 @@ namespace openshmem {
 /// Create a pass that coalesces consecutive OpenSHMEM put operations.
 std::unique_ptr<Pass> createCoalescePutsPass();
 
+/// Create a pass that coalesces consecutive OpenSHMEM get operations.
+std::unique_ptr<Pass> createCoalesceGetsPass();
+
 /// Create a pass that injects or overrides the openshmem.num_pes module
 /// attribute.
 std::unique_ptr<Pass> createInjectNumPEsPass();

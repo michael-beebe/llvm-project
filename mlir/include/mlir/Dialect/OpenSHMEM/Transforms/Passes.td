@@ -31,6 +31,26 @@ def CoalescePuts : Pass<"openshmem-coalesce-puts"> {
   let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
 }
 
+def CoalesceGets : Pass<"openshmem-coalesce-gets"> {
+  let summary = "Coalesce consecutive OpenSHMEM get operations";
+  let description = [{
+    This pass identifies consecutive get operations targeting the same PE
+    and attempts to coalesce them into fewer, larger transfers. This optimization
+    is particularly beneficial for stencil computations and bulk data transfers
+    where data is fetched in multiple small messages.
+    
+    The pass looks for patterns like:
+    ```
+    openshmem.get %dest1, %src1, %size1, %pe
+    openshmem.get %dest2, %src2, %size2, %pe
+    ```
+    
+    And transforms them into more efficient single transfers when possible.
+  }];
+  let constructor = "mlir::openshmem::createCoalesceGetsPass()";
+  let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
+}
+
 def InjectNumPEs : Pass<"openshmem-inject-num-pes"> {
   let summary = "Injects or overrides the openshmem.num_pes module attribute";
   let description = [{

@@ -6,6 +6,8 @@ module attributes {openshmem.num_pes = 8 : i32} {
   llvm.func @shmem_quiet()
   llvm.func @shmem_getmem(!llvm.ptr, !llvm.ptr, i64, i32)
   llvm.func @shmem_putmem(!llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_team_sync(!llvm.ptr)
+  llvm.mlir.global external constant @SHMEM_TEAM_WORLD() {addr_space = 0 : i32} : !llvm.ptr
   llvm.func @shmem_barrier_all()
   llvm.func @shmem_malloc(i64) -> !llvm.ptr
   llvm.func @shmem_n_pes() -> i32
@@ -33,14 +35,16 @@ module attributes {openshmem.num_pes = 8 : i32} {
     %17 = llvm.mlir.constant(40 : index) : i64
     %18 = llvm.mlir.constant(1 : i32) : i32
     llvm.call @shmem_barrier_all() : () -> ()
-    %19 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    llvm.call @shmem_putmem(%3, %19, %17, %18) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
-    %20 = llvm.mlir.constant(40 : index) : i64
-    %21 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    llvm.call @shmem_getmem(%21, %3, %20, %18) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
-    llvm.call @shmem_quiet() : () -> ()
+    %19 = llvm.mlir.addressof @SHMEM_TEAM_WORLD : !llvm.ptr
+    llvm.call @shmem_team_sync(%19) : (!llvm.ptr) -> ()
+    %20 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_putmem(%3, %20, %17, %18) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    %21 = llvm.mlir.constant(40 : index) : i64
     %22 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
-    llvm.call @free(%22) : (!llvm.ptr) -> ()
+    llvm.call @shmem_getmem(%22, %3, %21, %18) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_quiet() : () -> ()
+    %23 = llvm.extractvalue %16[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @free(%23) : (!llvm.ptr) -> ()
     llvm.call @shmem_free(%3) : (!llvm.ptr) -> ()
     llvm.call @shmem_finalize() : () -> ()
     llvm.return

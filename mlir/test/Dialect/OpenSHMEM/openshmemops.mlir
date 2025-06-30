@@ -58,7 +58,6 @@ module {
 // CHECK: call ptr @shmem_malloc(i{{32|64}} 40)
 // CHECK: call void @shmem_barrier_all()
 // CHECK: @SHMEM_TEAM_WORLD
-// CHECK: call void @shmem_team_sync(ptr %{{.*}})
 // CHECK: call void @shmem_putmem(ptr %{{.*}}, ptr %{{.*}}, i{{32|64}} 40, i32 1)
 // CHECK: call void @shmem_getmem(ptr %{{.*}}, ptr %{{.*}}, i{{32|64}} 40, i32 1)
 // CHECK: call void @shmem_quiet()

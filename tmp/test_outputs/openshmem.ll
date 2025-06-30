@@ -1,6 +1,8 @@
 ; ModuleID = 'LLVMDialectModule'
 source_filename = "LLVMDialectModule"
 
+@SHMEM_TEAM_WORLD = external constant ptr
+
 declare void @free(ptr)
 
 declare ptr @malloc(i64)
@@ -14,6 +16,8 @@ declare void @shmem_quiet()
 declare void @shmem_getmem(ptr, ptr, i64, i32)
 
 declare void @shmem_putmem(ptr, ptr, i64, i32)
+
+declare void @shmem_team_sync(ptr)
 
 declare void @shmem_barrier_all()
 
@@ -37,6 +41,7 @@ define void @main() {
   %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
   %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
   call void @shmem_barrier_all()
+  call void @shmem_team_sync(ptr @SHMEM_TEAM_WORLD)
   %10 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
   call void @shmem_putmem(ptr %3, ptr %10, i64 40, i32 1)
   %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0

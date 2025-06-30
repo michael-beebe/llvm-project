@@ -9,6 +9,8 @@ module {
     %c40_0 = arith.constant 40 : index
     %c1_i32 = arith.constant 1 : i32
     openshmem.barrier_all
+    %2 = openshmem.team_world -> !openshmem.team
+    openshmem.team_sync(%2) : !openshmem.team
     openshmem.putmem(%ptr, %alloc, %c40_0, %c1_i32) : <i32>, memref<10xi32>, index, i32
     %c40_1 = arith.constant 40 : index
     openshmem.getmem(%alloc, %ptr, %c40_1, %c1_i32) : memref<10xi32>, <i32>, index, i32

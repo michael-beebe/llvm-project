@@ -24,6 +24,12 @@ namespace openshmem {
 /// performance.
 std::unique_ptr<Pass> createCoalescePutsPass();
 
+/// Create a pass that coalesces consecutive OpenSHMEM get operations.
+/// This pass looks for adjacent get operations targeting the same PE and
+/// attempts to combine them into fewer, larger transfers for better
+/// performance.
+std::unique_ptr<Pass> createCoalesceGetsPass();
+
 /// Create a pass that injects or overrides the openshmem.num_pes module
 /// attribute. This pass allows specifying the number of PEs at compile time for
 /// optimization purposes, even though the actual number is determined at

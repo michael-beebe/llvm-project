@@ -8,6 +8,8 @@ module attributes {openshmem.num_pes = 16 : i32} {
     %ptr = openshmem.malloc(%c40) : index -> <i32>
     %alloc = memref.alloc() : memref<10xi32>
     openshmem.barrier_all
+    %2 = openshmem.team_world -> !openshmem.team
+    openshmem.team_sync(%2) : !openshmem.team
     openshmem.putmem(%ptr, %alloc, %c40, %c1_i32) : <i32>, memref<10xi32>, index, i32
     openshmem.getmem(%alloc, %ptr, %c40, %c1_i32) : memref<10xi32>, <i32>, index, i32
     openshmem.quiet

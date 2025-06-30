@@ -22,6 +22,10 @@ module {
 
     // Barrier all PEs
     openshmem.barrier_all
+    
+    // Demonstrate team usage
+    %world_team = openshmem.team_world -> !openshmem.team
+    openshmem.team_sync(%world_team) : !openshmem.team
 
     // Put raw memory to PE 1 (no result)
     openshmem.putmem(%sym_mem, %local_data, %put_size, %target_pe) : 
@@ -53,6 +57,7 @@ module {
 // CHECK: call i32 @shmem_n_pes()
 // CHECK: call ptr @shmem_malloc(i{{32|64}} 40)
 // CHECK: call void @shmem_barrier_all()
+// CHECK: @SHMEM_TEAM_WORLD
 // CHECK: call void @shmem_putmem(ptr %{{.*}}, ptr %{{.*}}, i{{32|64}} 40, i32 1)
 // CHECK: call void @shmem_getmem(ptr %{{.*}}, ptr %{{.*}}, i{{32|64}} 40, i32 1)
 // CHECK: call void @shmem_quiet()

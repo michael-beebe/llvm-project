@@ -1,4 +1,4 @@
-//===- CoalescePuts.cpp - Coalesce consecutive OpenSHMEM putmem -----------===//
+//===- CoalesceGets.cpp - Coalesce consecutive OpenSHMEM getmem -----------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file implements a pass that coalesces consecutive OpenSHMEM putmem
+// This file implements a pass that coalesces consecutive OpenSHMEM getmem
 // operations targeting the same PE into fewer, larger transfers.
 //
 //===----------------------------------------------------------------------===//
@@ -22,7 +22,7 @@
 namespace mlir {
 namespace openshmem {
 
-#define GEN_PASS_DEF_COALESCEPUTS
+#define GEN_PASS_DEF_COALESCEGETS
 #include "mlir/Dialect/OpenSHMEM/Transforms/Passes.h.inc"
 
 namespace {
@@ -31,9 +31,9 @@ namespace {
 // Helper Functions
 //===----------------------------------------------------------------------===//
 
-/// Check if two putmem operations can be coalesced.
+/// Check if two getmem operations can be coalesced.
 /// They must target the same PE and have compatible memory layouts.
-static bool canCoalesce(PutmemOp first, PutmemOp second) {
+static bool canCoalesce(GetmemOp first, GetmemOp second) {
   // Must target the same PE
   if (first.getPe() != second.getPe())
     return false;
@@ -51,7 +51,7 @@ static bool canCoalesce(PutmemOp first, PutmemOp second) {
 
 /// Calculate the total size for coalesced operations
 static Value calculateTotalSize(PatternRewriter &rewriter, Location loc,
-                                SmallVectorImpl<PutmemOp> &ops) {
+                                SmallVectorImpl<GetmemOp> &ops) {
   if (ops.empty())
     return nullptr;
 
@@ -72,30 +72,30 @@ static Value calculateTotalSize(PatternRewriter &rewriter, Location loc,
 // Coalescing Patterns
 //===----------------------------------------------------------------------===//
 
-/// Pattern to coalesce consecutive putmem operations to the same PE.
+/// Pattern to coalesce consecutive getmem operations from the same PE.
 /// This optimization is particularly beneficial for stencil communication
-/// patterns.
-struct CoalesceConsecutivePuts : public OpRewritePattern<PutmemOp> {
-  using OpRewritePattern<PutmemOp>::OpRewritePattern;
+/// patterns and bulk data transfers.
+struct CoalesceConsecutiveGets : public OpRewritePattern<GetmemOp> {
+  using OpRewritePattern<GetmemOp>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(PutmemOp putOp,
+  LogicalResult matchAndRewrite(GetmemOp getOp,
                                 PatternRewriter &rewriter) const override {
-    // Collect consecutive putmem operations that can be coalesced
-    SmallVector<PutmemOp, 4> coalesceable;
-    coalesceable.push_back(putOp);
+    // Collect consecutive getmem operations that can be coalesced
+    SmallVector<GetmemOp, 4> coalesceable;
+    coalesceable.push_back(getOp);
 
-    // Look for consecutive putmem operations
-    Operation *nextOp = putOp->getNextNode();
+    // Look for consecutive getmem operations
+    Operation *nextOp = getOp->getNextNode();
     while (nextOp) {
-      auto nextPut = dyn_cast<PutmemOp>(nextOp);
-      if (!nextPut)
+      auto nextGet = dyn_cast<GetmemOp>(nextOp);
+      if (!nextGet)
         break;
 
       // Check if this operation can be coalesced with the first one
-      if (!canCoalesce(putOp, nextPut))
+      if (!canCoalesce(getOp, nextGet))
         break;
 
-      coalesceable.push_back(nextPut);
+      coalesceable.push_back(nextGet);
       nextOp = nextOp->getNextNode();
     }
 
@@ -104,15 +104,15 @@ struct CoalesceConsecutivePuts : public OpRewritePattern<PutmemOp> {
       return failure();
 
     // Create the coalesced operation
-    Location loc = putOp.getLoc();
+    Location loc = getOp.getLoc();
     Value totalSize = calculateTotalSize(rewriter, loc, coalesceable);
 
-    // Create the new coalesced putmem operation
-    rewriter.create<PutmemOp>(loc, putOp.getDest(), putOp.getSrc(), totalSize,
-                              putOp.getPe());
+    // Create the new coalesced getmem operation
+    rewriter.create<GetmemOp>(loc, getOp.getDest(), getOp.getSrc(), totalSize,
+                              getOp.getPe());
 
     // Remove all the original operations
-    for (PutmemOp op : coalesceable) {
+    for (GetmemOp op : coalesceable) {
       rewriter.eraseOp(op);
     }
 
@@ -120,21 +120,21 @@ struct CoalesceConsecutivePuts : public OpRewritePattern<PutmemOp> {
   }
 };
 
-/// Pattern to coalesce putmem operations within the same basic block
+/// Pattern to coalesce getmem operations within the same basic block
 /// that target the same PE, even if they're not immediately consecutive.
-struct CoalesceBlockPuts : public OpRewritePattern<PutmemOp> {
-  using OpRewritePattern<PutmemOp>::OpRewritePattern;
+struct CoalesceBlockGets : public OpRewritePattern<GetmemOp> {
+  using OpRewritePattern<GetmemOp>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(PutmemOp putOp,
+  LogicalResult matchAndRewrite(GetmemOp getOp,
                                 PatternRewriter &rewriter) const override {
-    Block *block = putOp->getBlock();
-    SmallVector<PutmemOp, 4> sameTargetOps;
+    Block *block = getOp->getBlock();
+    SmallVector<GetmemOp, 4> sameTargetOps;
 
-    // Find all putmem operations in the same block targeting the same PE
+    // Find all getmem operations in the same block targeting the same PE
     for (Operation &op : *block) {
-      if (auto otherPut = dyn_cast<PutmemOp>(&op)) {
-        if (otherPut.getPe() == putOp.getPe() && canCoalesce(putOp, otherPut)) {
-          sameTargetOps.push_back(otherPut);
+      if (auto otherGet = dyn_cast<GetmemOp>(&op)) {
+        if (otherGet.getPe() == getOp.getPe() && canCoalesce(getOp, otherGet)) {
+          sameTargetOps.push_back(otherGet);
         }
       }
     }
@@ -144,19 +144,19 @@ struct CoalesceBlockPuts : public OpRewritePattern<PutmemOp> {
       return failure();
 
     // For safety, only coalesce if there are no interfering operations
-    // between the putmem operations (this is a conservative approach)
+    // between the getmem operations (this is a conservative approach)
 
     // Create one large coalesced operation
-    Location loc = putOp.getLoc();
+    Location loc = getOp.getLoc();
     Value totalSize = calculateTotalSize(rewriter, loc, sameTargetOps);
 
     // Insert the coalesced operation at the location of the first operation
     rewriter.setInsertionPoint(sameTargetOps[0]);
-    rewriter.create<PutmemOp>(loc, putOp.getDest(), putOp.getSrc(), totalSize,
-                              putOp.getPe());
+    rewriter.create<GetmemOp>(loc, getOp.getDest(), getOp.getSrc(), totalSize,
+                              getOp.getPe());
 
     // Remove all original operations
-    for (PutmemOp op : sameTargetOps) {
+    for (GetmemOp op : sameTargetOps) {
       rewriter.eraseOp(op);
     }
 
@@ -168,7 +168,7 @@ struct CoalesceBlockPuts : public OpRewritePattern<PutmemOp> {
 // Pass Implementation
 //===----------------------------------------------------------------------===//
 
-struct CoalescePutsPass : public impl::CoalescePutsBase<CoalescePutsPass> {
+struct CoalesceGetsPass : public impl::CoalesceGetsBase<CoalesceGetsPass> {
   void runOnOperation() override {
     Operation *op = getOperation();
     MLIRContext *context = &getContext();
@@ -177,7 +177,7 @@ struct CoalescePutsPass : public impl::CoalescePutsBase<CoalescePutsPass> {
     // First try to coalesce consecutive operations, then try block-level
     // coalescing
     RewritePatternSet patterns(context);
-    patterns.add<CoalesceConsecutivePuts>(context);
+    patterns.add<CoalesceConsecutiveGets>(context);
 
     if (failed(applyPatternsGreedily(op, std::move(patterns)))) {
       signalPassFailure();
@@ -186,7 +186,7 @@ struct CoalescePutsPass : public impl::CoalescePutsBase<CoalescePutsPass> {
 
     // Apply block-level coalescing as a second pass
     RewritePatternSet blockPatterns(context);
-    blockPatterns.add<CoalesceBlockPuts>(context);
+    blockPatterns.add<CoalesceBlockGets>(context);
 
     if (failed(applyPatternsGreedily(op, std::move(blockPatterns)))) {
       signalPassFailure();
@@ -200,9 +200,9 @@ struct CoalescePutsPass : public impl::CoalescePutsBase<CoalescePutsPass> {
 // Pass Registration
 //===----------------------------------------------------------------------===//
 
-std::unique_ptr<Pass> createCoalescePutsPass() {
-  return std::make_unique<CoalescePutsPass>();
+std::unique_ptr<Pass> createCoalesceGetsPass() {
+  return std::make_unique<CoalesceGetsPass>();
 }
 
 } // namespace openshmem
-} // namespace mlir
+} // namespace mlir 
