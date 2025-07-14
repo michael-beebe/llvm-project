@@ -36,7 +36,7 @@ The following tasks are required to complete the project, mapped to `llvm-projec
    - **NOT STARTED**: Follow MPI dialect patterns for operation structure and verification.
    - _Directory_: `mlir/lib/Dialect/OpenSHMEM` (`OpenSHMEMOps.cpp`).
 
-5. **Memory Model & Synchronization** [NOT STARTED]
+5. **Memory Model & Synchronization** [COMPLETE]
 
    - Add `shmem_fence`, `shmem_quiet`, `shmem_barrier_all` operations for memory ordering.
    - Implement memory ordering attributes (acquire, release, etc.).
@@ -50,13 +50,13 @@ The following tasks are required to complete the project, mapped to `llvm-projec
    - Create custom diagnostic categories for OpenSHMEM-specific errors.
    - _Directory_: `mlir/lib/Dialect/OpenSHMEM` (`OpenSHMEMOps.cpp`).
 
-7. **Develop Lowering Pass** [NOT STARTED]
+7. **Develop Lowering Pass** [IN PROGRESS]
 
    - Create a pass to lower `shmem.put` and `shmem.get` to OpenSHMEM library calls (e.g., `shmem_put`, `shmem_get`).
    - Use MLIR's `CallOp` for library invocation.
    - _Directory_: `mlir/lib/Conversion` (`OpenSHMEMToLLVM.cpp`).
 
-8. **Implement C-to-MLIR Conversion** [NOT STARTED]
+8. **Implement C-to-MLIR Conversion** [DEFERRED]
 
    - Modify Clang to emit OpenSHMEM dialect operations for `shmem_put` and `shmem_get` C calls.
    - Update AST-to-MLIR lowering, mapping API calls to `shmem.put`, `shmem.get`.

@@ -205,4 +205,4 @@ std::unique_ptr<Pass> createCoalesceGetsPass() {
 }
 
 } // namespace openshmem
-} // namespace mlir 
+} // namespace mlir

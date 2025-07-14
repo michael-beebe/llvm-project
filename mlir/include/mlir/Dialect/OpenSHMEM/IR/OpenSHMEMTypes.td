@@ -49,17 +49,7 @@ def OpenSHMEM_Size : OpenSHMEM_Type<"Size", "size"> {
   }];
 }
 
-//===----------------------------------------------------------------------===//
-// Return value type for error checking
-//===----------------------------------------------------------------------===//
 
-def OpenSHMEM_Retval : OpenSHMEM_Type<"Retval", "retval"> {
-  let summary = "Return value type for OpenSHMEM operations";
-  let description = [{
-    Represents a return value from OpenSHMEM operations that can be used
-    for error checking. Typically corresponds to int in C.
-  }];
-}
 
 //===----------------------------------------------------------------------===//
 // Symmetric memory type
@@ -72,15 +62,13 @@ def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_mem
     This type is distinct from standard memref: it is only produced by openshmem.malloc
     and is required for all OpenSHMEM operations that use symmetric memory (e.g., putmem, getmem, free).
     Symmetric memory has the same virtual address on all PEs and can be used in
-    one-sided communication operations. Only values of this type are valid for
-    OpenSHMEM symmetric memory operations.
-  }];
-  
-  let parameters = (ins
-    "Type":$elementType
-  );
-  
-  let assemblyFormat = "`<` $elementType `>`";
+    one-sided communication operations. Only  values of this type are valid for
+                        OpenSHMEM symmetric memory operations.
+}];
+
+let parameters = (ins "Type" : $elementType);
+
+let assemblyFormat = "`<` $elementType `>`";
 }
 
 //===----------------------------------------------------------------------===//

@@ -41,14 +41,16 @@ def CoalesceGets : Pass<"openshmem-coalesce-gets"> {
     
     The pass looks for patterns like:
     ```
-    openshmem.get %dest1, %src1, %size1, %pe
-    openshmem.get %dest2, %src2, %size2, %pe
+    openshmem.get %dest1, %sr c1,
+      % size1, % pe openshmem.get % dest2, % src2, % size2,
+      % pe
     ```
-    
-    And transforms them into more efficient single transfers when possible.
-  }];
-  let constructor = "mlir::openshmem::createCoalesceGetsPass()";
-  let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
+
+          And transforms them into more efficient single transfers when
+              possible.
+}];
+let constructor = "mlir::openshmem::createCoalesceGetsPass()";
+let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect"];
 }
 
 def InjectNumPEs : Pass<"openshmem-inject-num-pes"> {

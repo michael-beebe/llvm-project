@@ -129,15 +129,15 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
     void *shmem_malloc(size_t size);
     ```
     
-    This operation can optionally return an `!openshmem.retval` value that can be used
-    to check for errors.
+    This operation can optionally return an `i32` value that can be used
+    to check for errors (0 for success, non-zero for failure).
   }];
 
   let arguments = (ins Index:$size);
   
   let results = (outs 
     OpenSHMEM_SymmetricMemRef:$ptr,
-    Optional<OpenSHMEM_Retval>:$retval
+    Optional<I32>:$retval
   );
   
   let assemblyFormat = "`(` $size `)` attr-dict `:` type($size) `->` "
@@ -187,16 +187,17 @@ def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
     - dest: Destination symmetric memory reference on the target 
       PE (!openshmem.symmetric_memref<T>)
     - src: Source local memory reference on the calling PE (any type)
-    - size: Number of bytes to transfer (index)
-    - pe: Target PE number (i32)
-    
-    Signature:
-    ```c
-    void shmem_putmem(void *dest, const void *src, size_t nelems, int pe);
-    ```
-    
-    Note: For putmem operations, nelems represents the number of bytes to transfer.
-  }];
+   - size : Number of bytes to transfer(index) -
+            pe : Target PE number(i32)
+
+                     Signature :
+    ```c void shmem_putmem(void * dest, const void * src, size_t nelems,
+                            int pe);
+  ```
+
+      Note : For putmem operations,
+             nelems represents the number of bytes to transfer.
+}];
 
 let arguments = (ins OpenSHMEM_SymmetricMemRef
                  : $dest, AnyType
@@ -236,10 +237,10 @@ def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
   }];
 
   let arguments = (ins
-    AnyType:$dest,
-    OpenSHMEM_SymmetricMemRef:$src,
-    Index:$size, 
-    I32:$pe
+    AnyType : $dest,
+    OpenSHMEM_SymmetricMemRef : $src,
+    Index : $size, 
+    I32 : $pe
   );
 
   let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
@@ -275,15 +276,29 @@ def OpenSHMEM_BarrierOp : OpenSHMEM_Op<"barrier", []> {
     This operation performs a barrier operation on a subset of PEs.
     This is deprecated in favor of team-based barriers.
 
+    Arguments:
+    - pe_start: Starting PE number in the active set
+    - log_pe_stride: Log2 of the stride between PEs in the active set
+    - pe_size: Number of PEs in the active set
+    - psync: Symmetric memory array used for synchronization (must be allocated with openshmem.malloc)
+
     Signature:
     ```c
     void shmem_barrier(int PE_start, int logPE_stride, int PE_size, long *pSync);
     ```
+    
+    Note: The psync array must be initialized to SHMEM_SYNC_VALUE before use and
+    must be allocated in symmetric memory accessible to all participating PEs.
   }];
 
-  let arguments = (ins I32:$pe_start, I32:$log_pe_stride, I32:$pe_size);
-  let assemblyFormat = "`(` $pe_start `,` $log_pe_stride `,` $pe_size `)` attr-dict `:` "
-                       "type($pe_start) `,` type($log_pe_stride) `,` type($pe_size)";
+  let arguments = (ins 
+    I32 : $pe_start, 
+    I32 : $log_pe_stride, 
+    I32 : $pe_size, 
+    OpenSHMEM_SymmetricMemRef : $psync
+  );
+  let assemblyFormat = "`(` $pe_start `,` $log_pe_stride `,` $pe_size `,` $psync `)` attr-dict `:` "
+                       "type($pe_start) `,` type($log_pe_stride) `,` type($pe_size) `,` type($psync)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -328,6 +343,7 @@ def OpenSHMEM_TeamSplitStridedOp : OpenSHMEM_Op<"team_split_strided", []> {
     
     Results:
     - new_team: The new team that the calling PE belongs to (or null if not participating)
+    - retval: Return value for error checking (0 for success, non-zero for failure)
     
     Signature:
     ```c
@@ -346,7 +362,7 @@ def OpenSHMEM_TeamSplitStridedOp : OpenSHMEM_Op<"team_split_strided", []> {
   
   let results = (outs 
     OpenSHMEM_Team:$new_team,
-    OpenSHMEM_Retval:$retval
+    I32:$retval
   );
   
   let assemblyFormat = "`(` $parent_team `,` $start `,` $stride `,` $size `)` attr-dict `:` "
@@ -371,7 +387,7 @@ def OpenSHMEM_TeamSplit2dOp : OpenSHMEM_Op<"team_split_2d", []> {
     Results:
     - xaxis_team: Team containing PEs in the same row
     - yaxis_team: Team containing PEs in the same column
-    - retval: Return value for error checking
+    - retval: Return value for error checking (0 for success, non-zero for failure)
     
     Signature:
     ```c
@@ -391,7 +407,7 @@ def OpenSHMEM_TeamSplit2dOp : OpenSHMEM_Op<"team_split_2d", []> {
   let results = (outs 
     OpenSHMEM_Team:$xaxis_team,
     OpenSHMEM_Team:$yaxis_team,
-    OpenSHMEM_Retval:$retval
+    I32:$retval
   );
   
   let assemblyFormat = "`(` $parent_team `,` $xrange `)` attr-dict `:` "
@@ -537,6 +553,50 @@ def OpenSHMEM_TeamSharedOp : OpenSHMEM_Op<"team_shared", []> {
 
   let results = (outs OpenSHMEM_Team:$team);
   let assemblyFormat = "attr-dict `->` type($team)";
+}
+
+//===----------------------------------------------------------------------===//
+// AlltoallOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_AlltoallmemOp : OpenSHMEM_Op<"alltoallmem", []> {
+  let summary = "All-to-all communication";
+  let description = [{
+    This operation performs an all-to-all communication operation.
+    It is a collective operation - all PEs must participate.
+
+    Arguments:
+    - team: The team to participate in
+    - dest: Destination symmetric memory reference
+    - source: Source symmetric memory reference
+    - nelems: Number of elements to transfer
+
+    Results:
+    - retval: Return value for error checking (0 for success, non-zero for failure)
+
+    Signature:
+    ```c
+    int shmem_alltoallmem(shmem_team_t team, void *dest, const void *source, size_t nelems);
+    ```
+  }];
+
+  let arguments = (ins
+    OpenSHMEM_Team:$team,
+    OpenSHMEM_SymmetricMemRef:$dest,
+    OpenSHMEM_SymmetricMemRef:$source,
+    Index:$nelems
+  );
+
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
+                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems)";
+
+  let results = (outs
+    I32:$retval
+  );
+
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
+                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `->` "
+                       "type($retval)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMOPS_TD

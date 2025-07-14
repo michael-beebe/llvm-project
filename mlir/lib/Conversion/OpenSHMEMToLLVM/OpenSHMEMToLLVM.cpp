@@ -372,9 +372,7 @@ struct BarrierOpLowering : public ConvertOpToLLVMPattern<openshmem::BarrierOp> {
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
 
-    // void shmem_barrier(int PE_start, int logPE_stride, int PE_size, long
-    // *pSync) For simplicity, pass NULL for pSync (not recommended in real
-    // usage)
+    // void shmem_barrier(int PE_start, int logPE_stride, int PE_size, long *pSync)
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {rewriter.getI32Type(), rewriter.getI32Type(), rewriter.getI32Type(),
@@ -382,13 +380,13 @@ struct BarrierOpLowering : public ConvertOpToLLVMPattern<openshmem::BarrierOp> {
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, "shmem_barrier", funcType);
 
-    // Pass NULL for pSync (simplified)
-    Value nullPtr = rewriter.create<LLVM::ZeroOp>(loc, ptrType);
+    // The psync argument is already a pointer (symmetric_memref converts to pointer)
+    Value psyncPtr = adaptor.getPsync();
 
     rewriter.create<LLVM::CallOp>(loc, funcDecl,
                                   ValueRange{adaptor.getPeStart(),
                                              adaptor.getLogPeStride(),
-                                             adaptor.getPeSize(), nullPtr});
+                                             adaptor.getPeSize(), psyncPtr});
     rewriter.eraseOp(op);
     return success();
   }
@@ -683,6 +681,43 @@ struct TeamSharedOpLowering
 };
 
 //===----------------------------------------------------------------------===//
+// AlltoallmemOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct AlltoallmemOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::AlltoallmemOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::AlltoallmemOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // int shmem_alltoallmem(shmem_team_t team, void *dest, const void *source, size_t nelems)
+    // size_t is typically the same as index type on the target platform
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        rewriter.getI32Type(),
+        {ptrType, ptrType, ptrType, sizeType});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_alltoallmem", funcType);
+
+    // dest and source are already pointers (symmetric_memref converts to pointer)
+    Value destPtr = adaptor.getDest();
+    Value sourcePtr = adaptor.getSource();
+
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{adaptor.getTeam(), destPtr, sourcePtr, adaptor.getNelems()});
+
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
 // Pass and conversion setup
 //===----------------------------------------------------------------------===//
 
@@ -738,10 +773,7 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
     LLVMTypeConverter &converter, RewritePatternSet &patterns) {
 
   // Add type conversions for OpenSHMEM types
-  converter.addConversion([](openshmem::RetvalType type) -> Type {
-    return IntegerType::get(type.getContext(),
-                            32); // return values are typically int
-  });
+  // Note: OpenSHMEM_Retval has been removed and replaced with I32
 
   converter.addConversion([](openshmem::SymmetricMemRefType type) -> Type {
     // Convert symmetric memref to LLVM pointer type for now
@@ -761,8 +793,8 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
            BarrierAllOpLowering, BarrierOpLowering, QuietOpLowering,
            TeamSplitStridedOpLowering, TeamSplit2dOpLowering,
            TeamMyPeOpLowering, TeamNPesOpLowering, TeamSyncOpLowering,
-           TeamDestroyOpLowering, TeamWorldOpLowering, TeamSharedOpLowering>(
-          converter);
+           TeamDestroyOpLowering, TeamWorldOpLowering, TeamSharedOpLowering,
+           AlltoallmemOpLowering>(converter);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(
