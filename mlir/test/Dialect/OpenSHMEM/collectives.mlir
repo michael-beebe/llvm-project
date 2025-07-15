@@ -29,7 +29,6 @@ module {
     openshmem.finalize
     return
   }
-}
 
 // CHECK-LABEL: llvm.func @test_alltoallmem()
 // CHECK: llvm.call @shmem_init() : () -> ()
@@ -197,3 +196,6 @@ func.func @test_fcollectmem() {
 // CHECK: llvm.call @shmem_free(%{{.*}}) : (!llvm.ptr) -> ()
 // CHECK: llvm.call @shmem_finalize() : () -> ()
 // CHECK: llvm.return
+
+
+}

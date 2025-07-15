@@ -210,6 +210,46 @@ let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
 }
 
 //===----------------------------------------------------------------------===//
+// PutmemNbiOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_PutmemNbiOp : OpenSHMEM_Op<"putmem_nbi", []> {
+  let summary = "Non-blocking putmem operation (matches shmem_putmem_nbi C API)";
+  let description = [{
+    This operation performs a non-blocking putmem, copying raw memory from the source
+    memory region on the calling PE to the destination symmetric memory region on 
+    the target PE. The operation copies `nelems` bytes and returns immediately after the
+    data has been copied out of the source array on the local PE.
+
+    The nonblocking put routines provide a method for copying data from a
+    contiguous local data object to a data object on a specified PE. The
+    nonblocking put routines return immediately after the data has been copied
+    out of the source array on the local PE.
+
+    Arguments:
+    - dest: Destination symmetric memory reference on the target
+      PE (!openshmem.symmetric_memref<T>)
+    - FIXME: src: Source local memory reference on the calling PE (any type)
+    - nelems: Number of bytes to transfer (index)
+    - pe: Target PE number (i32)
+
+    Signature:
+    ```c void shmem_putmem_nbi(void * dest, const void * src, size_t nelems,
+                               int pe);
+  ```
+  }];
+
+  let arguments = (ins OpenSHMEM_SymmetricMemRef
+                 : $dest, AnyType
+                 : $src, Index
+                 : $nelems, I32
+                 : $pe);
+
+  let assemblyFormat = "`(` $dest `,` $src `,` $nelems `,` $pe `)` attr-dict `:` "
+                       "type($dest) `,` type($src) `,` type($nelems) `,` type($pe)";
+}
+
+//===----------------------------------------------------------------------===//
 // GetmemOp
 //===----------------------------------------------------------------------===//
 
@@ -245,6 +285,49 @@ def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
 
   let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
                        "type($dest) `,` type($src) `,` type($size) `,` type($pe)";
+}
+
+//===----------------------------------------------------------------------===//
+// GetmemNbiOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_GetmemNbiOp : OpenSHMEM_Op<"getmem_nbi", []> {
+  let summary = "Non-blocking getmem operation (matches shmem_getmem_nbi C API)";
+  let description = [{
+    This operation performs a non-blocking getmem, copying raw memory from the source
+    symmetric memory region on the target PE to the destination local memory region on
+    the calling PE. The operation copies `size` bytes and returns immediately after the
+    data has been delivered to the destination array on the local PE.
+
+    The nonblocking get routines provide a method for copying data from a
+    data object on a specified PE to a contiguous local data object. The
+    nonblocking get routines return immediately after the data has been copied
+    into the destination array on the local PE.
+
+    Arguments:
+    - dest: Destination local memory reference on the calling PE (any type)
+    - src: Source symmetric memory reference on the target
+      PE (!openshmem.symmetric_memref<T>)
+    - nelems: Number of bytes to transfer (index)
+    - pe: Target PE number (i32)
+
+    Signature:
+    ```c
+    void shmem_getmem_nbi(void *dest, const void *src, size_t nelems, int pe);
+    ```
+
+    Note: For getmem_nbi operations, nelems represents the number of bytes to transfer.
+  }];
+
+  let arguments = (ins
+    AnyType : $dest,
+    OpenSHMEM_SymmetricMemRef : $src,
+    Index : $nelems, 
+    I32 : $pe
+  );
+
+  let assemblyFormat = "`(` $dest `,` $src `,` $nelems `,` $pe `)` attr-dict `:` "
+                       "type($dest) `,` type($src) `,` type($nelems) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -449,23 +532,22 @@ def OpenSHMEM_TeamMyPeOp : OpenSHMEM_Op<"team_my_pe", []> {
 def OpenSHMEM_TeamNPesOp : OpenSHMEM_Op<"team_n_pes", []> {
   let summary = "Get number of PEs in a team";
   let description = [{
-    This operation returns the total number of PEs in the specified team.
-    
-    Arguments:
-    - team: The team to query
-    
-    Results:
-    - n_pes: Number of PEs in the team
-    
-    Signature:
-    ```c
-    int shmem_team_n_pes(shmem_team_t team);
-    ```
-  }];
+    This operation returns the total number  of PEs in the specified team.
 
-  let arguments = (ins OpenSHMEM_Team:$team);
-  let results = (outs I32:$n_pes);
-  let assemblyFormat = "`(` $team `)` attr-dict `:` type($team) `->` type($n_pes)";
+                    Arguments : -team : The team to query
+
+                                            Results : -n_pes
+      : Number of PEs in the team
+
+            Signature :
+    ```c int shmem_team_n_pes(shmem_team_t team);
+  ```
+}];
+
+let arguments = (ins OpenSHMEM_Team : $team);
+let results = (outs I32 : $n_pes);
+let assemblyFormat =
+    "`(` $team `)` attr-dict `:` type($team) `->` type($n_pes)";
 }
 
 //===----------------------------------------------------------------------===//

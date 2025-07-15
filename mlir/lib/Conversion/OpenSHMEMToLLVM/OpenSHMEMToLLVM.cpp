@@ -269,6 +269,41 @@ struct PutmemOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemOp> {
 };
 
 //===----------------------------------------------------------------------===//
+// PutmemNbiOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct PutmemNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemNbiOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::PutmemNbiOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // src: memref (need to extract pointer)
+    Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
+
+    // void shmem_putmem_nbi(void *dest, const void *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_putmem_nbi", funcType);
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, srcPtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
 // GetmemOp Lowering
 //===----------------------------------------------------------------------===//
 
@@ -300,6 +335,41 @@ struct GetmemOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemOp> {
     rewriter.create<LLVM::CallOp>(
         loc, funcDecl,
         ValueRange{destPtr, srcPtr, adaptor.getSize(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// GetmemNbiOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct GetmemNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemNbiOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::GetmemNbiOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // dest: memref (need to extract pointer)
+    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
+    // src: symmetric_memref (already a pointer after type conversion)
+    Value srcPtr = adaptor.getSrc();
+
+    // void shmem_getmem_nbi(void *dest, const void *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_getmem_nbi", funcType);
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, srcPtr, adaptor.getNelems(), adaptor.getPe()});
     rewriter.eraseOp(op);
     return success();
   }
@@ -948,7 +1018,8 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
            TeamMyPeOpLowering, TeamNPesOpLowering, TeamSyncOpLowering,
            TeamDestroyOpLowering, TeamWorldOpLowering, TeamSharedOpLowering,
            AlltoallmemOpLowering, AlltoallsmemOpLowering, BroadcastmemOpLowering,
-           CollectmemOpLowering, FCollectmemOpLowering>(converter);
+           CollectmemOpLowering, FCollectmemOpLowering, PutmemNbiOpLowering,
+           GetmemNbiOpLowering>(converter);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(

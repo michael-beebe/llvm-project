@@ -49,8 +49,6 @@ def OpenSHMEM_Size : OpenSHMEM_Type<"Size", "size"> {
   }];
 }
 
-
-
 //===----------------------------------------------------------------------===//
 // Symmetric memory type
 //===----------------------------------------------------------------------===//
@@ -60,10 +58,13 @@ def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_mem
   let description = [{
     Represents a reference to symmetric memory that is accessible from all PEs.
     This type is distinct from standard memref: it is only produced by openshmem.malloc
-    and is required for all OpenSHMEM operations that use symmetric memory (e.g., putmem, getmem, free).
+    and is required for all OpenSHMEM operations that use symmetric memory
+    (e.g., putmem, getmem, free).
+    
     Symmetric memory has the same virtual address on all PEs and can be used in
-    one-sided communication operations. Only  values of this type are valid for
-                        OpenSHMEM symmetric memory operations.
+    one-sided communication operations
+                        .Only values of this type are valid for OpenSHMEM
+                            symmetric memory operations.
 }];
 
 let parameters = (ins "Type" : $elementType);
@@ -87,5 +88,8 @@ def OpenSHMEM_Team : OpenSHMEM_Type<"Team", "team"> {
     and synchronization. Each PE can be a member of multiple teams simultaneously.
   }];
 }
+
+// TODO: Might want a way to know a PEs global number and number within its team.
+
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMTYPES_TD
