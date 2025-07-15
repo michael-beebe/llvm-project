@@ -24,7 +24,8 @@ class OpenSHMEM_Type<string name, string typeMnemonic, list<Trait> traits = []>
 //===----------------------------------------------------------------------===//
 // Processing Element (PE) type
 //
-// FIXME: I don't think this is needed.
+// TODO: potentially extend this to represent global PE number?
+// TODO: potentially add a second type for PE number within a team?
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_PE : OpenSHMEM_Type<"PE", "pe"> {
@@ -36,21 +37,9 @@ def OpenSHMEM_PE : OpenSHMEM_Type<"PE", "pe"> {
 }
 
 //===----------------------------------------------------------------------===//
-// Size type for memory operations
-//
-// FIXME: I don't think this is needed.
-//===----------------------------------------------------------------------===//
-
-def OpenSHMEM_Size : OpenSHMEM_Type<"Size", "size"> {
-  let summary = "Size type for OpenSHMEM memory operations";
-  let description = [{
-    Represents a size value used in OpenSHMEM memory operations.
-    Typically corresponds to size_t in C.
-  }];
-}
-
-//===----------------------------------------------------------------------===//
 // Symmetric memory type
+//
+// TODO: should we add a way to represent thape?
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_memref"> {
@@ -62,14 +51,13 @@ def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_mem
     (e.g., putmem, getmem, free).
     
     Symmetric memory has the same virtual address on all PEs and can be used in
-    one-sided communication operations
-                        .Only values of this type are valid for OpenSHMEM
-                            symmetric memory operations.
+    one-sided communication operations .Only values of this type are valid for
+    OpenSHMEM symmetric memory operations.
 }];
 
-let parameters = (ins "Type" : $elementType);
+  let parameters = (ins "Type" : $elementType);
 
-let assemblyFormat = "`<` $elementType `>`";
+  let assemblyFormat = "`<` $elementType `>`";
 }
 
 //===----------------------------------------------------------------------===//
@@ -89,7 +77,18 @@ def OpenSHMEM_Team : OpenSHMEM_Type<"Team", "team"> {
   }];
 }
 
-// TODO: Might want a way to know a PEs global number and number within its team.
+//===----------------------------------------------------------------------===//
+// Context type
+//===----------------------------------------------------------------------===//
 
+def OpenSHMEM_Ctx : OpenSHMEM_Type<"Ctx", "ctx"> {
+  let summary = "Context type for ordered OpenSHMEM operations";
+  let description = [{
+    Represents an OpenSHMEM context. Contexts are containers for communication
+    operations. Each context provides an environment where the operations
+    performed on that context are ordered and completed independently of other
+    operations performed by the application.
+  }];
+}
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMTYPES_TD

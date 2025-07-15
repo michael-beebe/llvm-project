@@ -1,0 +1,17 @@
+mlir/include/mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.h
+mlir/include/mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.td
+mlir/include/mlir/Dialect/OpenSHMEM/IR/OpenSHMEMOps.td
+mlir/include/mlir/Dialect/OpenSHMEM/IR/OpenSHMEMTypes.td
+mlir/lib/Dialect/OpenSHMEM/IR/OpenSHMEM.cpp
+mlir/lib/Dialect/OpenSHMEM/IR/OpenSHMEMOps.cpp
+mlir/include/mlir/Conversion/OpenSHMEMToLLVM/OpenSHMEMToLLVM.h
+mlir/lib/Conversion/OpenSHMEMToLLVM/OpenSHMEMToLLVM.cpp
+mlir/include/mlir/Dialect/OpenSHMEM/Transforms/Passes.td
+mlir/include/mlir/Dialect/OpenSHMEM/Transforms/Passes.h
+mlir/lib/Dialect/OpenSHMEM/Transforms/Passes.cpp
+mlir/include/mlir/Dialect/OpenSHMEM/Transforms/Transforms.h
+mlir/include/mlir/InitAllPasses.h
+mlir/lib/Dialect/OpenSHMEM/Transforms/InjectNumPEsPass.cpp
+mlir/lib/Dialect/OpenSHMEM/Transforms/CoalescePuts.cpp
+mlir/lib/Dialect/OpenSHMEM/Transforms/CoalesceGets.cpp
+mlir/test/Dialect/OpenSHMEM/openshmemops.mlir

@@ -272,7 +272,8 @@ struct PutmemOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemOp> {
 // PutmemNbiOp Lowering
 //===----------------------------------------------------------------------===//
 
-struct PutmemNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemNbiOp> {
+struct PutmemNbiOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::PutmemNbiOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
   LogicalResult
@@ -287,13 +288,14 @@ struct PutmemNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemNbiO
     // src: memref (need to extract pointer)
     Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
 
-    // void shmem_putmem_nbi(void *dest, const void *source, size_t nelems, int pe)
+    // void shmem_putmem_nbi(void *dest, const void *source, size_t nelems, int
+    // pe)
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_putmem_nbi", funcType);
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_putmem_nbi", funcType);
 
     rewriter.create<LLVM::CallOp>(
         loc, funcDecl,
@@ -344,7 +346,8 @@ struct GetmemOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemOp> {
 // GetmemNbiOp Lowering
 //===----------------------------------------------------------------------===//
 
-struct GetmemNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemNbiOp> {
+struct GetmemNbiOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::GetmemNbiOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
   LogicalResult
@@ -359,13 +362,14 @@ struct GetmemNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemNbiO
     // src: symmetric_memref (already a pointer after type conversion)
     Value srcPtr = adaptor.getSrc();
 
-    // void shmem_getmem_nbi(void *dest, const void *source, size_t nelems, int pe)
+    // void shmem_getmem_nbi(void *dest, const void *source, size_t nelems, int
+    // pe)
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_getmem_nbi", funcType);
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_getmem_nbi", funcType);
 
     rewriter.create<LLVM::CallOp>(
         loc, funcDecl,
@@ -442,7 +446,8 @@ struct BarrierOpLowering : public ConvertOpToLLVMPattern<openshmem::BarrierOp> {
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
 
-    // void shmem_barrier(int PE_start, int logPE_stride, int PE_size, long *pSync)
+    // void shmem_barrier(int PE_start, int logPE_stride, int PE_size, long
+    // *pSync)
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {rewriter.getI32Type(), rewriter.getI32Type(), rewriter.getI32Type(),
@@ -450,7 +455,8 @@ struct BarrierOpLowering : public ConvertOpToLLVMPattern<openshmem::BarrierOp> {
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, "shmem_barrier", funcType);
 
-    // The psync argument is already a pointer (symmetric_memref converts to pointer)
+    // The psync argument is already a pointer (symmetric_memref converts to
+    // pointer)
     Value psyncPtr = adaptor.getPsync();
 
     rewriter.create<LLVM::CallOp>(loc, funcDecl,
@@ -489,14 +495,15 @@ struct TeamSplitStridedOpLowering
         moduleOp, loc, rewriter, "shmem_team_split_strided", funcType);
 
     // Allocate space for the new team
-    Value one = rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI32Type(),
-                                                  rewriter.getI32IntegerAttr(1));
-    Value newTeamPtr = rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
+    Value one = rewriter.create<LLVM::ConstantOp>(
+        loc, rewriter.getI32Type(), rewriter.getI32IntegerAttr(1));
+    Value newTeamPtr =
+        rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
 
     // Pass NULL for config and 0 for config_mask (simplified)
     Value nullPtr = rewriter.create<LLVM::ZeroOp>(loc, ptrType);
-    Value zeroMask = rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(),
-                                                       rewriter.getI64IntegerAttr(0));
+    Value zeroMask = rewriter.create<LLVM::ConstantOp>(
+        loc, rewriter.getI64Type(), rewriter.getI64IntegerAttr(0));
 
     auto callOp = rewriter.create<LLVM::CallOp>(
         loc, funcDecl,
@@ -544,15 +551,17 @@ struct TeamSplit2dOpLowering
         moduleOp, loc, rewriter, "shmem_team_split_2d", funcType);
 
     // Allocate space for the new teams
-    Value one = rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI32Type(),
-                                                  rewriter.getI32IntegerAttr(1));
-    Value xaxisTeamPtr = rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
-    Value yaxisTeamPtr = rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
+    Value one = rewriter.create<LLVM::ConstantOp>(
+        loc, rewriter.getI32Type(), rewriter.getI32IntegerAttr(1));
+    Value xaxisTeamPtr =
+        rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
+    Value yaxisTeamPtr =
+        rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
 
     // Pass NULL for configs and 0 for config_masks (simplified)
     Value nullPtr = rewriter.create<LLVM::ZeroOp>(loc, ptrType);
-    Value zeroMask = rewriter.create<LLVM::ConstantOp>(loc, rewriter.getI64Type(),
-                                                       rewriter.getI64IntegerAttr(0));
+    Value zeroMask = rewriter.create<LLVM::ConstantOp>(
+        loc, rewriter.getI64Type(), rewriter.getI64IntegerAttr(0));
 
     auto callOp = rewriter.create<LLVM::CallOp>(
         loc, funcDecl,
@@ -751,6 +760,161 @@ struct TeamSharedOpLowering
 };
 
 //===----------------------------------------------------------------------===//
+// CtxCreateOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct CtxCreateOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::CtxCreateOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CtxCreateOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type i64Type = rewriter.getI64Type();
+    Type i32Type = rewriter.getI32Type();
+
+    // int shmem_ctx_create(long options, shmem_ctx_t *ctx)
+    auto funcType = LLVM::LLVMFunctionType::get(i32Type, {i64Type, ptrType});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_ctx_create", funcType);
+
+    // Allocate space for the context handle
+    Value one = rewriter.create<LLVM::ConstantOp>(
+        loc, i32Type, rewriter.getI32IntegerAttr(1));
+    Value ctxPtr = rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
+
+    // Call the function
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{adaptor.getOptions(), ctxPtr});
+
+    // Load the context handle
+    Value ctx = rewriter.create<LLVM::LoadOp>(loc, ptrType, ctxPtr);
+
+    SmallVector<Value> replacements;
+    replacements.push_back(ctx);
+    replacements.push_back(callOp.getResult());
+    rewriter.replaceOp(op, replacements);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// TeamCreateCtxOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct TeamCreateCtxOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::TeamCreateCtxOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::TeamCreateCtxOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type i64Type = rewriter.getI64Type();
+    Type i32Type = rewriter.getI32Type();
+
+    // int shmem_team_create_ctx(shmem_team_t team, long options, shmem_ctx_t
+    // *ctx)
+    auto funcType =
+        LLVM::LLVMFunctionType::get(i32Type, {ptrType, i64Type, ptrType});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_team_create_ctx", funcType);
+
+    // Allocate space for the context handle
+    Value one = rewriter.create<LLVM::ConstantOp>(
+        loc, i32Type, rewriter.getI32IntegerAttr(1));
+    Value ctxPtr = rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
+
+    // Call the function
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{adaptor.getTeam(), adaptor.getOptions(), ctxPtr});
+
+    // Load the context handle
+    Value ctx = rewriter.create<LLVM::LoadOp>(loc, ptrType, ctxPtr);
+
+    SmallVector<Value> replacements;
+    replacements.push_back(ctx);
+    replacements.push_back(callOp.getResult());
+    rewriter.replaceOp(op, replacements);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxDestroyOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct CtxDestroyOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::CtxDestroyOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CtxDestroyOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // void shmem_ctx_destroy(shmem_ctx_t ctx)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()), {ptrType});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_ctx_destroy", funcType);
+
+    rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{adaptor.getCtx()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxGetTeamOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct CtxGetTeamOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::CtxGetTeamOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CtxGetTeamOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type i32Type = rewriter.getI32Type();
+
+    // int shmem_ctx_get_team(shmem_ctx_t ctx, shmem_team_t *team)
+    auto funcType = LLVM::LLVMFunctionType::get(i32Type, {ptrType, ptrType});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_ctx_get_team", funcType);
+
+    // Allocate space for the team handle
+    Value one = rewriter.create<LLVM::ConstantOp>(
+        loc, i32Type, rewriter.getI32IntegerAttr(1));
+    Value teamPtr = rewriter.create<LLVM::AllocaOp>(loc, ptrType, ptrType, one);
+
+    // Call the function
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{adaptor.getCtx(), teamPtr});
+
+    // Load the team handle
+    Value team = rewriter.create<LLVM::LoadOp>(loc, ptrType, teamPtr);
+
+    SmallVector<Value> replacements;
+    replacements.push_back(team);
+    replacements.push_back(callOp.getResult());
+    rewriter.replaceOp(op, replacements);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
 // AlltoallmemOp Lowering
 //===----------------------------------------------------------------------===//
 
@@ -765,16 +929,17 @@ struct AlltoallmemOpLowering
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
 
-    // int shmem_alltoallmem(shmem_team_t team, void *dest, const void *source, size_t nelems)
-    // size_t is typically the same as index type on the target platform
+    // int shmem_alltoallmem(shmem_team_t team, void *dest, const void *source,
+    // size_t nelems) size_t is typically the same as index type on the target
+    // platform
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
-        rewriter.getI32Type(),
-        {ptrType, ptrType, ptrType, sizeType});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_alltoallmem", funcType);
+        rewriter.getI32Type(), {ptrType, ptrType, ptrType, sizeType});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_alltoallmem", funcType);
 
-    // dest and source are already pointers (symmetric_memref converts to pointer)
+    // dest and source are already pointers (symmetric_memref converts to
+    // pointer)
     Value destPtr = adaptor.getDest();
     Value sourcePtr = adaptor.getSource();
 
@@ -808,10 +973,11 @@ struct AlltoallsmemOpLowering
     auto funcType = LLVM::LLVMFunctionType::get(
         rewriter.getI32Type(),
         {ptrType, ptrType, ptrType, sizeType, sizeType, sizeType});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_alltoallsmem", funcType);
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_alltoallsmem", funcType);
 
-    // dest and source are already pointers (symmetric_memref converts to pointer)
+    // dest and source are already pointers (symmetric_memref converts to
+    // pointer)
     Value destPtr = adaptor.getDest();
     Value sourcePtr = adaptor.getSource();
     Value dst = adaptor.getDst();
@@ -848,10 +1014,11 @@ struct BroadcastmemOpLowering
     auto funcType = LLVM::LLVMFunctionType::get(
         rewriter.getI32Type(),
         {ptrType, ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_broadcastmem", funcType);
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_broadcastmem", funcType);
 
-    // dest and source are already pointers (symmetric_memref converts to pointer)
+    // dest and source are already pointers (symmetric_memref converts to
+    // pointer)
     Value destPtr = adaptor.getDest();
     Value sourcePtr = adaptor.getSource();
     Value nelems = adaptor.getNelems();
@@ -882,14 +1049,15 @@ struct CollectmemOpLowering
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
     Type sizeType = getTypeConverter()->getIndexType();
 
-    // int shmem_collectmem(shmem_team_t team, void *dest, const void *source, size_t nelems);
+    // int shmem_collectmem(shmem_team_t team, void *dest, const void *source,
+    // size_t nelems);
     auto funcType = LLVM::LLVMFunctionType::get(
-        rewriter.getI32Type(),
-        {ptrType, ptrType, ptrType, sizeType});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_collectmem", funcType);
+        rewriter.getI32Type(), {ptrType, ptrType, ptrType, sizeType});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_collectmem", funcType);
 
-    // dest and source are already pointers (symmetric_memref converts to pointer)
+    // dest and source are already pointers (symmetric_memref converts to
+    // pointer)
     Value destPtr = adaptor.getDest();
     Value sourcePtr = adaptor.getSource();
     Value nelems = adaptor.getNelems();
@@ -919,14 +1087,15 @@ struct FCollectmemOpLowering
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
     Type sizeType = getTypeConverter()->getIndexType();
 
-    // int shmem_fcollectmem(shmem_team_t team, void *dest, const void *source, size_t nelems);
+    // int shmem_fcollectmem(shmem_team_t team, void *dest, const void *source,
+    // size_t nelems);
     auto funcType = LLVM::LLVMFunctionType::get(
-        rewriter.getI32Type(),
-        {ptrType, ptrType, ptrType, sizeType});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_fcollectmem", funcType);
+        rewriter.getI32Type(), {ptrType, ptrType, ptrType, sizeType});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_fcollectmem", funcType);
 
-    // dest and source are already pointers (symmetric_memref converts to pointer)
+    // dest and source are already pointers (symmetric_memref converts to
+    // pointer)
     Value destPtr = adaptor.getDest();
     Value sourcePtr = adaptor.getSource();
     Value nelems = adaptor.getNelems();
@@ -939,6 +1108,7 @@ struct FCollectmemOpLowering
     return success();
   }
 };
+
 
 //===----------------------------------------------------------------------===//
 // Pass and conversion setup
@@ -1010,6 +1180,11 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
     return LLVM::LLVMPointerType::get(type.getContext());
   });
 
+  converter.addConversion([](openshmem::CtxType type) -> Type {
+    // Convert ctx to LLVM pointer type (shmem_ctx_t is typically a pointer)
+    return LLVM::LLVMPointerType::get(type.getContext());
+  });
+
   patterns
       .add<InitOpLowering, FinalizeOpLowering, MyPeOpLowering, NPesOpLowering,
            MallocOpLowering, FreeOpLowering, PutmemOpLowering, GetmemOpLowering,
@@ -1017,9 +1192,11 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
            TeamSplitStridedOpLowering, TeamSplit2dOpLowering,
            TeamMyPeOpLowering, TeamNPesOpLowering, TeamSyncOpLowering,
            TeamDestroyOpLowering, TeamWorldOpLowering, TeamSharedOpLowering,
-           AlltoallmemOpLowering, AlltoallsmemOpLowering, BroadcastmemOpLowering,
-           CollectmemOpLowering, FCollectmemOpLowering, PutmemNbiOpLowering,
-           GetmemNbiOpLowering>(converter);
+           AlltoallmemOpLowering, AlltoallsmemOpLowering,
+           BroadcastmemOpLowering, CollectmemOpLowering, FCollectmemOpLowering,
+           PutmemNbiOpLowering, GetmemNbiOpLowering, CtxCreateOpLowering,
+           TeamCreateCtxOpLowering, CtxDestroyOpLowering, CtxGetTeamOpLowering>(
+          converter);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(
