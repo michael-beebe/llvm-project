@@ -1615,6 +1615,85 @@ GEN_CTX_GET_SIZED_LOWERING(64)
 GEN_CTX_GET_SIZED_LOWERING(128)
 #undef GEN_CTX_GET_SIZED_LOWERING
 
+//===----------------------------------------------------------------------===//
+// AtomicFetchOp Lowering (Typed - Generic)
+//===----------------------------------------------------------------------===//
+struct AtomicFetchOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::AtomicFetchOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+  LogicalResult
+  matchAndRewrite(openshmem::AtomicFetchOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get element type from symmetric memref
+    Type elementType = getSymmetricMemRefElementType(op.getSource());
+    if (!elementType) {
+      return failure();
+    }
+
+    // Generate function name based on type
+    std::string funcName = getTypedFunctionName("atomic_fetch", elementType);
+
+    // TYPE shmem_atomic_fetch(const TYPE *source, int pe)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        elementType, {ptrType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+
+    // source: symmetric_memref (already a pointer after type conversion)
+    Value sourcePtr = adaptor.getSource();
+
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{sourcePtr, adaptor.getPe()});
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxAtomicFetchOp Lowering (Typed - Context-aware)
+//===----------------------------------------------------------------------===//
+struct CtxAtomicFetchOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::CtxAtomicFetchOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+  LogicalResult
+  matchAndRewrite(openshmem::CtxAtomicFetchOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get element type from symmetric memref
+    Type elementType = getSymmetricMemRefElementType(op.getSource());
+    if (!elementType) {
+      return failure();
+    }
+
+    // Generate function name based on type
+    std::string funcName =
+        getTypedFunctionName("ctx_atomic_fetch", elementType);
+
+    // TYPE shmem_atomic_fetch(shmem_ctx_t ctx, const TYPE *source, int pe)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        elementType, {ptrType, ptrType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+
+    // ctx: context (already a pointer after type conversion)
+    Value ctxPtr = adaptor.getCtx();
+    // source: symmetric_memref (already a pointer after type conversion)
+    Value sourcePtr = adaptor.getSource();
+
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{ctxPtr, sourcePtr, adaptor.getPe()});
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
 } // namespace
 
 //===----------------------------------------------------------------------===//
@@ -1721,7 +1800,9 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
       GetOpLowering, CtxGetOpLowering, GetNbiOpLowering, CtxGetNbiOpLowering,
       Get8OpLowering, Get16OpLowering, Get32OpLowering, Get64OpLowering,
       Get128OpLowering, CtxGet8OpLowering, CtxGet16OpLowering,
-      CtxGet32OpLowering, CtxGet64OpLowering, CtxGet128OpLowering>(converter);
+      CtxGet32OpLowering, CtxGet64OpLowering, CtxGet128OpLowering,
+      // Atomic fetch operations
+      AtomicFetchOpLowering, CtxAtomicFetchOpLowering>(converter);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(
