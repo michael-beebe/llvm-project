@@ -1,5 +1,17 @@
 module {
   llvm.func @malloc(i64) -> !llvm.ptr
+  llvm.func @shmem_ctx_get128(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_ctx_get64(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_ctx_get16(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_ctx_get8(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_get128(!llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_get64(!llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_get16(!llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_get8(!llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_ctx_get_nbi32(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_get_nbi32(!llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_ctx_get32(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
+  llvm.func @shmem_get32(!llvm.ptr, !llvm.ptr, i64, i32)
   llvm.func @shmem_ctx_destroy(!llvm.ptr)
   llvm.func @shmem_ctx_put32(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
   llvm.func @shmem_ctx_create(i64, !llvm.ptr) -> i32
@@ -372,6 +384,392 @@ module {
     %21 = llvm.insertvalue %10, %20[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
     %22 = llvm.extractvalue %21[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
     llvm.call @shmem_ctx_put32(%4, %8, %22, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_i32_get() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(10 : index) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.mlir.constant(40 : index) : i64
+    %3 = llvm.mlir.constant(10 : index) : i64
+    %4 = llvm.mlir.constant(1 : index) : i64
+    %5 = llvm.mlir.zero : !llvm.ptr
+    %6 = llvm.getelementptr %5[%3] : (!llvm.ptr, i64) -> !llvm.ptr, i32
+    %7 = llvm.ptrtoint %6 : !llvm.ptr to i64
+    %8 = llvm.call @malloc(%7) : (i64) -> !llvm.ptr
+    %9 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %10 = llvm.insertvalue %8, %9[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %11 = llvm.insertvalue %8, %10[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.mlir.constant(0 : index) : i64
+    %13 = llvm.insertvalue %12, %11[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %14 = llvm.insertvalue %3, %13[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %17 = llvm.extractvalue %15[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_get32(%17, %16, %0, %1) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_free(%16) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_get() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(10 : index) : i64
+    %6 = llvm.mlir.constant(1 : i32) : i32
+    %7 = llvm.mlir.constant(40 : index) : i64
+    %8 = llvm.mlir.constant(10 : index) : i64
+    %9 = llvm.mlir.constant(1 : index) : i64
+    %10 = llvm.mlir.zero : !llvm.ptr
+    %11 = llvm.getelementptr %10[%8] : (!llvm.ptr, i64) -> !llvm.ptr, i32
+    %12 = llvm.ptrtoint %11 : !llvm.ptr to i64
+    %13 = llvm.call @malloc(%12) : (i64) -> !llvm.ptr
+    %14 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %15 = llvm.insertvalue %13, %14[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %13, %15[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(0 : index) : i64
+    %18 = llvm.insertvalue %17, %16[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %19 = llvm.insertvalue %8, %18[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %20 = llvm.insertvalue %9, %19[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_ctx_get32(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_get_nbi_typed() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(10 : index) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.mlir.constant(40 : index) : i64
+    %3 = llvm.mlir.constant(10 : index) : i64
+    %4 = llvm.mlir.constant(1 : index) : i64
+    %5 = llvm.mlir.zero : !llvm.ptr
+    %6 = llvm.getelementptr %5[%3] : (!llvm.ptr, i64) -> !llvm.ptr, i32
+    %7 = llvm.ptrtoint %6 : !llvm.ptr to i64
+    %8 = llvm.call @malloc(%7) : (i64) -> !llvm.ptr
+    %9 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %10 = llvm.insertvalue %8, %9[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %11 = llvm.insertvalue %8, %10[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.mlir.constant(0 : index) : i64
+    %13 = llvm.insertvalue %12, %11[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %14 = llvm.insertvalue %3, %13[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %17 = llvm.extractvalue %15[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_get_nbi32(%17, %16, %0, %1) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_quiet() : () -> ()
+    llvm.call @shmem_free(%16) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_get_nbi() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(10 : index) : i64
+    %6 = llvm.mlir.constant(1 : i32) : i32
+    %7 = llvm.mlir.constant(40 : index) : i64
+    %8 = llvm.mlir.constant(10 : index) : i64
+    %9 = llvm.mlir.constant(1 : index) : i64
+    %10 = llvm.mlir.zero : !llvm.ptr
+    %11 = llvm.getelementptr %10[%8] : (!llvm.ptr, i64) -> !llvm.ptr, i32
+    %12 = llvm.ptrtoint %11 : !llvm.ptr to i64
+    %13 = llvm.call @malloc(%12) : (i64) -> !llvm.ptr
+    %14 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %15 = llvm.insertvalue %13, %14[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %13, %15[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(0 : index) : i64
+    %18 = llvm.insertvalue %17, %16[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %19 = llvm.insertvalue %8, %18[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %20 = llvm.insertvalue %9, %19[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_ctx_get_nbi32(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_get8_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(10 : index) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.mlir.constant(10 : index) : i64
+    %3 = llvm.mlir.constant(10 : index) : i64
+    %4 = llvm.mlir.constant(1 : index) : i64
+    %5 = llvm.mlir.zero : !llvm.ptr
+    %6 = llvm.getelementptr %5[%3] : (!llvm.ptr, i64) -> !llvm.ptr, i8
+    %7 = llvm.ptrtoint %6 : !llvm.ptr to i64
+    %8 = llvm.call @malloc(%7) : (i64) -> !llvm.ptr
+    %9 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %10 = llvm.insertvalue %8, %9[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %11 = llvm.insertvalue %8, %10[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.mlir.constant(0 : index) : i64
+    %13 = llvm.insertvalue %12, %11[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %14 = llvm.insertvalue %3, %13[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %17 = llvm.extractvalue %15[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_get8(%17, %16, %0, %1) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_free(%16) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_get16_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(10 : index) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.mlir.constant(20 : index) : i64
+    %3 = llvm.mlir.constant(10 : index) : i64
+    %4 = llvm.mlir.constant(1 : index) : i64
+    %5 = llvm.mlir.zero : !llvm.ptr
+    %6 = llvm.getelementptr %5[%3] : (!llvm.ptr, i64) -> !llvm.ptr, i16
+    %7 = llvm.ptrtoint %6 : !llvm.ptr to i64
+    %8 = llvm.call @malloc(%7) : (i64) -> !llvm.ptr
+    %9 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %10 = llvm.insertvalue %8, %9[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %11 = llvm.insertvalue %8, %10[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.mlir.constant(0 : index) : i64
+    %13 = llvm.insertvalue %12, %11[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %14 = llvm.insertvalue %3, %13[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %17 = llvm.extractvalue %15[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_get16(%17, %16, %0, %1) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_free(%16) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_get32_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(10 : index) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.mlir.constant(40 : index) : i64
+    %3 = llvm.mlir.constant(10 : index) : i64
+    %4 = llvm.mlir.constant(1 : index) : i64
+    %5 = llvm.mlir.zero : !llvm.ptr
+    %6 = llvm.getelementptr %5[%3] : (!llvm.ptr, i64) -> !llvm.ptr, i32
+    %7 = llvm.ptrtoint %6 : !llvm.ptr to i64
+    %8 = llvm.call @malloc(%7) : (i64) -> !llvm.ptr
+    %9 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %10 = llvm.insertvalue %8, %9[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %11 = llvm.insertvalue %8, %10[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.mlir.constant(0 : index) : i64
+    %13 = llvm.insertvalue %12, %11[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %14 = llvm.insertvalue %3, %13[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %17 = llvm.extractvalue %15[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_get32(%17, %16, %0, %1) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_free(%16) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_get64_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(10 : index) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.mlir.constant(80 : index) : i64
+    %3 = llvm.mlir.constant(10 : index) : i64
+    %4 = llvm.mlir.constant(1 : index) : i64
+    %5 = llvm.mlir.zero : !llvm.ptr
+    %6 = llvm.getelementptr %5[%3] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %7 = llvm.ptrtoint %6 : !llvm.ptr to i64
+    %8 = llvm.call @malloc(%7) : (i64) -> !llvm.ptr
+    %9 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %10 = llvm.insertvalue %8, %9[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %11 = llvm.insertvalue %8, %10[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.mlir.constant(0 : index) : i64
+    %13 = llvm.insertvalue %12, %11[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %14 = llvm.insertvalue %3, %13[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %17 = llvm.extractvalue %15[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_get64(%17, %16, %0, %1) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_free(%16) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_get128_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(10 : index) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.mlir.constant(160 : index) : i64
+    %3 = llvm.mlir.constant(10 : index) : i64
+    %4 = llvm.mlir.constant(1 : index) : i64
+    %5 = llvm.mlir.zero : !llvm.ptr
+    %6 = llvm.getelementptr %5[%3] : (!llvm.ptr, i64) -> !llvm.ptr, f128
+    %7 = llvm.ptrtoint %6 : !llvm.ptr to i64
+    %8 = llvm.call @malloc(%7) : (i64) -> !llvm.ptr
+    %9 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %10 = llvm.insertvalue %8, %9[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %11 = llvm.insertvalue %8, %10[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %12 = llvm.mlir.constant(0 : index) : i64
+    %13 = llvm.insertvalue %12, %11[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %14 = llvm.insertvalue %3, %13[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %15 = llvm.insertvalue %4, %14[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    %17 = llvm.extractvalue %15[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_get128(%17, %16, %0, %1) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_free(%16) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_get8_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(10 : index) : i64
+    %6 = llvm.mlir.constant(1 : i32) : i32
+    %7 = llvm.mlir.constant(10 : index) : i64
+    %8 = llvm.mlir.constant(10 : index) : i64
+    %9 = llvm.mlir.constant(1 : index) : i64
+    %10 = llvm.mlir.zero : !llvm.ptr
+    %11 = llvm.getelementptr %10[%8] : (!llvm.ptr, i64) -> !llvm.ptr, i8
+    %12 = llvm.ptrtoint %11 : !llvm.ptr to i64
+    %13 = llvm.call @malloc(%12) : (i64) -> !llvm.ptr
+    %14 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %15 = llvm.insertvalue %13, %14[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %13, %15[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(0 : index) : i64
+    %18 = llvm.insertvalue %17, %16[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %19 = llvm.insertvalue %8, %18[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %20 = llvm.insertvalue %9, %19[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_ctx_get8(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_get16_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(10 : index) : i64
+    %6 = llvm.mlir.constant(1 : i32) : i32
+    %7 = llvm.mlir.constant(20 : index) : i64
+    %8 = llvm.mlir.constant(10 : index) : i64
+    %9 = llvm.mlir.constant(1 : index) : i64
+    %10 = llvm.mlir.zero : !llvm.ptr
+    %11 = llvm.getelementptr %10[%8] : (!llvm.ptr, i64) -> !llvm.ptr, i16
+    %12 = llvm.ptrtoint %11 : !llvm.ptr to i64
+    %13 = llvm.call @malloc(%12) : (i64) -> !llvm.ptr
+    %14 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %15 = llvm.insertvalue %13, %14[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %13, %15[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(0 : index) : i64
+    %18 = llvm.insertvalue %17, %16[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %19 = llvm.insertvalue %8, %18[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %20 = llvm.insertvalue %9, %19[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_ctx_get16(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_get32_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(10 : index) : i64
+    %6 = llvm.mlir.constant(1 : i32) : i32
+    %7 = llvm.mlir.constant(40 : index) : i64
+    %8 = llvm.mlir.constant(10 : index) : i64
+    %9 = llvm.mlir.constant(1 : index) : i64
+    %10 = llvm.mlir.zero : !llvm.ptr
+    %11 = llvm.getelementptr %10[%8] : (!llvm.ptr, i64) -> !llvm.ptr, i32
+    %12 = llvm.ptrtoint %11 : !llvm.ptr to i64
+    %13 = llvm.call @malloc(%12) : (i64) -> !llvm.ptr
+    %14 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %15 = llvm.insertvalue %13, %14[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %13, %15[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(0 : index) : i64
+    %18 = llvm.insertvalue %17, %16[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %19 = llvm.insertvalue %8, %18[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %20 = llvm.insertvalue %9, %19[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_ctx_get32(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_get64_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(10 : index) : i64
+    %6 = llvm.mlir.constant(1 : i32) : i32
+    %7 = llvm.mlir.constant(80 : index) : i64
+    %8 = llvm.mlir.constant(10 : index) : i64
+    %9 = llvm.mlir.constant(1 : index) : i64
+    %10 = llvm.mlir.zero : !llvm.ptr
+    %11 = llvm.getelementptr %10[%8] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %12 = llvm.ptrtoint %11 : !llvm.ptr to i64
+    %13 = llvm.call @malloc(%12) : (i64) -> !llvm.ptr
+    %14 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %15 = llvm.insertvalue %13, %14[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %13, %15[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(0 : index) : i64
+    %18 = llvm.insertvalue %17, %16[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %19 = llvm.insertvalue %8, %18[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %20 = llvm.insertvalue %9, %19[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_ctx_get64(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_get128_sized() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(10 : index) : i64
+    %6 = llvm.mlir.constant(1 : i32) : i32
+    %7 = llvm.mlir.constant(160 : index) : i64
+    %8 = llvm.mlir.constant(10 : index) : i64
+    %9 = llvm.mlir.constant(1 : index) : i64
+    %10 = llvm.mlir.zero : !llvm.ptr
+    %11 = llvm.getelementptr %10[%8] : (!llvm.ptr, i64) -> !llvm.ptr, f128
+    %12 = llvm.ptrtoint %11 : !llvm.ptr to i64
+    %13 = llvm.call @malloc(%12) : (i64) -> !llvm.ptr
+    %14 = llvm.mlir.poison : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+    %15 = llvm.insertvalue %13, %14[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %16 = llvm.insertvalue %13, %15[1] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %17 = llvm.mlir.constant(0 : index) : i64
+    %18 = llvm.insertvalue %17, %16[2] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %19 = llvm.insertvalue %8, %18[3, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %20 = llvm.insertvalue %9, %19[4, 0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
+    llvm.call @shmem_ctx_get128(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
     llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
     llvm.call @shmem_finalize() : () -> ()
     llvm.return

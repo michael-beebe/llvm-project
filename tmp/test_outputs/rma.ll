@@ -3,6 +3,30 @@ source_filename = "LLVMDialectModule"
 
 declare ptr @malloc(i64)
 
+declare void @shmem_ctx_get128(ptr, ptr, ptr, i64, i32)
+
+declare void @shmem_ctx_get64(ptr, ptr, ptr, i64, i32)
+
+declare void @shmem_ctx_get16(ptr, ptr, ptr, i64, i32)
+
+declare void @shmem_ctx_get8(ptr, ptr, ptr, i64, i32)
+
+declare void @shmem_get128(ptr, ptr, i64, i32)
+
+declare void @shmem_get64(ptr, ptr, i64, i32)
+
+declare void @shmem_get16(ptr, ptr, i64, i32)
+
+declare void @shmem_get8(ptr, ptr, i64, i32)
+
+declare void @shmem_ctx_get_nbi32(ptr, ptr, ptr, i64, i32)
+
+declare void @shmem_get_nbi32(ptr, ptr, i64, i32)
+
+declare void @shmem_ctx_get32(ptr, ptr, ptr, i64, i32)
+
+declare void @shmem_get32(ptr, ptr, i64, i32)
+
 declare void @shmem_ctx_destroy(ptr)
 
 declare void @shmem_ctx_put32(ptr, ptr, ptr, i64, i32)
@@ -264,6 +288,252 @@ define void @test_ctx_put() {
   %10 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, i64 1, 4, 0
   %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %10, 0
   call void @shmem_ctx_put32(ptr %3, ptr %4, ptr %11, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_i32_get() {
+  call void @shmem_init()
+  %1 = call ptr @malloc(i64 40)
+  %2 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %1, 0
+  %3 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %2, ptr %1, 1
+  %4 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %3, i64 0, 2
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %4, i64 10, 3, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, i64 1, 4, 0
+  %7 = call ptr @shmem_malloc(i64 40)
+  %8 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, 0
+  call void @shmem_get32(ptr %8, ptr %7, i64 10, i32 1)
+  call void @shmem_free(ptr %7)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_get() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @malloc(i64 40)
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %4, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, ptr %4, 1
+  %7 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, i64 0, 2
+  %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
+  %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
+  %10 = call ptr @shmem_malloc(i64 40)
+  %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @shmem_ctx_get32(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_get_nbi_typed() {
+  call void @shmem_init()
+  %1 = call ptr @malloc(i64 40)
+  %2 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %1, 0
+  %3 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %2, ptr %1, 1
+  %4 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %3, i64 0, 2
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %4, i64 10, 3, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, i64 1, 4, 0
+  %7 = call ptr @shmem_malloc(i64 40)
+  %8 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, 0
+  call void @shmem_get_nbi32(ptr %8, ptr %7, i64 10, i32 1)
+  call void @shmem_quiet()
+  call void @shmem_free(ptr %7)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_get_nbi() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @malloc(i64 40)
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %4, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, ptr %4, 1
+  %7 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, i64 0, 2
+  %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
+  %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
+  %10 = call ptr @shmem_malloc(i64 40)
+  %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @shmem_ctx_get_nbi32(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_get8_sized() {
+  call void @shmem_init()
+  %1 = call ptr @malloc(i64 10)
+  %2 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %1, 0
+  %3 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %2, ptr %1, 1
+  %4 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %3, i64 0, 2
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %4, i64 10, 3, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, i64 1, 4, 0
+  %7 = call ptr @shmem_malloc(i64 10)
+  %8 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, 0
+  call void @shmem_get8(ptr %8, ptr %7, i64 10, i32 1)
+  call void @shmem_free(ptr %7)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_get16_sized() {
+  call void @shmem_init()
+  %1 = call ptr @malloc(i64 20)
+  %2 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %1, 0
+  %3 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %2, ptr %1, 1
+  %4 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %3, i64 0, 2
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %4, i64 10, 3, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, i64 1, 4, 0
+  %7 = call ptr @shmem_malloc(i64 20)
+  %8 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, 0
+  call void @shmem_get16(ptr %8, ptr %7, i64 10, i32 1)
+  call void @shmem_free(ptr %7)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_get32_sized() {
+  call void @shmem_init()
+  %1 = call ptr @malloc(i64 40)
+  %2 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %1, 0
+  %3 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %2, ptr %1, 1
+  %4 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %3, i64 0, 2
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %4, i64 10, 3, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, i64 1, 4, 0
+  %7 = call ptr @shmem_malloc(i64 40)
+  %8 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, 0
+  call void @shmem_get32(ptr %8, ptr %7, i64 10, i32 1)
+  call void @shmem_free(ptr %7)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_get64_sized() {
+  call void @shmem_init()
+  %1 = call ptr @malloc(i64 80)
+  %2 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %1, 0
+  %3 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %2, ptr %1, 1
+  %4 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %3, i64 0, 2
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %4, i64 10, 3, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, i64 1, 4, 0
+  %7 = call ptr @shmem_malloc(i64 80)
+  %8 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, 0
+  call void @shmem_get64(ptr %8, ptr %7, i64 10, i32 1)
+  call void @shmem_free(ptr %7)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_get128_sized() {
+  call void @shmem_init()
+  %1 = call ptr @malloc(i64 160)
+  %2 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %1, 0
+  %3 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %2, ptr %1, 1
+  %4 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %3, i64 0, 2
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %4, i64 10, 3, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, i64 1, 4, 0
+  %7 = call ptr @shmem_malloc(i64 160)
+  %8 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, 0
+  call void @shmem_get128(ptr %8, ptr %7, i64 10, i32 1)
+  call void @shmem_free(ptr %7)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_get8_sized() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @malloc(i64 10)
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %4, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, ptr %4, 1
+  %7 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, i64 0, 2
+  %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
+  %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
+  %10 = call ptr @shmem_malloc(i64 10)
+  %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @shmem_ctx_get8(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_get16_sized() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @malloc(i64 20)
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %4, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, ptr %4, 1
+  %7 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, i64 0, 2
+  %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
+  %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
+  %10 = call ptr @shmem_malloc(i64 20)
+  %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @shmem_ctx_get16(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_get32_sized() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @malloc(i64 40)
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %4, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, ptr %4, 1
+  %7 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, i64 0, 2
+  %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
+  %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
+  %10 = call ptr @shmem_malloc(i64 40)
+  %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @shmem_ctx_get32(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_get64_sized() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @malloc(i64 80)
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %4, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, ptr %4, 1
+  %7 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, i64 0, 2
+  %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
+  %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
+  %10 = call ptr @shmem_malloc(i64 80)
+  %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @shmem_ctx_get64(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_get128_sized() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @malloc(i64 160)
+  %5 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } poison, ptr %4, 0
+  %6 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %5, ptr %4, 1
+  %7 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %6, i64 0, 2
+  %8 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %7, i64 10, 3, 0
+  %9 = insertvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %8, i64 1, 4, 0
+  %10 = call ptr @shmem_malloc(i64 160)
+  %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
+  call void @shmem_ctx_get128(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
   call void @shmem_finalize()
   ret void

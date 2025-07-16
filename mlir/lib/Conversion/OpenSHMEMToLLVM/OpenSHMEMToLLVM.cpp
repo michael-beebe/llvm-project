@@ -34,6 +34,7 @@ namespace {
 // Utility functions for creating LLVM function declarations
 //===----------------------------------------------------------------------===//
 
+/// Utility to get or define a function in the module
 static LLVM::LLVMFuncOp getOrDefineFunction(ModuleOp &moduleOp,
                                             const Location loc,
                                             ConversionPatternRewriter &rewriter,
@@ -49,7 +50,7 @@ static LLVM::LLVMFuncOp getOrDefineFunction(ModuleOp &moduleOp,
   return funcOp;
 }
 
-// Utility to extract the data pointer from a memref
+/// Utility to extract the data pointer from a memref
 static Value getMemRefDataPtr(Location loc, ConversionPatternRewriter &rewriter,
                               Value memref) {
   // Assumes memref is a MemRef descriptor (struct), extract the pointer (field
@@ -58,7 +59,7 @@ static Value getMemRefDataPtr(Location loc, ConversionPatternRewriter &rewriter,
   return rewriter.create<LLVM::ExtractValueOp>(loc, ptrType, memref, 0);
 }
 
-// Utility to extract element type from symmetric memref
+/// Utility to extract element type from symmetric memref
 static Type getSymmetricMemRefElementType(Value symmetricMemRef) {
   auto symMemRefType =
       llvm::dyn_cast<openshmem::SymmetricMemRefType>(symmetricMemRef.getType());
@@ -68,7 +69,7 @@ static Type getSymmetricMemRefElementType(Value symmetricMemRef) {
   return symMemRefType.getElementType();
 }
 
-// Utility to generate typed function names based on element type
+/// Utility to generate typed function names based on element type
 static std::string getTypedFunctionName(StringRef baseName, Type elementType) {
   std::string funcName = "shmem_";
   funcName += baseName.str();
@@ -1194,160 +1195,75 @@ struct CtxPutNbiOpLowering
 // PutSizedOp Lowering (Sized variants)
 //===----------------------------------------------------------------------===//
 
-struct Put8OpLowering : public ConvertOpToLLVMPattern<openshmem::Put8Op> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+#define GEN_PUT_SIZED_LOWERING(SZ)                                             \
+  struct Put##SZ##OpLowering                                                   \
+      : public ConvertOpToLLVMPattern<openshmem::Put##SZ##Op> {                \
+    using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;                      \
+    LogicalResult                                                              \
+    matchAndRewrite(openshmem::Put##SZ##Op op, OpAdaptor adaptor,              \
+                    ConversionPatternRewriter &rewriter) const override {      \
+      Location loc = op.getLoc();                                              \
+      auto moduleOp = op->getParentOfType<ModuleOp>();                         \
+      Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());        \
+      Type sizeType = getTypeConverter()->getIndexType();                      \
+      auto funcType = LLVM::LLVMFunctionType::get(                             \
+          mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),                \
+          {ptrType, ptrType, sizeType, rewriter.getI32Type()});                \
+      LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(                         \
+          moduleOp, loc, rewriter, "shmem_put" #SZ, funcType);                 \
+      Value destPtr = adaptor.getDest();                                       \
+      Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());  \
+      rewriter.create<LLVM::CallOp>(loc, funcDecl,                             \
+                                    ValueRange{destPtr, sourcePtr,             \
+                                               adaptor.getNelems(),            \
+                                               adaptor.getPe()});              \
+      rewriter.eraseOp(op);                                                    \
+      return success();                                                        \
+    }                                                                          \
+  };
+GEN_PUT_SIZED_LOWERING(8)
+GEN_PUT_SIZED_LOWERING(16)
+GEN_PUT_SIZED_LOWERING(32)
+GEN_PUT_SIZED_LOWERING(64)
+GEN_PUT_SIZED_LOWERING(128)
+#undef GEN_PUT_SIZED_LOWERING
 
-  LogicalResult
-  matchAndRewrite(openshmem::Put8Op op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // void shmem_put8(void *dest, const void *source, size_t nelems, int pe)
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put8", funcType);
-
-    // dest: symmetric_memref (already a pointer after type conversion)
-    Value destPtr = adaptor.getDest();
-    // source: memref (need to extract pointer)
-    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-struct Put16OpLowering : public ConvertOpToLLVMPattern<openshmem::Put16Op> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::Put16Op op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // void shmem_put16(void *dest, const void *source, size_t nelems, int pe)
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put16", funcType);
-
-    // dest: symmetric_memref (already a pointer after type conversion)
-    Value destPtr = adaptor.getDest();
-    // source: memref (need to extract pointer)
-    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-struct Put32OpLowering : public ConvertOpToLLVMPattern<openshmem::Put32Op> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::Put32Op op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // void shmem_put32(void *dest, const void *source, size_t nelems, int pe)
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put32", funcType);
-
-    // dest: symmetric_memref (already a pointer after type conversion)
-    Value destPtr = adaptor.getDest();
-    // source: memref (need to extract pointer)
-    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-struct Put64OpLowering : public ConvertOpToLLVMPattern<openshmem::Put64Op> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::Put64Op op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // void shmem_put64(void *dest, const void *source, size_t nelems, int pe)
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put64", funcType);
-
-    // dest: symmetric_memref (already a pointer after type conversion)
-    Value destPtr = adaptor.getDest();
-    // source: memref (need to extract pointer)
-    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-struct Put128OpLowering : public ConvertOpToLLVMPattern<openshmem::Put128Op> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::Put128Op op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // void shmem_put128(void *dest, const void *source, size_t nelems, int pe)
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put128", funcType);
-
-    // dest: symmetric_memref (already a pointer after type conversion)
-    Value destPtr = adaptor.getDest();
-    // source: memref (need to extract pointer)
-    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
+//===----------------------------------------------------------------------===//
+// CtxPut8/16/32/64/128Op Lowering (Context-aware Sized)
+//===----------------------------------------------------------------------===//
+#define GEN_CTX_PUT_SIZED_LOWERING(SZ)                                         \
+  struct CtxPut##SZ##OpLowering                                                \
+      : public ConvertOpToLLVMPattern<openshmem::CtxPut##SZ##Op> {             \
+    using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;                      \
+    LogicalResult                                                              \
+    matchAndRewrite(openshmem::CtxPut##SZ##Op op, OpAdaptor adaptor,           \
+                    ConversionPatternRewriter &rewriter) const override {      \
+      Location loc = op.getLoc();                                              \
+      auto moduleOp = op->getParentOfType<ModuleOp>();                         \
+      Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());        \
+      Type sizeType = getTypeConverter()->getIndexType();                      \
+      auto funcType = LLVM::LLVMFunctionType::get(                             \
+          mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),                \
+          {ptrType, ptrType, ptrType, sizeType, rewriter.getI32Type()});       \
+      LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(                         \
+          moduleOp, loc, rewriter, "shmem_ctx_put" #SZ, funcType);             \
+      Value ctxPtr = adaptor.getCtx();                                         \
+      Value destPtr = adaptor.getDest();                                       \
+      Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());  \
+      rewriter.create<LLVM::CallOp>(loc, funcDecl,                             \
+                                    ValueRange{ctxPtr, destPtr, sourcePtr,     \
+                                               adaptor.getNelems(),            \
+                                               adaptor.getPe()});              \
+      rewriter.eraseOp(op);                                                    \
+      return success();                                                        \
+    }                                                                          \
+  };
+GEN_CTX_PUT_SIZED_LOWERING(8)
+GEN_CTX_PUT_SIZED_LOWERING(16)
+GEN_CTX_PUT_SIZED_LOWERING(32)
+GEN_CTX_PUT_SIZED_LOWERING(64)
+GEN_CTX_PUT_SIZED_LOWERING(128)
+#undef GEN_CTX_PUT_SIZED_LOWERING
 
 //===----------------------------------------------------------------------===//
 // PutmemOp Lowering
@@ -1498,6 +1414,210 @@ struct GetmemNbiOpLowering
 };
 
 //===----------------------------------------------------------------------===//
+// GetOp Lowering (Typed - Generic)
+//===----------------------------------------------------------------------===//
+struct GetOpLowering : public ConvertOpToLLVMPattern<openshmem::GetOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+  LogicalResult
+  matchAndRewrite(openshmem::GetOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type elementType = getSymmetricMemRefElementType(op.getSource());
+    if (!elementType)
+      return failure();
+    std::string funcName = getTypedFunctionName("get", elementType);
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
+    Value sourcePtr = adaptor.getSource();
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxGetOp Lowering (Typed - Context-aware)
+//===----------------------------------------------------------------------===//
+struct CtxGetOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxGetOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+  LogicalResult
+  matchAndRewrite(openshmem::CtxGetOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type elementType = getSymmetricMemRefElementType(op.getSource());
+    if (!elementType)
+      return failure();
+    std::string funcName = getTypedFunctionName("ctx_get", elementType);
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+    Value ctxPtr = adaptor.getCtx();
+    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
+    Value sourcePtr = adaptor.getSource();
+    rewriter.create<LLVM::CallOp>(loc, funcDecl,
+                                  ValueRange{ctxPtr, destPtr, sourcePtr,
+                                             adaptor.getNelems(),
+                                             adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// GetNbiOp Lowering (Typed - Non-blocking)
+//===----------------------------------------------------------------------===//
+struct GetNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::GetNbiOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+  LogicalResult
+  matchAndRewrite(openshmem::GetNbiOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type elementType = getSymmetricMemRefElementType(op.getSource());
+    if (!elementType)
+      return failure();
+    std::string funcName = getTypedFunctionName("get_nbi", elementType);
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
+    Value sourcePtr = adaptor.getSource();
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxGetNbiOp Lowering (Typed - Context-aware Non-blocking)
+//===----------------------------------------------------------------------===//
+struct CtxGetNbiOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::CtxGetNbiOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+  LogicalResult
+  matchAndRewrite(openshmem::CtxGetNbiOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type elementType = getSymmetricMemRefElementType(op.getSource());
+    if (!elementType)
+      return failure();
+    std::string funcName = getTypedFunctionName("ctx_get_nbi", elementType);
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+    Value ctxPtr = adaptor.getCtx();
+    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
+    Value sourcePtr = adaptor.getSource();
+    rewriter.create<LLVM::CallOp>(loc, funcDecl,
+                                  ValueRange{ctxPtr, destPtr, sourcePtr,
+                                             adaptor.getNelems(),
+                                             adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// Get8/16/32/64/128Op Lowering (Sized)
+//===----------------------------------------------------------------------===//
+#define GEN_GET_SIZED_LOWERING(SZ)                                             \
+  struct Get##SZ##OpLowering                                                   \
+      : public ConvertOpToLLVMPattern<openshmem::Get##SZ##Op> {                \
+    using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;                      \
+    LogicalResult                                                              \
+    matchAndRewrite(openshmem::Get##SZ##Op op, OpAdaptor adaptor,              \
+                    ConversionPatternRewriter &rewriter) const override {      \
+      Location loc = op.getLoc();                                              \
+      auto moduleOp = op->getParentOfType<ModuleOp>();                         \
+      Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());        \
+      Type sizeType = getTypeConverter()->getIndexType();                      \
+      auto funcType = LLVM::LLVMFunctionType::get(                             \
+          mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),                \
+          {ptrType, ptrType, sizeType, rewriter.getI32Type()});                \
+      LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(                         \
+          moduleOp, loc, rewriter, "shmem_get" #SZ, funcType);                 \
+      Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());      \
+      Value sourcePtr = adaptor.getSource();                                   \
+      rewriter.create<LLVM::CallOp>(loc, funcDecl,                             \
+                                    ValueRange{destPtr, sourcePtr,             \
+                                               adaptor.getNelems(),            \
+                                               adaptor.getPe()});              \
+      rewriter.eraseOp(op);                                                    \
+      return success();                                                        \
+    }                                                                          \
+  };
+GEN_GET_SIZED_LOWERING(8)
+GEN_GET_SIZED_LOWERING(16)
+GEN_GET_SIZED_LOWERING(32)
+GEN_GET_SIZED_LOWERING(64)
+GEN_GET_SIZED_LOWERING(128)
+#undef GEN_GET_SIZED_LOWERING
+
+//===----------------------------------------------------------------------===//
+// CtxGet8/16/32/64/128Op Lowering (Context-aware Sized)
+//===----------------------------------------------------------------------===//
+#define GEN_CTX_GET_SIZED_LOWERING(SZ)                                         \
+  struct CtxGet##SZ##OpLowering                                                \
+      : public ConvertOpToLLVMPattern<openshmem::CtxGet##SZ##Op> {             \
+    using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;                      \
+    LogicalResult                                                              \
+    matchAndRewrite(openshmem::CtxGet##SZ##Op op, OpAdaptor adaptor,           \
+                    ConversionPatternRewriter &rewriter) const override {      \
+      Location loc = op.getLoc();                                              \
+      auto moduleOp = op->getParentOfType<ModuleOp>();                         \
+      Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());        \
+      Type sizeType = getTypeConverter()->getIndexType();                      \
+      auto funcType = LLVM::LLVMFunctionType::get(                             \
+          mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),                \
+          {ptrType, ptrType, ptrType, sizeType, rewriter.getI32Type()});       \
+      LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(                         \
+          moduleOp, loc, rewriter, "shmem_ctx_get" #SZ, funcType);             \
+      Value ctxPtr = adaptor.getCtx();                                         \
+      Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());      \
+      Value sourcePtr = adaptor.getSource();                                   \
+      rewriter.create<LLVM::CallOp>(loc, funcDecl,                             \
+                                    ValueRange{ctxPtr, destPtr, sourcePtr,     \
+                                               adaptor.getNelems(),            \
+                                               adaptor.getPe()});              \
+      rewriter.eraseOp(op);                                                    \
+      return success();                                                        \
+    }                                                                          \
+  };
+GEN_CTX_GET_SIZED_LOWERING(8)
+GEN_CTX_GET_SIZED_LOWERING(16)
+GEN_CTX_GET_SIZED_LOWERING(32)
+GEN_CTX_GET_SIZED_LOWERING(64)
+GEN_CTX_GET_SIZED_LOWERING(128)
+#undef GEN_CTX_GET_SIZED_LOWERING
+
+} // namespace
+
+//===----------------------------------------------------------------------===//
 // Pass and conversion setup
 //===----------------------------------------------------------------------===//
 
@@ -1543,7 +1663,6 @@ struct OpenSHMEMToLLVMDialectInterface : public ConvertToLLVMPatternInterface {
                                                          patterns);
   }
 };
-} // namespace
 
 //===----------------------------------------------------------------------===//
 // Pattern population and pass creation
@@ -1596,7 +1715,13 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
       // Typed put operations
       PutOpLowering, CtxPutOpLowering, PutNbiOpLowering, CtxPutNbiOpLowering,
       Put8OpLowering, Put16OpLowering, Put32OpLowering, Put64OpLowering,
-      Put128OpLowering>(converter);
+      Put128OpLowering, CtxPut8OpLowering, CtxPut16OpLowering,
+      CtxPut32OpLowering, CtxPut64OpLowering, CtxPut128OpLowering,
+      // Typed get operations
+      GetOpLowering, CtxGetOpLowering, GetNbiOpLowering, CtxGetNbiOpLowering,
+      Get8OpLowering, Get16OpLowering, Get32OpLowering, Get64OpLowering,
+      Get128OpLowering, CtxGet8OpLowering, CtxGet16OpLowering,
+      CtxGet32OpLowering, CtxGet64OpLowering, CtxGet128OpLowering>(converter);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(
