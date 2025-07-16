@@ -17,6 +17,7 @@
 #include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.h"
 #include "mlir/IR/Types.h"
 #include "mlir/Pass/Pass.h"
+#include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include <memory>
 
@@ -55,6 +56,45 @@ static Value getMemRefDataPtr(Location loc, ConversionPatternRewriter &rewriter,
   // 0)
   auto ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
   return rewriter.create<LLVM::ExtractValueOp>(loc, ptrType, memref, 0);
+}
+
+// Utility to extract element type from symmetric memref
+static Type getSymmetricMemRefElementType(Value symmetricMemRef) {
+  auto symMemRefType =
+      llvm::dyn_cast<openshmem::SymmetricMemRefType>(symmetricMemRef.getType());
+  if (!symMemRefType) {
+    return nullptr;
+  }
+  return symMemRefType.getElementType();
+}
+
+// Utility to generate typed function names based on element type
+static std::string getTypedFunctionName(StringRef baseName, Type elementType) {
+  std::string funcName = "shmem_";
+  funcName += baseName.str();
+
+  // Map MLIR types to OpenSHMEM type suffixes
+  if (elementType.isInteger(8)) {
+    funcName += "8";
+  } else if (elementType.isInteger(16)) {
+    funcName += "16";
+  } else if (elementType.isInteger(32)) {
+    funcName += "32";
+  } else if (elementType.isInteger(64)) {
+    funcName += "64";
+  } else if (elementType.isF32()) {
+    funcName += "32";
+  } else if (elementType.isF64()) {
+    funcName += "64";
+  } else if (elementType.isF128()) {
+    funcName += "128";
+  } else {
+    // For unsupported types, fall back to generic name
+    // This should be validated earlier in the process
+    funcName = "shmem_" + baseName.str();
+  }
+
+  return funcName;
 }
 
 //===----------------------------------------------------------------------===//
@@ -226,154 +266,6 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
 
     // Replace with function call
     rewriter.create<LLVM::CallOp>(loc, funcDecl, ValueRange{dataPtr});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-//===----------------------------------------------------------------------===//
-// PutmemOp Lowering
-//===----------------------------------------------------------------------===//
-
-struct PutmemOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemOp> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::PutmemOp op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // dest: symmetric_memref (already a pointer after type conversion)
-    Value destPtr = adaptor.getDest();
-    // src: memref (need to extract pointer)
-    Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
-
-    // void shmem_putmem(void *dest, const void *source, size_t nelems, int pe)
-    // Note: for putmem, nelems represents the number of bytes to transfer
-    // size_t is typically the same as index type on the target platform
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_putmem", funcType);
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, srcPtr, adaptor.getSize(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-//===----------------------------------------------------------------------===//
-// PutmemNbiOp Lowering
-//===----------------------------------------------------------------------===//
-
-struct PutmemNbiOpLowering
-    : public ConvertOpToLLVMPattern<openshmem::PutmemNbiOp> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::PutmemNbiOp op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // dest: symmetric_memref (already a pointer after type conversion)
-    Value destPtr = adaptor.getDest();
-    // src: memref (need to extract pointer)
-    Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
-
-    // void shmem_putmem_nbi(void *dest, const void *source, size_t nelems, int
-    // pe)
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_putmem_nbi", funcType);
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, srcPtr, adaptor.getNelems(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-//===----------------------------------------------------------------------===//
-// GetmemOp Lowering
-//===----------------------------------------------------------------------===//
-
-struct GetmemOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemOp> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::GetmemOp op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // dest: memref (need to extract pointer)
-    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
-    // src: symmetric_memref (already a pointer after type conversion)
-    Value srcPtr = adaptor.getSrc();
-
-    // void shmem_getmem(void *dest, const void *source, size_t nelems, int pe)
-    // Note: for getmem, nelems represents the number of bytes to transfer
-    // size_t is typically the same as index type on the target platform
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl =
-        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_getmem", funcType);
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, srcPtr, adaptor.getSize(), adaptor.getPe()});
-    rewriter.eraseOp(op);
-    return success();
-  }
-};
-
-//===----------------------------------------------------------------------===//
-// GetmemNbiOp Lowering
-//===----------------------------------------------------------------------===//
-
-struct GetmemNbiOpLowering
-    : public ConvertOpToLLVMPattern<openshmem::GetmemNbiOp> {
-  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
-
-  LogicalResult
-  matchAndRewrite(openshmem::GetmemNbiOp op, OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    Location loc = op.getLoc();
-    auto moduleOp = op->getParentOfType<ModuleOp>();
-    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
-
-    // dest: memref (need to extract pointer)
-    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
-    // src: symmetric_memref (already a pointer after type conversion)
-    Value srcPtr = adaptor.getSrc();
-
-    // void shmem_getmem_nbi(void *dest, const void *source, size_t nelems, int
-    // pe)
-    Type sizeType = getTypeConverter()->getIndexType();
-    auto funcType = LLVM::LLVMFunctionType::get(
-        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
-        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_getmem_nbi", funcType);
-
-    rewriter.create<LLVM::CallOp>(
-        loc, funcDecl,
-        ValueRange{destPtr, srcPtr, adaptor.getNelems(), adaptor.getPe()});
     rewriter.eraseOp(op);
     return success();
   }
@@ -1109,6 +1001,500 @@ struct FCollectmemOpLowering
   }
 };
 
+//===----------------------------------------------------------------------===//
+// Typed Put Operations Lowering
+//===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+// PutOp Lowering (Typed - Generic)
+//===----------------------------------------------------------------------===//
+
+struct PutOpLowering : public ConvertOpToLLVMPattern<openshmem::PutOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::PutOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get element type from symmetric memref
+    Type elementType = getSymmetricMemRefElementType(op.getDest());
+    if (!elementType) {
+      return failure();
+    }
+
+    // Generate function name based on type
+    std::string funcName = getTypedFunctionName("put", elementType);
+
+    // void shmem_put(TYPE *dest, const TYPE *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxPutOp Lowering (Typed - Context-aware)
+//===----------------------------------------------------------------------===//
+
+struct CtxPutOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CtxPutOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get element type from symmetric memref
+    Type elementType = getSymmetricMemRefElementType(op.getDest());
+    if (!elementType) {
+      return failure();
+    }
+
+    // Generate function name based on type
+    std::string funcName = getTypedFunctionName("put", elementType);
+
+    // void shmem_put(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t
+    // nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+
+    // ctx: context (already a pointer after type conversion)
+    Value ctxPtr = adaptor.getCtx();
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(loc, funcDecl,
+                                  ValueRange{ctxPtr, destPtr, sourcePtr,
+                                             adaptor.getNelems(),
+                                             adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// PutNOp Lowering (Typed - Non-blocking)
+//===----------------------------------------------------------------------===//
+
+struct PutNOpLowering : public ConvertOpToLLVMPattern<openshmem::PutNOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::PutNOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get element type from symmetric memref
+    Type elementType = getSymmetricMemRefElementType(op.getDest());
+    if (!elementType) {
+      return failure();
+    }
+
+    // Generate function name based on type
+    std::string funcName = getTypedFunctionName("put_n", elementType);
+
+    // void shmem_put_n(TYPE *dest, const TYPE *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxPutNOp Lowering (Typed - Context-aware Non-blocking)
+//===----------------------------------------------------------------------===//
+
+struct CtxPutNOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutNOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CtxPutNOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get element type from symmetric memref
+    Type elementType = getSymmetricMemRefElementType(op.getDest());
+    if (!elementType) {
+      return failure();
+    }
+
+    // Generate function name based on type
+    std::string funcName = getTypedFunctionName("put_n", elementType);
+
+    // void shmem_put_n(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t
+    // nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
+
+    // ctx: context (already a pointer after type conversion)
+    Value ctxPtr = adaptor.getCtx();
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(loc, funcDecl,
+                                  ValueRange{ctxPtr, destPtr, sourcePtr,
+                                             adaptor.getNelems(),
+                                             adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// PutSizedOp Lowering (Sized variants)
+//===----------------------------------------------------------------------===//
+
+struct Put8OpLowering : public ConvertOpToLLVMPattern<openshmem::Put8Op> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::Put8Op op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // void shmem_put8(void *dest, const void *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put8", funcType);
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+struct Put16OpLowering : public ConvertOpToLLVMPattern<openshmem::Put16Op> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::Put16Op op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // void shmem_put16(void *dest, const void *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put16", funcType);
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+struct Put32OpLowering : public ConvertOpToLLVMPattern<openshmem::Put32Op> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::Put32Op op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // void shmem_put32(void *dest, const void *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put32", funcType);
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+struct Put64OpLowering : public ConvertOpToLLVMPattern<openshmem::Put64Op> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::Put64Op op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // void shmem_put64(void *dest, const void *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put64", funcType);
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+struct Put128OpLowering : public ConvertOpToLLVMPattern<openshmem::Put128Op> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::Put128Op op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // void shmem_put128(void *dest, const void *source, size_t nelems, int pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_put128", funcType);
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // source: memref (need to extract pointer)
+    Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, sourcePtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// PutmemOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct PutmemOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::PutmemOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // src: memref (need to extract pointer)
+    Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
+
+    // void shmem_putmem(void *dest, const void *source, size_t nelems, int pe)
+    // Note: for putmem, nelems represents the number of bytes to transfer
+    // size_t is typically the same as index type on the target platform
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_putmem", funcType);
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, srcPtr, adaptor.getSize(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// PutmemNbiOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct PutmemNbiOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::PutmemNbiOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::PutmemNbiOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // src: memref (need to extract pointer)
+    Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
+
+    // void shmem_putmem_nbi(void *dest, const void *source, size_t nelems, int
+    // pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_putmem_nbi", funcType);
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, srcPtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// GetmemOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct GetmemOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::GetmemOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // dest: memref (need to extract pointer)
+    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
+    // src: symmetric_memref (already a pointer after type conversion)
+    Value srcPtr = adaptor.getSrc();
+
+    // void shmem_getmem(void *dest, const void *source, size_t nelems, int pe)
+    // Note: for getmem, nelems represents the number of bytes to transfer
+    // size_t is typically the same as index type on the target platform
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_getmem", funcType);
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, srcPtr, adaptor.getSize(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// GetmemNbiOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct GetmemNbiOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::GetmemNbiOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::GetmemNbiOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // dest: memref (need to extract pointer)
+    Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
+    // src: symmetric_memref (already a pointer after type conversion)
+    Value srcPtr = adaptor.getSrc();
+
+    // void shmem_getmem_nbi(void *dest, const void *source, size_t nelems, int
+    // pe)
+    Type sizeType = getTypeConverter()->getIndexType();
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, sizeType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_getmem_nbi", funcType);
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl,
+        ValueRange{destPtr, srcPtr, adaptor.getNelems(), adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
 
 //===----------------------------------------------------------------------===//
 // Pass and conversion setup
@@ -1185,18 +1571,31 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
     return LLVM::LLVMPointerType::get(type.getContext());
   });
 
-  patterns
-      .add<InitOpLowering, FinalizeOpLowering, MyPeOpLowering, NPesOpLowering,
-           MallocOpLowering, FreeOpLowering, PutmemOpLowering, GetmemOpLowering,
-           BarrierAllOpLowering, BarrierOpLowering, QuietOpLowering,
-           TeamSplitStridedOpLowering, TeamSplit2dOpLowering,
-           TeamMyPeOpLowering, TeamNPesOpLowering, TeamSyncOpLowering,
-           TeamDestroyOpLowering, TeamWorldOpLowering, TeamSharedOpLowering,
-           AlltoallmemOpLowering, AlltoallsmemOpLowering,
-           BroadcastmemOpLowering, CollectmemOpLowering, FCollectmemOpLowering,
-           PutmemNbiOpLowering, GetmemNbiOpLowering, CtxCreateOpLowering,
-           TeamCreateCtxOpLowering, CtxDestroyOpLowering, CtxGetTeamOpLowering>(
-          converter);
+  patterns.add<
+      // Setup
+      InitOpLowering, FinalizeOpLowering, MyPeOpLowering, NPesOpLowering,
+
+      // Memory handling
+      MallocOpLowering, FreeOpLowering, PutmemOpLowering, GetmemOpLowering,
+      PutmemNbiOpLowering, GetmemNbiOpLowering,
+
+      // Barrier operations
+      BarrierAllOpLowering, BarrierOpLowering, QuietOpLowering,
+
+      // Team and context operations
+      TeamSplitStridedOpLowering, TeamSplit2dOpLowering, TeamMyPeOpLowering,
+      TeamNPesOpLowering, TeamSyncOpLowering, TeamDestroyOpLowering,
+      TeamWorldOpLowering, TeamSharedOpLowering, TeamCreateCtxOpLowering,
+      CtxCreateOpLowering, CtxDestroyOpLowering, CtxGetTeamOpLowering,
+
+      // Collective operations
+      AlltoallmemOpLowering, AlltoallsmemOpLowering, BroadcastmemOpLowering,
+      CollectmemOpLowering, FCollectmemOpLowering,
+
+      // Typed put operations
+      PutOpLowering, CtxPutOpLowering, PutNOpLowering, CtxPutNOpLowering,
+      Put8OpLowering, Put16OpLowering, Put32OpLowering, Put64OpLowering,
+      Put128OpLowering>(converter);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(
