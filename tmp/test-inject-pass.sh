@@ -6,6 +6,12 @@ BUILD_DIR="build"
 MLIR_OPT="$BUILD_DIR/bin/mlir-opt"
 OUTPUT_DIR="tmp/test_outputs"
 
+if command -v bat &> /dev/null; then
+  CAT="bat --paging=never"
+else
+  CAT="cat"
+fi
+
 mkdir -p "$OUTPUT_DIR"
 
 # Check if mlir-opt exists
@@ -23,13 +29,13 @@ TEST1_INPUT="mlir/test/Dialect/OpenSHMEM/inject-num-pes.mlir"
 TEST1_OUTPUT="$OUTPUT_DIR/test1-output.mlir"
 
 echo "Input file:"
-cat "$TEST1_INPUT"
+$CAT "$TEST1_INPUT"
 echo ""
 
 if "$MLIR_OPT" "$TEST1_INPUT" --openshmem-inject-num-pes="num-pes=4" -o "$TEST1_OUTPUT"; then
 	echo "PASS: Basic test passed"
 	echo "Output file:"
-	cat "$TEST1_OUTPUT"
+	$CAT "$TEST1_OUTPUT"
 	echo ""
 	if grep -q "openshmem.num_pes = 4" "$TEST1_OUTPUT"; then
 		echo "PASS: Module attribute correctly injected"
@@ -47,13 +53,13 @@ echo -e "\n===== [ Test 2: No num-pes option ] ====="
 TEST2_OUTPUT="$OUTPUT_DIR/test2-output.mlir"
 
 echo "Input file:"
-cat "$TEST1_INPUT"
+$CAT "$TEST1_INPUT"
 echo ""
 
 if "$MLIR_OPT" "$TEST1_INPUT" --openshmem-inject-num-pes -o "$TEST2_OUTPUT"; then
 	echo "PASS: No-option test passed"
 	echo "Output file:"
-	cat "$TEST2_OUTPUT"
+	$CAT "$TEST2_OUTPUT"
 	echo ""
 	if grep -q "openshmem.num_pes" "$TEST2_OUTPUT"; then
 		echo "FAIL: Module attribute should not be added"
@@ -72,13 +78,13 @@ TEST3_INPUT="mlir/test/Dialect/OpenSHMEM/inject-num-pes-optimization-example.mli
 TEST3_OUTPUT="$OUTPUT_DIR/test3-output.mlir"
 
 echo "Input file:"
-cat "$TEST3_INPUT"
+$CAT "$TEST3_INPUT"
 echo ""
 
 if "$MLIR_OPT" "$TEST3_INPUT" --openshmem-inject-num-pes="num-pes=8" -o "$TEST3_OUTPUT"; then
 	echo "PASS: Optimization example test passed"
 	echo "Output file:"
-	cat "$TEST3_OUTPUT"
+	$CAT "$TEST3_OUTPUT"
 	echo ""
 	if grep -q "openshmem.num_pes = 8" "$TEST3_OUTPUT"; then
 		echo "PASS: Module attribute correctly injected in complex example"

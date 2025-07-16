@@ -39,7 +39,7 @@ def OpenSHMEM_PE : OpenSHMEM_Type<"PE", "pe"> {
 //===----------------------------------------------------------------------===//
 // Symmetric memory type
 //
-// TODO: should we add a way to represent thape?
+// TODO: should we add a way to represent shape?
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_memref"> {

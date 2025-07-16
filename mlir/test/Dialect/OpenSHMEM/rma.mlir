@@ -104,7 +104,7 @@ module {
 // CHECK: llvm.return
 
   // Test generic typed put operations
-  func.func @test_put_typed() {
+  func.func @test_i32_put() {
     openshmem.init
     %nelems = arith.constant 10 : index
     %pe = arith.constant 1 : i32
@@ -122,7 +122,7 @@ module {
     openshmem.finalize
     return
   }
-// CHECK-LABEL: llvm.func @test_put_typed()
+// CHECK-LABEL: llvm.func @test_i32_put()
 // CHECK: llvm.call @shmem_init() : () -> ()
 // CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
 // CHECK: llvm.call @shmem_put32(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
@@ -130,10 +130,61 @@ module {
 // CHECK: llvm.call @shmem_finalize() : () -> ()
 // CHECK: llvm.return
 
+  // Test generic typed put operations
+  func.func @test_i64_put() {
+    openshmem.init
+    %nelems = arith.constant 10 : index
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 80 : index // 10 * 8 bytes
+    
+    // Allocate symmetric memory for dest (i64 type)
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    // Allocate local memory for src
+    %src = memref.alloc() : memref<10xi64>
+    
+    // Perform typed put operation
+    openshmem.put(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<i64>, memref<10xi64>, index, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_i64_put()
+// CHECK: llvm.call @shmem_init() : () -> ()
+// CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
+// CHECK: llvm.call @shmem_put64(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+// CHECK: llvm.call @shmem_free(%{{.*}}) : (!llvm.ptr) -> ()
+// CHECK: llvm.call @shmem_finalize() : () -> ()
+// CHECK: llvm.return
 
+  func.func @test_f32_put() {
+    openshmem.init
+    %nelems = arith.constant 10 : index
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 40 : index // 10 * 4 bytes
+    
+    // Allocate symmetric memory for dest (f32 type)
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    // Allocate local memory for src
+    %src = memref.alloc() : memref<10xf32>
+    
+    // Perform typed put operation
+    openshmem.put(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<f32>, memref<10xf32>, index, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_f32_put()
+// CHECK: llvm.call @shmem_init() : () -> ()
+// CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
+// CHECK: llvm.call @shmem_put32(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+// CHECK: llvm.call @shmem_free(%{{.*}}) : (!llvm.ptr) -> ()
+// CHECK: llvm.call @shmem_finalize() : () -> ()
+// CHECK: llvm.return
 
   // Test non-blocking typed put operations
-  func.func @test_put_n_typed() {
+  func.func @test_put_nbi_typed() {
     openshmem.init
     %nelems = arith.constant 10 : index
     %pe = arith.constant 1 : i32
@@ -145,17 +196,17 @@ module {
     %src = memref.alloc() : memref<10xf32>
     
     // Perform non-blocking typed put operation
-    openshmem.put_n(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<f32>, memref<10xf32>, index, i32
+    openshmem.put_nbi(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<f32>, memref<10xf32>, index, i32
     
     openshmem.quiet
     openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
     openshmem.finalize
     return
   }
-// CHECK-LABEL: llvm.func @test_put_n_typed()
+// CHECK-LABEL: llvm.func @test_put_nbi_typed()
 // CHECK: llvm.call @shmem_init() : () -> ()
 // CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
-// CHECK: llvm.call @shmem_put_n32(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
+// CHECK: llvm.call @shmem_put_nbi32(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
 // CHECK: llvm.call @shmem_quiet() : () -> ()
 // CHECK: llvm.call @shmem_free(%{{.*}}) : (!llvm.ptr) -> ()
 // CHECK: llvm.call @shmem_finalize() : () -> ()
@@ -164,7 +215,7 @@ module {
 
 
   // Test sized put operations
-  func.func @test_put_sized() {
+  func.func @test_put8_sized() {
     openshmem.init
     %nelems = arith.constant 10 : index
     %pe = arith.constant 1 : i32
@@ -182,7 +233,7 @@ module {
     openshmem.finalize
     return
   }
-// CHECK-LABEL: llvm.func @test_put_sized()
+// CHECK-LABEL: llvm.func @test_put8_sized()
 // CHECK: llvm.call @shmem_init() : () -> ()
 // CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
 // CHECK: llvm.call @shmem_put8(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
@@ -279,6 +330,33 @@ module {
 // CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
 // CHECK: llvm.call @shmem_put128(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, i64, i32) -> ()
 // CHECK: llvm.call @shmem_free(%{{.*}}) : (!llvm.ptr) -> ()
+// CHECK: llvm.call @shmem_finalize() : () -> ()
+// CHECK: llvm.return
+
+  func.func @test_ctx_put() {
+    openshmem.init
+    %opts = arith.constant 0 : i64
+    %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
+    %nelems = arith.constant 10 : index
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 40 : index
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %src = memref.alloc() : memref<10xi32>
+    openshmem.ctx_put(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+    openshmem.ctx_destroy(%ctx) : !openshmem.ctx
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_ctx_put()
+// CHECK: llvm.call @shmem_init() : () -> ()
+// CHECK: llvm.mlir.constant(0 : i64) : i64
+// CHECK: llvm.mlir.constant(1 : i32) : i32
+// CHECK: llvm.alloca %{{.*}} x !llvm.ptr : (i32) -> !llvm.ptr
+// CHECK: llvm.call @shmem_ctx_create(%{{.*}}, %{{.*}}) : (i64, !llvm.ptr) -> i32
+// CHECK: llvm.load %{{.*}} : !llvm.ptr -> !llvm.ptr
+// CHECK: llvm.call @shmem_malloc(%{{.*}}) : (i64) -> !llvm.ptr
+// CHECK: llvm.call @shmem_ctx_put32(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+// CHECK: llvm.call @shmem_ctx_destroy(%{{.*}}) : (!llvm.ptr) -> ()
 // CHECK: llvm.call @shmem_finalize() : () -> ()
 // CHECK: llvm.return
 

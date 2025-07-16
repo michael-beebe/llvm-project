@@ -10,13 +10,14 @@ FILECHECK="$BUILD_DIR/bin/FileCheck"
 OUTPUT_DIR="tmp/test_outputs"
 COALESCE_PUTS_OUT="$OUTPUT_DIR/openshmem-coalesce-puts.mlir"
 
+mkdir -p "$OUTPUT_DIR"
+
 if command -v bat &> /dev/null; then
   CAT="bat --paging=never"
 else
   CAT="cat"
 fi
 
-mkdir -p "$OUTPUT_DIR"
 
 # Check if tools exist
 if [ ! -f "$MLIR_OPT" ]; then

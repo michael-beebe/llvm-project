@@ -1070,7 +1070,7 @@ struct CtxPutOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutOp> {
     }
 
     // Generate function name based on type
-    std::string funcName = getTypedFunctionName("put", elementType);
+    std::string funcName = getTypedFunctionName("ctx_put", elementType);
 
     // void shmem_put(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t
     // nelems, int pe)
@@ -1098,14 +1098,14 @@ struct CtxPutOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutOp> {
 };
 
 //===----------------------------------------------------------------------===//
-// PutNOp Lowering (Typed - Non-blocking)
+// PutNbiOp Lowering (Typed - Non-blocking)
 //===----------------------------------------------------------------------===//
 
-struct PutNOpLowering : public ConvertOpToLLVMPattern<openshmem::PutNOp> {
+struct PutNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::PutNbiOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
   LogicalResult
-  matchAndRewrite(openshmem::PutNOp op, OpAdaptor adaptor,
+  matchAndRewrite(openshmem::PutNbiOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     Location loc = op.getLoc();
     auto moduleOp = op->getParentOfType<ModuleOp>();
@@ -1118,7 +1118,7 @@ struct PutNOpLowering : public ConvertOpToLLVMPattern<openshmem::PutNOp> {
     }
 
     // Generate function name based on type
-    std::string funcName = getTypedFunctionName("put_n", elementType);
+    std::string funcName = getTypedFunctionName("put_nbi", elementType);
 
     // void shmem_put_n(TYPE *dest, const TYPE *source, size_t nelems, int pe)
     Type sizeType = getTypeConverter()->getIndexType();
@@ -1142,14 +1142,15 @@ struct PutNOpLowering : public ConvertOpToLLVMPattern<openshmem::PutNOp> {
 };
 
 //===----------------------------------------------------------------------===//
-// CtxPutNOp Lowering (Typed - Context-aware Non-blocking)
+// CtxPutNbiOp Lowering (Typed - Context-aware Non-blocking)
 //===----------------------------------------------------------------------===//
 
-struct CtxPutNOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutNOp> {
+struct CtxPutNbiOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::CtxPutNbiOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
 
   LogicalResult
-  matchAndRewrite(openshmem::CtxPutNOp op, OpAdaptor adaptor,
+  matchAndRewrite(openshmem::CtxPutNbiOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     Location loc = op.getLoc();
     auto moduleOp = op->getParentOfType<ModuleOp>();
@@ -1162,10 +1163,10 @@ struct CtxPutNOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutNOp> {
     }
 
     // Generate function name based on type
-    std::string funcName = getTypedFunctionName("put_n", elementType);
+    std::string funcName = getTypedFunctionName("put_nbi", elementType);
 
-    // void shmem_put_n(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t
-    // nelems, int pe)
+    // void shmem_put_nbi(shmem_ctx_t ctx, TYPE *dest, const TYPE *source,
+    // size_t nelems, int pe)
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
@@ -1593,7 +1594,7 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
       CollectmemOpLowering, FCollectmemOpLowering,
 
       // Typed put operations
-      PutOpLowering, CtxPutOpLowering, PutNOpLowering, CtxPutNOpLowering,
+      PutOpLowering, CtxPutOpLowering, PutNbiOpLowering, CtxPutNbiOpLowering,
       Put8OpLowering, Put16OpLowering, Put32OpLowering, Put64OpLowering,
       Put128OpLowering>(converter);
 }

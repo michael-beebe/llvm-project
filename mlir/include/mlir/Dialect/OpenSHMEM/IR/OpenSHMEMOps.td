@@ -15,11 +15,20 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 
 include "mlir/IR/BuiltinTypes.td"
 
-
+//----------------------------------
 // TODO: REMAINING OPERATIONS
-// - context-aware RMA operations
-// - 
-
+//----------------------------------
+// - shmem_realloc, shmem_align, shmem_calloc
+// - shmem_p, shmem_g
+// - atomics
+// - context-aware atomics
+// - typed collectives
+// - reductions
+// - pt2pt synch operations
+// - lock/unlock
+// - fence
+// - context-aware rma
+// - signaling
 
 //===----------------------------------------------------------------------===//
 // Traits
@@ -903,10 +912,10 @@ def OpenSHMEM_CtxPutOp : OpenSHMEM_Op<"ctx_put", []> {
 }
 
 //===----------------------------------------------------------------------===//
-// PutNOp (Typed - Non-blocking)
+// PutNbiOp (Typed - Non-blocking)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_PutNOp : OpenSHMEM_Op<"put_n", []> {
+def OpenSHMEM_PutNbiOp : OpenSHMEM_Op<"put_nbi", []> {
   let summary = "Typed non-blocking put operation (generic)";
   let description = [{
     This operation performs a typed non-blocking put, copying data from the source
@@ -948,7 +957,7 @@ def OpenSHMEM_PutNOp : OpenSHMEM_Op<"put_n", []> {
 // CtxPutNOp (Typed - Context-aware Non-blocking)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxPutNOp : OpenSHMEM_Op<"ctx_put_n", []> {
+def OpenSHMEM_CtxPutNbiOp : OpenSHMEM_Op<"ctx_put_nbi", []> {
   let summary = "Typed non-blocking put operation with context";
   let description = [{
     This operation performs a typed non-blocking put with a specific context, copying data 
