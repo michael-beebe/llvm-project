@@ -1,0 +1,29 @@
+//===- SetupOpsToLLVM.h - Setup Operations Conversion -----------*- C++ -*-===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file declares conversion patterns for OpenSHMEM setup operations
+// (init, finalize, my_pe, n_pes) to LLVM.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_SETUPOPSTOLLVM_H
+#define MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_SETUPOPSTOLLVM_H
+
+namespace mlir {
+class LLVMTypeConverter;
+class RewritePatternSet;
+
+namespace openshmem {
+/// Populate the given list with patterns that convert setup operations
+/// from OpenSHMEM to LLVM.
+void populateSetupOpsToLLVMConversionPatterns(LLVMTypeConverter &converter,
+                                              RewritePatternSet &patterns);
+} // namespace openshmem
+} // namespace mlir
+
+#endif // MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_SETUPOPSTOLLVM_H
