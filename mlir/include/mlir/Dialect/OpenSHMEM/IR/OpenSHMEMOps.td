@@ -21,7 +21,6 @@ include "mlir/IR/BuiltinTypes.td"
 // - shmem_realloc, shmem_align, shmem_calloc
 // - shmem_p, shmem_g
 // - atomics
-// - context-aware atomics
 // - typed collectives
 // - reductions
 // - pt2pt synch operations
@@ -2027,6 +2026,74 @@ def OpenSHMEM_CtxAtomicFetchOp : OpenSHMEM_Op<"ctx_atomic_fetch", []> {
   
   let assemblyFormat = "`(` $ctx `,` $source `,` $pe `)` attr-dict `:` "
                        "type($ctx) `,` type($source) `,` type($pe) `->` type($result)";
+}
+
+//===----------------------------------------------------------------------===//
+// AtomicSetOp (Typed - Generic)
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_AtomicSetOp : OpenSHMEM_Op<"atomic_set", []> {
+  let summary = "Atomic set operation (generic)";
+  let description = [{
+    Atomically sets the value of a remote data object.
+
+    Arguments:
+    - dest: Destination symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T> where T is a supported atomic type)
+    - value: Value to set (T where T is a supported atomic type)
+    - pe: Target PE number (i32)
+
+    Signature:
+    ```c
+    void shmem_atomic_set(TYPE *dest, TYPE value, int pe);
+    ```
+    where TYPE is one of the extended AMO types from Table 7.
+  }];
+
+  let arguments = (ins 
+    OpenSHMEM_SymmetricMemRef:$dest,
+    AnyType:$value,
+    I32:$pe
+  );
+  
+  let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` attr-dict `:` "
+                       "type($dest) `,` type($value) `,` type($pe)";
+}
+
+//===----------------------------------------------------------------------===//
+// CtxAtomicSetOp (Typed - Context-aware)
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_CtxAtomicSetOp : OpenSHMEM_Op<"ctx_atomic_set", []> {
+  let summary = "Atomic set operation with context";
+  let description = [{
+    Atomically sets the value of a remote data object.
+    
+    Arguments:
+    - ctx: A context handle specifying the context on which to perform the operation.
+      When this argument is not provided, the operation is performed on the default
+      context. (!openshmem.ctx)
+    - dest: Destination symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T> where T is a supported atomic type)
+    - value: Value to set (T where T is a supported atomic type)
+    - pe: Target PE number (i32)
+
+    Signature:
+    ```c
+    void shmem_ctx_atomic_set(shmem_ctx_t ctx, TYPE *dest, TYPE value, int pe);
+    ```
+    where TYPE is one of the extended AMO types from Table 7.
+  }];
+
+  let arguments = (ins 
+    OpenSHMEM_Ctx:$ctx,
+    OpenSHMEM_SymmetricMemRef:$dest,
+    AnyType:$value,
+    I32:$pe
+  );
+  
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($value) `,` type($pe)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMOPS_TD

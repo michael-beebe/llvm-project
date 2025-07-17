@@ -161,4 +161,170 @@ module {
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_fetch()
 // CHECK: llvm.call @shmem_ctx_atomic_fetch64(
 
+  // Test generic typed atomic set operations
+  func.func @test_i32_atomic_set() {
+    openshmem.init
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 4 : index // 4 bytes for i32
+    %value = arith.constant 42 : i32
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    
+    // Perform atomic set operation
+    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_i32_atomic_set()
+// CHECK: llvm.call @shmem_atomic_set32(
+
+  func.func @test_i64_atomic_set() {
+    openshmem.init
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 8 : index // 8 bytes for i64
+    %value = arith.constant 42 : i64
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    
+    // Perform atomic set operation
+    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_i64_atomic_set()
+// CHECK: llvm.call @shmem_atomic_set64(
+
+  func.func @test_f32_atomic_set() {
+    openshmem.init
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 4 : index // 4 bytes for f32
+    %value = arith.constant 42.0 : f32
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    
+    // Perform atomic set operation
+    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<f32>, f32, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_f32_atomic_set()
+// CHECK: llvm.call @shmem_atomic_set32(
+
+  func.func @test_f64_atomic_set() {
+    openshmem.init
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 8 : index // 8 bytes for f64
+    %value = arith.constant 42.0 : f64
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    
+    // Perform atomic set operation
+    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<f64>, f64, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_f64_atomic_set()
+// CHECK: llvm.call @shmem_atomic_set64(
+
+  // Test context-aware typed atomic set operations
+  func.func @test_ctx_i32_atomic_set() {
+    openshmem.init
+    %opts = arith.constant 0 : i64
+    %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 4 : index
+    %value = arith.constant 42 : i32
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    
+    // Perform context-aware atomic set operation
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32
+    
+    openshmem.ctx_destroy(%ctx) : !openshmem.ctx
+    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_ctx_i32_atomic_set()
+// CHECK: llvm.call @shmem_ctx_atomic_set32(
+
+  func.func @test_ctx_i64_atomic_set() {
+    openshmem.init
+    %opts = arith.constant 0 : i64
+    %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 8 : index
+    %value = arith.constant 42 : i64
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    
+    // Perform context-aware atomic set operation
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32
+    
+    openshmem.ctx_destroy(%ctx) : !openshmem.ctx
+    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_ctx_i64_atomic_set()
+// CHECK: llvm.call @shmem_ctx_atomic_set64(
+
+  func.func @test_ctx_f32_atomic_set() {
+    openshmem.init
+    %opts = arith.constant 0 : i64
+    %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 4 : index
+    %value = arith.constant 42.0 : f32
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    
+    // Perform context-aware atomic set operation
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f32>, f32, i32
+    
+    openshmem.ctx_destroy(%ctx) : !openshmem.ctx
+    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_ctx_f32_atomic_set()
+// CHECK: llvm.call @shmem_ctx_atomic_set32(
+
+  func.func @test_ctx_f64_atomic_set() {
+    openshmem.init
+    %opts = arith.constant 0 : i64
+    %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 8 : index
+    %value = arith.constant 42.0 : f64
+    
+    // Allocate symmetric memory for destination
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    
+    // Perform context-aware atomic set operation
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f64>, f64, i32
+    
+    openshmem.ctx_destroy(%ctx) : !openshmem.ctx
+    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_ctx_f64_atomic_set()
+// CHECK: llvm.call @shmem_ctx_atomic_set64(
 }
+
