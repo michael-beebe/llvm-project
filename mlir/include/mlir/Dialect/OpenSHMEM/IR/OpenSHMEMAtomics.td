@@ -725,7 +725,7 @@ def OpenSHMEM_CtxAtomicXorOp : OpenSHMEM_Op<"ctx_atomic_xor", []> {
 
   let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
                        "type($ctx) `,` type($dest) `,` type($value) `,` type($pe)";
-  };
+}
 
 //===----------------------------------------------------------------------===//
 // AtomicFetchNbiOp (Typed - Generic)
