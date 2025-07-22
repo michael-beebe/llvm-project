@@ -11,6 +11,8 @@
 
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 
+// TODO: probably need an op to initialize the default context
+
 //===----------------------------------------------------------------------===//
 // CreateCtxOp
 //===----------------------------------------------------------------------===//

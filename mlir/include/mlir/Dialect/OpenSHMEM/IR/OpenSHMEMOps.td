@@ -19,11 +19,13 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMContexts.td"
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMAtomics.td"
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMSync.td"
 
+//===----------------------------------------------------------------------===//
 // TODO: REMAINING OPERATIONS
-
-
+//===----------------------------------------------------------------------===//
 // The following operations are not yet implemented and should be added
 // to the appropriate modular files when needed:
+//
+// Op to initialize the default context
 //
 // Memory Operations:
 // - shmem_realloc, shmem_align, shmem_calloc

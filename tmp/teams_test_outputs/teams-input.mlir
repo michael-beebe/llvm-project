@@ -25,12 +25,12 @@ module {
     %stride = arith.constant 1 : i32  
     %size = arith.constant 2 : i32
     %strided_team, %ret1 = openshmem.team_split_strided(%world_team, %start, %stride, %size) : 
-      !openshmem.team, i32, i32, i32 -> !openshmem.team, !openshmem.retval
+      !openshmem.team, i32, i32, i32 -> !openshmem.team, i32
 
     // Create 2D teams (split world team into 2D grid)
     %xrange = arith.constant 2 : i32
     %xaxis_team, %yaxis_team, %ret2 = openshmem.team_split_2d(%world_team, %xrange) : 
-      !openshmem.team, i32 -> !openshmem.team, !openshmem.team, !openshmem.retval
+      !openshmem.team, i32 -> !openshmem.team, !openshmem.team, i32
 
     // Use teams for synchronization
     openshmem.team_sync(%strided_team) : !openshmem.team
@@ -64,7 +64,7 @@ module {
     %stride = arith.constant 1 : i32
     %size = arith.constant 2 : i32
     %pair_team, %ret = openshmem.team_split_strided(%world_team, %start, %stride, %size) : 
-      !openshmem.team, i32, i32, i32 -> !openshmem.team, !openshmem.retval
+      !openshmem.team, i32, i32, i32 -> !openshmem.team, i32
 
     // Allocate symmetric memory
     %mem_size = arith.constant 40 : index
