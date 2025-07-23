@@ -13,6 +13,10 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 
 //===----------------------------------------------------------------------===//
 // AlltoallmemOp
+//
+// TODO: Can we support both alltoall and alltoallmem with one operation and one
+//       lowering pass?
+// 
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_AlltoallmemOp : OpenSHMEM_Op<"alltoallmem", []> {

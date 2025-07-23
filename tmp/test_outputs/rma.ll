@@ -3,6 +3,14 @@ source_filename = "LLVMDialectModule"
 
 declare ptr @malloc(i64)
 
+declare i32 @shmem_ctx_g(ptr, ptr, i32)
+
+declare i32 @shmem_g(ptr, i32)
+
+declare void @shmem_ctx_p(ptr, ptr, i32, i32)
+
+declare void @shmem_p(ptr, i32, i32)
+
 declare void @shmem_ctx_get128(ptr, ptr, ptr, i64, i32)
 
 declare void @shmem_ctx_get64(ptr, ptr, ptr, i64, i32)
@@ -534,6 +542,50 @@ define void @test_ctx_get128_sized() {
   %10 = call ptr @shmem_malloc(i64 160)
   %11 = extractvalue { ptr, ptr, i64, [1 x i64], [1 x i64] } %9, 0
   call void @shmem_ctx_get128(ptr %3, ptr %11, ptr %10, i64 10, i32 1)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_p() {
+  call void @shmem_init()
+  %1 = call ptr @shmem_malloc(i64 4)
+  call void @shmem_p(ptr %1, i32 42, i32 1)
+  call void @shmem_free(ptr %1)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_p() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @shmem_malloc(i64 4)
+  call void @shmem_ctx_p(ptr %3, ptr %4, i32 42, i32 1)
+  call void @shmem_free(ptr %4)
+  call void @shmem_ctx_destroy(ptr %3)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_g() {
+  call void @shmem_init()
+  %1 = call ptr @shmem_malloc(i64 4)
+  %2 = call i32 @shmem_g(ptr %1, i32 1)
+  call void @shmem_free(ptr %1)
+  call void @shmem_finalize()
+  ret void
+}
+
+define void @test_ctx_g() {
+  call void @shmem_init()
+  %1 = alloca ptr, align 8
+  %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
+  %3 = load ptr, ptr %1, align 8
+  %4 = call ptr @shmem_malloc(i64 4)
+  %5 = call i32 @shmem_ctx_g(ptr %3, ptr %4, i32 1)
+  call void @shmem_free(ptr %4)
   call void @shmem_ctx_destroy(ptr %3)
   call void @shmem_finalize()
   ret void

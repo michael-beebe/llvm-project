@@ -514,4 +514,80 @@ module {
 // CHECK-LABEL: llvm.func @test_ctx_get128_sized()
 // CHECK: llvm.call @shmem_ctx_get128(
 
+  // Test single-element operations
+  func.func @test_p() {
+    openshmem.init
+    %pe = arith.constant 1 : i32
+    %value = arith.constant 42 : i32
+    %size = arith.constant 4 : index // 4 bytes for i32
+    
+    // Allocate symmetric memory for dest
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    
+    openshmem.p(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_p()
+// CHECK: llvm.call @shmem_p(
+
+  func.func @test_ctx_p() {
+    openshmem.init
+    %opts = arith.constant 0 : i64
+    %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
+    %pe = arith.constant 1 : i32
+    %value = arith.constant 42 : i32
+    %size = arith.constant 4 : index // 4 bytes for i32
+    
+    // Allocate symmetric memory for dest
+    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    
+    openshmem.ctx_p(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32
+    
+    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.ctx_destroy(%ctx) : !openshmem.ctx
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_ctx_p()
+// CHECK: llvm.call @shmem_ctx_p(
+
+  func.func @test_g() {
+    openshmem.init
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 4 : index // 4 bytes for i32
+    
+    // Allocate symmetric memory for source
+    %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    
+    %value = openshmem.g(%source, %pe) : !openshmem.symmetric_memref<i32>, i32 -> i32
+    
+    openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_g()
+// CHECK: llvm.call @shmem_g(
+
+  func.func @test_ctx_g() {
+    openshmem.init
+    %opts = arith.constant 0 : i64
+    %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
+    %pe = arith.constant 1 : i32
+    %size = arith.constant 4 : index // 4 bytes for i32
+    
+    // Allocate symmetric memory for source
+    %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    
+    %value = openshmem.ctx_g(%ctx, %source, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32 -> i32
+    
+    openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+    openshmem.ctx_destroy(%ctx) : !openshmem.ctx
+    openshmem.finalize
+    return
+  }
+// CHECK-LABEL: llvm.func @test_ctx_g()
+// CHECK: llvm.call @shmem_ctx_g(
 }

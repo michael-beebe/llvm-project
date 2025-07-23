@@ -1,5 +1,9 @@
 module {
   llvm.func @malloc(i64) -> !llvm.ptr
+  llvm.func @shmem_ctx_g(!llvm.ptr, !llvm.ptr, i32) -> i32
+  llvm.func @shmem_g(!llvm.ptr, i32) -> i32
+  llvm.func @shmem_ctx_p(!llvm.ptr, !llvm.ptr, i32, i32)
+  llvm.func @shmem_p(!llvm.ptr, i32, i32)
   llvm.func @shmem_ctx_get128(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
   llvm.func @shmem_ctx_get64(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
   llvm.func @shmem_ctx_get16(!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32)
@@ -770,6 +774,60 @@ module {
     %21 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
     %22 = llvm.extractvalue %20[0] : !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> 
     llvm.call @shmem_ctx_get128(%4, %22, %21, %5, %6) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, i64, i32) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_p() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(1 : i32) : i32
+    %1 = llvm.mlir.constant(42 : i32) : i32
+    %2 = llvm.mlir.constant(4 : index) : i64
+    %3 = llvm.call @shmem_malloc(%2) : (i64) -> !llvm.ptr
+    llvm.call @shmem_p(%3, %1, %0) : (!llvm.ptr, i32, i32) -> ()
+    llvm.call @shmem_free(%3) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_p() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(1 : i32) : i32
+    %6 = llvm.mlir.constant(42 : i32) : i32
+    %7 = llvm.mlir.constant(4 : index) : i64
+    %8 = llvm.call @shmem_malloc(%7) : (i64) -> !llvm.ptr
+    llvm.call @shmem_ctx_p(%4, %8, %6, %5) : (!llvm.ptr, !llvm.ptr, i32, i32) -> ()
+    llvm.call @shmem_free(%8) : (!llvm.ptr) -> ()
+    llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_g() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(1 : i32) : i32
+    %1 = llvm.mlir.constant(4 : index) : i64
+    %2 = llvm.call @shmem_malloc(%1) : (i64) -> !llvm.ptr
+    %3 = llvm.call @shmem_g(%2, %0) : (!llvm.ptr, i32) -> i32
+    llvm.call @shmem_free(%2) : (!llvm.ptr) -> ()
+    llvm.call @shmem_finalize() : () -> ()
+    llvm.return
+  }
+  llvm.func @test_ctx_g() {
+    llvm.call @shmem_init() : () -> ()
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(1 : i32) : i32
+    %2 = llvm.alloca %1 x !llvm.ptr : (i32) -> !llvm.ptr
+    %3 = llvm.call @shmem_ctx_create(%0, %2) : (i64, !llvm.ptr) -> i32
+    %4 = llvm.load %2 : !llvm.ptr -> !llvm.ptr
+    %5 = llvm.mlir.constant(1 : i32) : i32
+    %6 = llvm.mlir.constant(4 : index) : i64
+    %7 = llvm.call @shmem_malloc(%6) : (i64) -> !llvm.ptr
+    %8 = llvm.call @shmem_ctx_g(%4, %7, %5) : (!llvm.ptr, !llvm.ptr, i32) -> i32
+    llvm.call @shmem_free(%7) : (!llvm.ptr) -> ()
     llvm.call @shmem_ctx_destroy(%4) : (!llvm.ptr) -> ()
     llvm.call @shmem_finalize() : () -> ()
     llvm.return

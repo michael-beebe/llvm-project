@@ -31,7 +31,7 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMSync.td"
 // - shmem_realloc, shmem_align, shmem_calloc
 //
 // Point-to-Point Operations:
-// - shmem_p, shmem_g (single element put/get)
+// - shmem_iput, shmem_iget
 //
 // Typed Collective Operations:
 // - typed variants of collective operations (alltoall_TYPE, etc.)
@@ -54,13 +54,6 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMSync.td"
 // - shmem_put_signal, shmem_put_signal_nbi
 // - shmem_signal_fetch, shmem_signal_set
 //
-// Additional Atomic Operations:
-// - shmem_atomic_compare_swap, shmem_atomic_swap
-// - shmem_atomic_fetch_inc, shmem_atomic_inc
-// - shmem_atomic_fetch_add, shmem_atomic_add
-// - shmem_atomic_fetch_and, shmem_atomic_and
-// - shmem_atomic_fetch_or, shmem_atomic_or
-// - shmem_atomic_fetch_xor, shmem_atomic_xor
 //
 //===----------------------------------------------------------------------===//
 

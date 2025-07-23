@@ -347,9 +347,6 @@ def OpenSHMEM_CtxAtomicIncOp : OpenSHMEM_Op<"ctx_atomic_inc", []> {
 
 //===----------------------------------------------------------------------===//
 // AtomicFetchAddOp (Typed - Generic)
-//
-//  TODO: pick up lowering passes from here
-//
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_AtomicFetchAddOp : OpenSHMEM_Op<"atomic_fetch_add", []> {

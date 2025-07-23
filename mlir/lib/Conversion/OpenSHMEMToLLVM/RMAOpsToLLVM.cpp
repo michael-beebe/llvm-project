@@ -637,6 +637,144 @@ struct GetmemNbiOpLowering
   }
 };
 
+//===----------------------------------------------------------------------===//
+// POp Lowering
+//===----------------------------------------------------------------------===//
+
+struct POpLowering : public ConvertOpToLLVMPattern<openshmem::POp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::POp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // value: any type
+    Value value = adaptor.getValue();
+
+    // void shmem_p(void *dest, TYPE value, int pe)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, value.getType(), rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_p", funcType);
+
+    rewriter.create<LLVM::CallOp>(loc, funcDecl,
+                                  ValueRange{destPtr, value, adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxPOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct CtxPOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CtxPOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // ctx: ctx (already a pointer after type conversion)
+    Value ctxPtr = adaptor.getCtx();
+    // dest: symmetric_memref (already a pointer after type conversion)
+    Value destPtr = adaptor.getDest();
+    // value: any type
+    Value value = adaptor.getValue();
+
+    // void shmem_ctx_p(shmem_ctx_t ctx, void *dest, TYPE value, int pe)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
+        {ptrType, ptrType, value.getType(), rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_ctx_p", funcType);
+
+    rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{ctxPtr, destPtr, value, adaptor.getPe()});
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// GOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct GOpLowering : public ConvertOpToLLVMPattern<openshmem::GOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::GOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get the return type from the operation result
+    Type resultType = op.getValue().getType();
+
+    // source: symmetric_memref (already a pointer after type conversion)
+    Value sourcePtr = adaptor.getSource();
+
+    // TYPE shmem_g(const void *source, int pe)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        resultType, {ptrType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_g", funcType);
+
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{sourcePtr, adaptor.getPe()});
+
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CtxGOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct CtxGOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxGOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CtxGOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+
+    // Get the return type from the operation result
+    Type resultType = op.getValue().getType();
+
+    // ctx: ctx (already a pointer after type conversion)
+    Value ctxPtr = adaptor.getCtx();
+    // source: symmetric_memref (already a pointer after type conversion)
+    Value sourcePtr = adaptor.getSource();
+
+    // TYPE shmem_ctx_g(shmem_ctx_t ctx, TYPE *source, int pe)
+    auto funcType = LLVM::LLVMFunctionType::get(
+        resultType, {ptrType, ptrType, rewriter.getI32Type()});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_ctx_g", funcType);
+
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{ctxPtr, sourcePtr, adaptor.getPe()});
+
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
 } // namespace
 
 //===----------------------------------------------------------------------===//
@@ -665,5 +803,7 @@ void openshmem::populateRMAOpsToLLVMConversionPatterns(
       CtxGet8OpLowering, CtxGet16OpLowering, CtxGet32OpLowering,
       CtxGet64OpLowering, CtxGet128OpLowering,
       // Memory get operations
-      GetmemOpLowering, GetmemNbiOpLowering>(converter);
+      GetmemOpLowering, GetmemNbiOpLowering,
+      // Single-element operations
+      POpLowering, CtxPOpLowering, GOpLowering, CtxGOpLowering>(converter);
 }
