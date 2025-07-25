@@ -16,6 +16,7 @@
 #include "ContextOpsToLLVM.h"
 #include "AtomicOpsToLLVM.h"
 #include "SyncOpsToLLVM.h"
+#include "Pt2ptSyncOpsToLLVM.h"
 #include "mlir/Conversion/ConvertToLLVM/ToLLVMInterface.h"
 #include "mlir/Conversion/LLVMCommon/ConversionTarget.h"
 #include "mlir/Conversion/LLVMCommon/MemRefBuilder.h"
@@ -116,7 +117,7 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
     return LLVM::LLVMPointerType::get(type.getContext());
   });
 
-  // Populate patterns from modular files
+  // Populate patterns
   populateSetupOpsToLLVMConversionPatterns(converter, patterns);
   populateMemoryOpsToLLVMConversionPatterns(converter, patterns);
   populateRMAOpsToLLVMConversionPatterns(converter, patterns);
@@ -125,8 +126,7 @@ void openshmem::populateOpenSHMEMToLLVMConversionPatterns(
   populateContextOpsToLLVMConversionPatterns(converter, patterns);
   populateAtomicOpsToLLVMConversionPatterns(converter, patterns);
   populateSyncOpsToLLVMConversionPatterns(converter, patterns);
-
-  // All conversion patterns are now handled by modular files!
+  populatePt2ptSyncOpsToLLVMConversionPatterns(converter, patterns);
 }
 
 void openshmem::registerConvertOpenSHMEMToLLVMInterface(

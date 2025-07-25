@@ -18,6 +18,7 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMTeams.td"
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMContexts.td"
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMAtomics.td"
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMSync.td"
+include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMPt2ptSync.td"
 
 //===----------------------------------------------------------------------===//
 // TODO: REMAINING OPERATIONS
@@ -39,10 +40,6 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMSync.td"
 // Reduction Operations:
 // - shmem_and_reduce, shmem_or_reduce, shmem_xor_reduce
 // - shmem_max_reduce, shmem_min_reduce, shmem_sum_reduce, shmem_prod_reduce
-//
-// Point-to-Point Synchronization:
-// - shmem_wait_until, shmem_test, shmem_wait_until_all, shmem_wait_until_any
-// - shmem_wait_until_some, shmem_test_all, shmem_test_any, shmem_test_some
 //
 // Lock Operations:
 // - shmem_set_lock, shmem_clear_lock, shmem_test_lock

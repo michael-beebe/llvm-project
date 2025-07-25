@@ -1,0 +1,26 @@
+//===- Pt2ptSyncOpsToLLVM.h - Point-to-point synchronization ops conversion patterns -*- C++ -*-===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_PT2PTSYNCOPSTOLLVM_H
+#define MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_PT2PTSYNCOPSTOLLVM_H
+
+namespace mlir {
+class LLVMTypeConverter;
+class RewritePatternSet;
+
+namespace openshmem {
+
+/// Populate conversion patterns for OpenSHMEM Point-to-point synchronization
+/// operations.
+void populatePt2ptSyncOpsToLLVMConversionPatterns(LLVMTypeConverter &converter,
+                                                   RewritePatternSet &patterns);
+
+} // namespace openshmem
+} // namespace mlir
+
+#endif // MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_PT2PTSYNCOPSTOLLVM_H

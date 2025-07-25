@@ -9,6 +9,7 @@ add_mlir_conversion_library(MLIROpenSHMEMToLLVM
   ContextOpsToLLVM.cpp
   AtomicOpsToLLVM.cpp
   SyncOpsToLLVM.cpp
+  Pt2ptSyncOpsToLLVM.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${MLIR_MAIN_INCLUDE_DIR}/mlir/Conversion/OpenSHMEMToLLVM
