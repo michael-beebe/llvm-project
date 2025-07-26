@@ -34,13 +34,6 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMPt2ptSync.td"
 // Point-to-Point Operations:
 // - shmem_iput, shmem_iget
 //
-// Typed Collective Operations:
-// - typed variants of collective operations (alltoall_TYPE, etc.)
-//
-// Reduction Operations:
-// - shmem_and_reduce, shmem_or_reduce, shmem_xor_reduce
-// - shmem_max_reduce, shmem_min_reduce, shmem_sum_reduce, shmem_prod_reduce
-//
 // Lock Operations:
 // - shmem_set_lock, shmem_clear_lock, shmem_test_lock
 //
