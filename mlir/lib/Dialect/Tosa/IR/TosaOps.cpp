@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
-#include "mlir/Dialect/Mesh/Interfaces/ShardingInterface.h"
 #include "mlir/Dialect/Quant/IR/Quant.h"
+#include "mlir/Dialect/Shard/Interfaces/ShardingInterface.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tosa/Utils/QuantUtils.h"
 #include "mlir/Dialect/Tosa/Utils/ShapeUtils.h"
@@ -166,7 +166,7 @@ void TosaDialect::initialize() {
       >();
   addInterfaces<TosaDialectBytecodeInterface, TosaInlinerInterface>();
   declarePromisedInterfaces<
-      mesh::ShardingInterface, ClampOp, SigmoidOp, TanhOp, AddOp,
+      shard::ShardingInterface, ClampOp, SigmoidOp, TanhOp, AddOp,
       ArithmeticRightShiftOp, BitwiseAndOp, BitwiseOrOp, BitwiseXorOp, IntDivOp,
       LogicalAndOp, LogicalLeftShiftOp, LogicalRightShiftOp, LogicalOrOp,
       LogicalXorOp, MaximumOp, MinimumOp, MulOp, PowOp, SubOp, AbsOp,
@@ -945,10 +945,11 @@ LogicalResult tosa::ClampOp::verify() {
       return emitOpError("min/max attributes types are incompatible with "
                          "input/output element types.");
 
-    const bool isUnsigned = cast<IntegerType>(inputETy).isUnsigned();
+    const bool isUnsigned = inputETy.isUnsignedInteger();
+    const bool isBoolean = inputETy.isInteger(1);
     const APInt minVal = intMinValAttr.getValue();
     const APInt maxVal = intMaxValAttr.getValue();
-    if (isUnsigned ? maxVal.ult(minVal) : maxVal.slt(minVal))
+    if ((isUnsigned || isBoolean) ? maxVal.ult(minVal) : maxVal.slt(minVal))
       return emitOpError("expected min_val <= max_val, got min_val=")
              << minValAttr << ", max_val=" << maxValAttr;
   } else {
