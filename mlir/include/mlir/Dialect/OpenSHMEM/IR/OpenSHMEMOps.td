@@ -21,15 +21,12 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMSync.td"
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMPt2ptSync.td"
 
 //===----------------------------------------------------------------------===//
-// TODO: REMAINING OPERATIONS
+// TODO: REMAINING v1.5 OPERATIONS
 //===----------------------------------------------------------------------===//
 // The following operations are not yet implemented and should be added
 // to the appropriate modular files when needed:
 //
 // Op to initialize the default context
-//
-// Memory Operations:
-// - shmem_realloc, shmem_align, shmem_calloc
 //
 // Point-to-Point Operations:
 // - shmem_iput, shmem_iget

@@ -50,15 +50,7 @@ struct MallocOpLowering : public ConvertOpToLLVMPattern<openshmem::MallocOp> {
                                                 ValueRange{adaptor.getSize()});
 
     // Return the pointer as the symmetric_memref
-    SmallVector<Value> replacements;
-    replacements.push_back(callOp.getResult());
-    if (op.getRetval()) {
-      // Return success (0) for now
-      Value success = rewriter.create<arith::ConstantIntOp>(loc, 0, 32);
-      replacements.push_back(success);
-    }
-
-    rewriter.replaceOp(op, replacements);
+    rewriter.replaceOp(op, callOp.getResult());
     return success();
   }
 };
@@ -93,6 +85,93 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
   }
 };
 
+//===----------------------------------------------------------------------===//
+// ReallocOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct ReallocOpLowering : public ConvertOpToLLVMPattern<openshmem::ReallocOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::ReallocOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type sizeType = getTypeConverter()->getIndexType();
+
+    // void *shmem_realloc(void *ptr, size_t size)
+    auto funcType = LLVM::LLVMFunctionType::get(ptrType, {ptrType, sizeType});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_realloc", funcType);
+
+    // Replace with function call
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{adaptor.getPtr(), adaptor.getSize()});
+
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// AlignOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct AlignOpLowering : public ConvertOpToLLVMPattern<openshmem::AlignOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::AlignOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type sizeType = getTypeConverter()->getIndexType();
+
+    // void *shmem_align(size_t alignment, size_t size)
+    auto funcType = LLVM::LLVMFunctionType::get(ptrType, {sizeType, sizeType});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_align", funcType);
+
+    // Replace with function call
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{adaptor.getAlignment(), adaptor.getSize()});
+
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// CallocOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct CallocOpLowering : public ConvertOpToLLVMPattern<openshmem::CallocOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::CallocOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+    Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
+    Type sizeType = getTypeConverter()->getIndexType();
+
+    // void *shmem_calloc(size_t count, size_t size)
+    auto funcType = LLVM::LLVMFunctionType::get(ptrType, {sizeType, sizeType});
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, "shmem_calloc", funcType);
+
+    // Replace with function call
+    auto callOp = rewriter.create<LLVM::CallOp>(
+        loc, funcDecl, ValueRange{adaptor.getCount(), adaptor.getSize()});
+
+    rewriter.replaceOp(op, callOp.getResult());
+    return success();
+  }
+};
+
 } // namespace
 
 //===----------------------------------------------------------------------===//
@@ -101,5 +180,6 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
 
 void openshmem::populateMemoryOpsToLLVMConversionPatterns(
     LLVMTypeConverter &converter, RewritePatternSet &patterns) {
-  patterns.add<MallocOpLowering, FreeOpLowering>(converter);
+  patterns.add<MallocOpLowering, FreeOpLowering, ReallocOpLowering,
+               AlignOpLowering, CallocOpLowering>(converter);
 } 

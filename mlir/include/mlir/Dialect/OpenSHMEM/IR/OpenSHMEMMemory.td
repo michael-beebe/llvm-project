@@ -44,12 +44,11 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
   let arguments = (ins Index:$size);
   
   let results = (outs 
-    OpenSHMEM_SymmetricMemRef:$ptr,
-    Optional<I32>:$retval
+    OpenSHMEM_SymmetricMemRef:$ptr
   );
   
   let assemblyFormat = "`(` $size `)` attr-dict `:` type($size) `->` "
-                       "type($ptr) (`,` type($retval)^)?";
+                       "type($ptr)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -67,7 +66,7 @@ def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
     same symmetric memory allocation.
     
     Arguments:
-    - ptr: Memory reference to free (must be symmetric memory)
+    - ptr: Symmetric address of an object in the symmetric heap.
     
     Signature:
     ```c
@@ -77,6 +76,115 @@ def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
   
   let arguments = (ins OpenSHMEM_SymmetricMemRef:$ptr);
   let assemblyFormat = "`(` $ptr `)` attr-dict `:` type($ptr)";
+}
+
+//===----------------------------------------------------------------------===//
+// ReallocOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_ReallocOp : OpenSHMEM_Op<"realloc", []> {
+  let summary = "Collectively resize an allocation of symmetric memory.";
+  let description = [{
+    Collective operation on the world team that changes the size of the block
+    to which ptr points to the size (in bytes) specified by size. The contents
+    of the block are unchanged up to the lesser of the new and old sizes.
+
+    Arguments:
+    - ptr: Symmetric address of an object in the symmetric heap
+    - size: The size, in bytes, of a block to be allocated from the
+            symmetric heap.
+
+    Signature:
+    ```c
+    void *shmem_realloc(void *ptr, size_t size);
+    ```
+  }];
+
+  let arguments = (ins
+    OpenSHMEM_SymmetricMemRef:$ptr,
+    Index:$size
+  );
+
+  let results = (outs 
+    OpenSHMEM_SymmetricMemRef:$retval
+  );
+
+  let assemblyFormat = "`(` $ptr `,` $size `)` attr-dict `:` "
+                       "type($ptr) `,` type($size) `->` type($retval)";
+}
+
+//===----------------------------------------------------------------------===//
+// AlignOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_AlignOp : OpenSHMEM_Op<"align", []> {
+  let summary = "Collectively allocate symmetric memory with a specified alignment.";
+  let description = [{
+    Collective operation on the world team that allocates a block in the symmetric
+    heap that has a byte alignment specified by the alignment argument. The value
+    of alignment shall be a multiple of sizeof(void *) that is also a power of
+    two; otherwise, the behavior is undefined. When size is zero, the shmem_align
+    routine performs no action and returns a null pointer; otherwise, shmem_align
+    calls a barrier on exit. The value of the alignment and size arguments must
+    be identical on all PEs; otherwise, the behavior is undefined.
+
+    Arguments:
+    - alignment: Byte alignment of the block allocated from the symmetric heap.
+    - size: The size, in bytes, of a block to be allocated from the symmetric heap.
+
+    Signature:
+    - void *shmem_align(size_t alignment, size_t size);
+  }];
+
+  let arguments = (ins
+    Index:$alignment,
+    Index:$size
+  );
+
+  let results = (outs 
+    OpenSHMEM_SymmetricMemRef:$retval
+  );
+
+  let assemblyFormat = "`(` $alignment `,` $size `)` attr-dict `:` "
+                       "type($alignment) `,` type($size) `->` type($retval)";
+}
+
+//===----------------------------------------------------------------------===//
+// CallocOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_CallocOp : OpenSHMEM_Op<"calloc", []> {
+  let summary = "Collectively allocate symmetric memory with a specified alignment.";
+  let description = [{
+    Collective operation on the world team that allocates a block in the symmetric
+    heap that has a byte alignment specified by the alignment argument. The value of
+    alignment shall be a multiple of sizeof(void *) that is also a power of two;
+    otherwise, the behavior is undefined. When size is zero, the shmem_align routine
+    performs no action and returns a null pointer; otherwise, shmem_align calls a
+    barrier on exit. The value of the alignment and size arguments must be identical
+    on all PEs; otherwise, the behavior is undefined.
+
+    Arguments:
+    - count: The number of objects to allocate
+    - size: The size of each object
+
+    Signature:
+    ```c
+    void *shmem_calloc(size_t count, size_t size);
+    ```
+  }];
+
+  let arguments = (ins
+    Index:$count,
+    Index:$size
+  );
+
+  let results = (outs 
+    OpenSHMEM_SymmetricMemRef:$retval
+  );
+
+  let assemblyFormat = "`(` $count `,` $size `)` attr-dict `:` "
+                       "type($count) `,` type($size) `->` type($retval)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHEMMMEMORY_TD 
