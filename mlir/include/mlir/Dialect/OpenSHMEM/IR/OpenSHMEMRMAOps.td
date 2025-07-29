@@ -1,7 +1,7 @@
 //===- OpenSHMEMRMAOps.td - OpenSHMEM RMA operations -------*- tablegen -*-===//
 //
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM
+// Exceptions. See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
@@ -10,8 +10,6 @@
 #define MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMRMAOPS_TD
 
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
-
-// TODO: shmem_p, shmem_g
 
 //===----------------------------------------------------------------------===//
 // Typed RMA Operations
@@ -24,13 +22,14 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
   let summary = "Typed blocking put operation (generic)";
   let description = [{
-    This operation performs a typed blocking put, copying data from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` elements of the specified type.
+    This operation performs a typed blocking put, copying data from the
+    source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` elements
+    of the specified type.
     
-    This is the generic typed equivalent of putmem, providing type safety and better
-    performance for known data types. The element type is inferred from the symmetric
-    memref type.
+    This is the generic typed equivalent of putmem, providing type safety
+    and better performance for known data types. The element type is
+    inferred from the symmetric memref type.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
@@ -55,8 +54,10 @@ def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -66,9 +67,10 @@ def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
 def OpenSHMEM_CtxPutOp : OpenSHMEM_Op<"ctx_put", []> {
   let summary = "Typed blocking put operation with context";
   let description = [{
-    This operation performs a typed blocking put with a specific context, copying data 
-    from the source memory region on the calling PE to the destination symmetric memory 
-    region on the target PE. The operation copies `nelems` elements of the specified type.
+    This operation performs a typed blocking put with a specific context,
+    copying data from the source memory region on the calling PE to the
+    destination symmetric memory region on the target PE. The operation
+    copies `nelems` elements of the specified type.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
@@ -82,7 +84,8 @@ def OpenSHMEM_CtxPutOp : OpenSHMEM_Op<"ctx_put", []> {
     
     Signature:
     ```c
-    void shmem_put(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t nelems, int pe);
+    void shmem_put(shmem_ctx_t ctx, TYPE *dest, const TYPE *source,
+                   size_t nelems, int pe);
     ```
     where TYPE is one of the standard RMA types from Table 5.
   }];
@@ -95,8 +98,10 @@ def OpenSHMEM_CtxPutOp : OpenSHMEM_Op<"ctx_put", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -106,13 +111,14 @@ def OpenSHMEM_CtxPutOp : OpenSHMEM_Op<"ctx_put", []> {
 def OpenSHMEM_PutNbiOp : OpenSHMEM_Op<"put_nbi", []> {
   let summary = "Typed non-blocking put operation (generic)";
   let description = [{
-    This operation performs a typed non-blocking put, copying data from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` elements and returns immediately
-    after the data has been copied out of the source array.
+    This operation performs a typed non-blocking put, copying data from the
+    source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` elements
+    and returns immediately after the data has been copied out of the source
+    array.
     
-    This is the generic typed equivalent of putmem_nbi, providing type safety and better
-    performance for known data types.
+    This is the generic typed equivalent of putmem_nbi, providing type
+    safety and better performance for known data types.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
@@ -137,8 +143,10 @@ def OpenSHMEM_PutNbiOp : OpenSHMEM_Op<"put_nbi", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -148,10 +156,11 @@ def OpenSHMEM_PutNbiOp : OpenSHMEM_Op<"put_nbi", []> {
 def OpenSHMEM_CtxPutNbiOp : OpenSHMEM_Op<"ctx_put_nbi", []> {
   let summary = "Typed non-blocking put operation with context";
   let description = [{
-    This operation performs a typed non-blocking put with a specific context, copying data 
-    from the source memory region on the calling PE to the destination symmetric memory 
-    region on the target PE. The operation copies `nelems` elements and returns immediately
-    after the data has been copied out of the source array.
+    This operation performs a typed non-blocking put with a specific context,
+    copying data from the source memory region on the calling PE to the
+    destination symmetric memory region on the target PE. The operation
+    copies `nelems` elements and returns immediately after the data has been
+    copied out of the source array.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
@@ -165,7 +174,8 @@ def OpenSHMEM_CtxPutNbiOp : OpenSHMEM_Op<"ctx_put_nbi", []> {
     
     Signature:
     ```c
-    void shmem_put_n(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t nelems, int pe);
+    void shmem_put_n(shmem_ctx_t ctx, TYPE *dest, const TYPE *source,
+                     size_t nelems, int pe);
     ```
     where TYPE is one of the standard RMA types from Table 5.
   }];
@@ -178,8 +188,10 @@ def OpenSHMEM_CtxPutNbiOp : OpenSHMEM_Op<"ctx_put_nbi", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -189,9 +201,9 @@ def OpenSHMEM_CtxPutNbiOp : OpenSHMEM_Op<"ctx_put_nbi", []> {
 def OpenSHMEM_Put8Op : OpenSHMEM_Op<"put8", []> {
   let summary = "8-bit sized put operation";
   let description = [{
-    This operation performs an 8-bit sized put operation, copying data from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs an 8-bit sized put operation, copying data from
+    the source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` bytes.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
@@ -213,16 +225,18 @@ def OpenSHMEM_Put8Op : OpenSHMEM_Op<"put8", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Put16Op : OpenSHMEM_Op<"put16", []> {
   let summary = "16-bit sized put operation";
   let description = [{
-    This operation performs a 16-bit sized put operation, copying data from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 16-bit sized put operation, copying data from
+    the source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` bytes.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
@@ -244,16 +258,18 @@ def OpenSHMEM_Put16Op : OpenSHMEM_Op<"put16", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Put32Op : OpenSHMEM_Op<"put32", []> {
   let summary = "32-bit sized put operation";
   let description = [{
-    This operation performs a 32-bit sized put operation, copying data from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 32-bit sized put operation, copying data from
+    the source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` bytes.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
@@ -275,16 +291,18 @@ def OpenSHMEM_Put32Op : OpenSHMEM_Op<"put32", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Put64Op : OpenSHMEM_Op<"put64", []> {
   let summary = "64-bit sized put operation";
   let description = [{
-    This operation performs a 64-bit sized put operation, copying data from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 64-bit sized put operation, copying data from
+    the source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` bytes.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
@@ -306,21 +324,24 @@ def OpenSHMEM_Put64Op : OpenSHMEM_Op<"put64", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Put128Op : OpenSHMEM_Op<"put128", []> {
   let summary = "128-bit sized put operation";
   let description = [{
-    This operation performs a 128-bit sized put operation, copying data from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 128-bit sized put operation, copying data from
+    the source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` bytes.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
       (!openshmem.symmetric_memref<f128> or vector type)
-    - source: Source local memory reference on the calling PE (memref<f128> or vector type)
+    - source: Source local memory reference on the calling PE (memref<f128>
+      or vector type)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -337,8 +358,10 @@ def OpenSHMEM_Put128Op : OpenSHMEM_Op<"put128", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -348,20 +371,23 @@ def OpenSHMEM_Put128Op : OpenSHMEM_Op<"put128", []> {
 def OpenSHMEM_CtxPut8Op : OpenSHMEM_Op<"ctx_put8", []> {
   let summary = "8-bit sized put operation with context";
   let description = [{
-    This operation performs an 8-bit sized put operation with a context, copying data from the source
-    local memory region on the calling PE to the destination symmetric memory region on
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs an 8-bit sized put operation with a context,
+    copying data from the source local memory region on the calling PE to
+    the destination symmetric memory region on the target PE. The operation
+    copies `nelems` bytes.
 
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
-    - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<i8>)
+    - dest: Destination symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i8>)
     - source: Source local memory reference on the calling PE (memref<i8>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
 
     Signature:
     ```c
-    void shmem_ctx_put8(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_put8(shmem_ctx_t ctx, void *dest, const void *source,
+                        size_t nelems, int pe);
     ```
   }];
 
@@ -373,27 +399,32 @@ def OpenSHMEM_CtxPut8Op : OpenSHMEM_Op<"ctx_put8", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxPut16Op : OpenSHMEM_Op<"ctx_put16", []> {
   let summary = "16-bit sized put operation with context";
   let description = [{
-    This operation performs a 16-bit sized put operation with a context, copying data from the source
-    local memory region on the calling PE to the destination symmetric memory region on
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 16-bit sized put operation with a context,
+    copying data from the source local memory region on the calling PE to
+    the destination symmetric memory region on the target PE. The operation
+    copies `nelems` bytes.
 
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
-    - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<i16>)
+    - dest: Destination symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i16>)
     - source: Source local memory reference on the calling PE (memref<i16>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
 
     Signature:
     ```c
-    void shmem_ctx_put16(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_put16(shmem_ctx_t ctx, void *dest, const void *source,
+                         size_t nelems, int pe);
     ```
   }];
 
@@ -405,27 +436,32 @@ def OpenSHMEM_CtxPut16Op : OpenSHMEM_Op<"ctx_put16", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxPut32Op : OpenSHMEM_Op<"ctx_put32", []> {
   let summary = "32-bit sized put operation with context";
   let description = [{
-    This operation performs a 32-bit sized put operation with a context, copying data from the source
-    local memory region on the calling PE to the destination symmetric memory region on
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 32-bit sized put operation with a context,
+    copying data from the source local memory region on the calling PE to
+    the destination symmetric memory region on the target PE. The operation
+    copies `nelems` bytes.
 
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
-    - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<i32>)
+    - dest: Destination symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i32>)
     - source: Source local memory reference on the calling PE (memref<i32>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
 
     Signature:
     ```c
-    void shmem_ctx_put32(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_put32(shmem_ctx_t ctx, void *dest, const void *source,
+                         size_t nelems, int pe);
     ```
   }];
 
@@ -437,27 +473,32 @@ def OpenSHMEM_CtxPut32Op : OpenSHMEM_Op<"ctx_put32", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxPut64Op : OpenSHMEM_Op<"ctx_put64", []> {
   let summary = "64-bit sized put operation with context";
   let description = [{
-    This operation performs a 64-bit sized put operation with a context, copying data from the source
-    local memory region on the calling PE to the destination symmetric memory region on
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 64-bit sized put operation with a context,
+    copying data from the source local memory region on the calling PE to
+    the destination symmetric memory region on the target PE. The operation
+    copies `nelems` bytes.
 
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
-    - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<i64>)
+    - dest: Destination symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i64>)
     - source: Source local memory reference on the calling PE (memref<i64>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
 
     Signature:
     ```c
-    void shmem_ctx_put64(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_put64(shmem_ctx_t ctx, void *dest, const void *source,
+                         size_t nelems, int pe);
     ```
   }];
 
@@ -469,27 +510,33 @@ def OpenSHMEM_CtxPut64Op : OpenSHMEM_Op<"ctx_put64", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxPut128Op : OpenSHMEM_Op<"ctx_put128", []> {
   let summary = "128-bit sized put operation with context";
   let description = [{
-    This operation performs a 128-bit sized put operation with a context, copying data from the source
-    local memory region on the calling PE to the destination symmetric memory region on
-    the target PE. The operation copies `nelems` bytes.
+    This operation performs a 128-bit sized put operation with a context,
+    copying data from the source local memory region on the calling PE to
+    the destination symmetric memory region on the target PE. The operation
+    copies `nelems` bytes.
 
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
-    - dest: Destination symmetric memory reference on the target PE (!openshmem.symmetric_memref<f128> or vector type)
-    - source: Source local memory reference on the calling PE (memref<f128> or vector type)
+    - dest: Destination symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<f128> or vector type)
+    - source: Source local memory reference on the calling PE (memref<f128>
+      or vector type)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
 
     Signature:
     ```c
-    void shmem_ctx_put128(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_put128(shmem_ctx_t ctx, void *dest, const void *source,
+                          size_t nelems, int pe);
     ```
   }];
 
@@ -501,8 +548,10 @@ def OpenSHMEM_CtxPut128Op : OpenSHMEM_Op<"ctx_put128", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -512,10 +561,11 @@ def OpenSHMEM_CtxPut128Op : OpenSHMEM_Op<"ctx_put128", []> {
 def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
   let summary = "Blocking putmem operation (matches shmem_putmem C API)";
   let description = [{
-    This operation performs a blocking putmem, copying raw memory from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `size` bytes and returns only after the
-    data has been copied out of the source array on the local PE.
+    This operation performs a blocking putmem, copying raw memory from the
+    source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `size` bytes and
+    returns only after the data has been copied out of the source array on
+    the local PE.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target 
@@ -529,7 +579,8 @@ def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
     void shmem_putmem(void *dest, const void *src, size_t nelems, int pe);
     ```
     
-    Note: For putmem operations, nelems represents the number of bytes to transfer.
+    Note: For putmem operations, nelems represents the number of bytes to
+    transfer.
   }];
 
   let arguments = (ins 
@@ -539,17 +590,20 @@ def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($src) `,` type($size) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($src) `,` type($size) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_PutmemNbiOp : OpenSHMEM_Op<"putmem_nbi", []> {
   let summary = "Non-blocking putmem operation (matches shmem_putmem_nbi C API)";
   let description = [{
-    This operation performs a non-blocking putmem, copying raw memory from the source
-    memory region on the calling PE to the destination symmetric memory region on 
-    the target PE. The operation copies `nelems` bytes and returns immediately after the
-    data has been copied out of the source array on the local PE.
+    This operation performs a non-blocking putmem, copying raw memory from
+    the source memory region on the calling PE to the destination symmetric
+    memory region on the target PE. The operation copies `nelems` bytes and
+    returns immediately after the data has been copied out of the source
+    array on the local PE.
 
     Arguments:
     - dest: Destination symmetric memory reference on the target
@@ -563,7 +617,8 @@ def OpenSHMEM_PutmemNbiOp : OpenSHMEM_Op<"putmem_nbi", []> {
     void shmem_putmem_nbi(void *dest, const void *src, size_t nelems, int pe);
     ```
 
-    Note: For putmem_nbi operations, nelems represents the number of bytes to transfer.
+    Note: For putmem_nbi operations, nelems represents the number of bytes
+    to transfer.
   }];
 
   let arguments = (ins 
@@ -573,8 +628,10 @@ def OpenSHMEM_PutmemNbiOp : OpenSHMEM_Op<"putmem_nbi", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $src `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($src) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $src `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($src) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -584,17 +641,19 @@ def OpenSHMEM_PutmemNbiOp : OpenSHMEM_Op<"putmem_nbi", []> {
 def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
   let summary = "Typed blocking get operation (generic)";
   let description = [{
-    This operation performs a typed blocking get, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` elements of the specified type.
+    This operation performs a typed blocking get, copying data from the
+    source symmetric memory region on the target PE to the destination local
+    memory region on the calling PE. The operation copies `nelems` elements
+    of the specified type.
     
-    This is the generic typed equivalent of getmem, providing type safety and better
-    performance for known data types. The element type is inferred from the symmetric
-    memref type.
+    This is the generic typed equivalent of getmem, providing type safety
+    and better performance for known data types. The element type is
+    inferred from the symmetric memref type.
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<T>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -614,21 +673,25 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_CtxGetOp : OpenSHMEM_Op<"ctx_get", []> {
   let summary = "Typed blocking get operation with context";
   let description = [{
-    This operation performs a typed blocking get with a specific context, copying data
-    from the source symmetric memory region on the target PE to the destination local memory
-    region on the calling PE. The operation copies `nelems` elements of the specified type.
+    This operation performs a typed blocking get with a specific context,
+    copying data from the source symmetric memory region on the target PE
+    to the destination local memory region on the calling PE. The operation
+    copies `nelems` elements of the specified type.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<T>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -636,7 +699,8 @@ def OpenSHMEM_CtxGetOp : OpenSHMEM_Op<"ctx_get", []> {
     
     Signature:
     ```c
-    void shmem_get(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t nelems, int pe);
+    void shmem_get(shmem_ctx_t ctx, TYPE *dest, const TYPE *source,
+                   size_t nelems, int pe);
     ```
     where TYPE is one of the standard RMA types from Table 5.
   }];
@@ -649,21 +713,25 @@ def OpenSHMEM_CtxGetOp : OpenSHMEM_Op<"ctx_get", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_GetNbiOp : OpenSHMEM_Op<"get_nbi", []> {
   let summary = "Typed non-blocking get operation (generic)";
   let description = [{
-    This operation performs a typed non-blocking get, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` elements and returns immediately
-    after the data has been delivered to the destination array.
+    This operation performs a typed non-blocking get, copying data from the
+    source symmetric memory region on the target PE to the destination local
+    memory region on the calling PE. The operation copies `nelems` elements
+    and returns immediately after the data has been delivered to the
+    destination array.
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<T>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -683,22 +751,26 @@ def OpenSHMEM_GetNbiOp : OpenSHMEM_Op<"get_nbi", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_CtxGetNbiOp : OpenSHMEM_Op<"ctx_get_nbi", []> {
   let summary = "Typed non-blocking get operation with context";
   let description = [{
-    This operation performs a typed non-blocking get with a specific context, copying data
-    from the source symmetric memory region on the target PE to the destination local memory
-    region on the calling PE. The operation copies `nelems` elements and returns immediately
-    after the data has been delivered to the destination array.
+    This operation performs a typed non-blocking get with a specific
+    context, copying data from the source symmetric memory region on the
+    target PE to the destination local memory region on the calling PE. The
+    operation copies `nelems` elements and returns immediately after the
+    data has been delivered to the destination array.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<T>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -706,7 +778,8 @@ def OpenSHMEM_CtxGetNbiOp : OpenSHMEM_Op<"ctx_get_nbi", []> {
     
     Signature:
     ```c
-    void shmem_get_nbi(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t nelems, int pe);
+    void shmem_get_nbi(shmem_ctx_t ctx, TYPE *dest, const TYPE *source,
+                       size_t nelems, int pe);
     ```
     where TYPE is one of the standard RMA types from Table 5.
   }];
@@ -719,8 +792,10 @@ def OpenSHMEM_CtxGetNbiOp : OpenSHMEM_Op<"ctx_get_nbi", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -730,13 +805,15 @@ def OpenSHMEM_CtxGetNbiOp : OpenSHMEM_Op<"ctx_get_nbi", []> {
 def OpenSHMEM_Get8Op : OpenSHMEM_Op<"get8", []> {
   let summary = "8-bit sized get operation";
   let description = [{
-    This operation performs an 8-bit sized get operation, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs an 8-bit sized get operation, copying data from
+    the source symmetric memory region on the target PE to the destination
+    local memory region on the calling PE. The operation copies `nelems`
+    bytes.
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i8>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i8>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i8>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -753,20 +830,24 @@ def OpenSHMEM_Get8Op : OpenSHMEM_Op<"get8", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Get16Op : OpenSHMEM_Op<"get16", []> {
   let summary = "16-bit sized get operation";
   let description = [{
-    This operation performs a 16-bit sized get operation, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 16-bit sized get operation, copying data from
+    the source symmetric memory region on the target PE to the destination
+    local memory region on the calling PE. The operation copies `nelems`
+    bytes.
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i16>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i16>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i16>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -783,20 +864,24 @@ def OpenSHMEM_Get16Op : OpenSHMEM_Op<"get16", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Get32Op : OpenSHMEM_Op<"get32", []> {
   let summary = "32-bit sized get operation";
   let description = [{
-    This operation performs a 32-bit sized get operation, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 32-bit sized get operation, copying data from
+    the source symmetric memory region on the target PE to the destination
+    local memory region on the calling PE. The operation copies `nelems`
+    bytes.
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i32>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i32>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i32>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -813,20 +898,24 @@ def OpenSHMEM_Get32Op : OpenSHMEM_Op<"get32", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Get64Op : OpenSHMEM_Op<"get64", []> {
   let summary = "64-bit sized get operation";
   let description = [{
-    This operation performs a 64-bit sized get operation, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 64-bit sized get operation, copying data from
+    the source symmetric memory region on the target PE to the destination
+    local memory region on the calling PE. The operation copies `nelems`
+    bytes.
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i64>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i64>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i64>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -843,20 +932,25 @@ def OpenSHMEM_Get64Op : OpenSHMEM_Op<"get64", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_Get128Op : OpenSHMEM_Op<"get128", []> {
   let summary = "128-bit sized get operation";
   let description = [{
-    This operation performs a 128-bit sized get operation, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 128-bit sized get operation, copying data from
+    the source symmetric memory region on the target PE to the destination
+    local memory region on the calling PE. The operation copies `nelems`
+    bytes.
     
     Arguments:
-    - dest: Destination local memory reference on the calling PE (memref<f128> or vector type)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<f128> or vector type)
+    - dest: Destination local memory reference on the calling PE (memref<f128>
+      or vector type)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<f128> or vector type)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -873,8 +967,10 @@ def OpenSHMEM_Get128Op : OpenSHMEM_Op<"get128", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($source) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -884,20 +980,23 @@ def OpenSHMEM_Get128Op : OpenSHMEM_Op<"get128", []> {
 def OpenSHMEM_CtxGet8Op : OpenSHMEM_Op<"ctx_get8", []> {
   let summary = "8-bit sized get operation with context";
   let description = [{
-    This operation performs an 8-bit sized get operation with a context, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs an 8-bit sized get operation with a context,
+    copying data from the source symmetric memory region on the target PE
+    to the destination local memory region on the calling PE. The operation
+    copies `nelems` bytes.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i8>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i8>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i8>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
     Signature:
     ```c
-    void shmem_ctx_get8(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_get8(shmem_ctx_t ctx, void *dest, const void *source,
+                        size_t nelems, int pe);
     ```
   }];
 
@@ -909,27 +1008,32 @@ def OpenSHMEM_CtxGet8Op : OpenSHMEM_Op<"ctx_get8", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxGet16Op : OpenSHMEM_Op<"ctx_get16", []> {
   let summary = "16-bit sized get operation with context";
   let description = [{
-    This operation performs a 16-bit sized get operation with a context, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 16-bit sized get operation with a context,
+    copying data from the source symmetric memory region on the target PE
+    to the destination local memory region on the calling PE. The operation
+    copies `nelems` bytes.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i16>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i16>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i16>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
     Signature:
     ```c
-    void shmem_ctx_get16(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_get16(shmem_ctx_t ctx, void *dest, const void *source,
+                         size_t nelems, int pe);
     ```
   }];
 
@@ -941,27 +1045,32 @@ def OpenSHMEM_CtxGet16Op : OpenSHMEM_Op<"ctx_get16", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxGet32Op : OpenSHMEM_Op<"ctx_get32", []> {
   let summary = "32-bit sized get operation with context";
   let description = [{
-    This operation performs a 32-bit sized get operation with a context, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 32-bit sized get operation with a context,
+    copying data from the source symmetric memory region on the target PE
+    to the destination local memory region on the calling PE. The operation
+    copies `nelems` bytes.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i32>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i32>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i32>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
     Signature:
     ```c
-    void shmem_ctx_get32(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_get32(shmem_ctx_t ctx, void *dest, const void *source,
+                         size_t nelems, int pe);
     ```
   }];
 
@@ -973,27 +1082,32 @@ def OpenSHMEM_CtxGet32Op : OpenSHMEM_Op<"ctx_get32", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxGet64Op : OpenSHMEM_Op<"ctx_get64", []> {
   let summary = "64-bit sized get operation with context";
   let description = [{
-    This operation performs a 64-bit sized get operation with a context, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 64-bit sized get operation with a context,
+    copying data from the source symmetric memory region on the target PE
+    to the destination local memory region on the calling PE. The operation
+    copies `nelems` bytes.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i64>)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<i64>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<i64>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
     Signature:
     ```c
-    void shmem_ctx_get64(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_get64(shmem_ctx_t ctx, void *dest, const void *source,
+                         size_t nelems, int pe);
     ```
   }];
 
@@ -1005,27 +1119,33 @@ def OpenSHMEM_CtxGet64Op : OpenSHMEM_Op<"ctx_get64", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 def OpenSHMEM_CtxGet128Op : OpenSHMEM_Op<"ctx_get128", []> {
   let summary = "128-bit sized get operation with context";
   let description = [{
-    This operation performs a 128-bit sized get operation with a context, copying data from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `nelems` bytes.
+    This operation performs a 128-bit sized get operation with a context,
+    copying data from the source symmetric memory region on the target PE
+    to the destination local memory region on the calling PE. The operation
+    copies `nelems` bytes.
     
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
-    - dest: Destination local memory reference on the calling PE (memref<f128> or vector type)
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<f128> or vector type)
+    - dest: Destination local memory reference on the calling PE (memref<f128>
+      or vector type)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<f128> or vector type)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
     Signature:
     ```c
-    void shmem_ctx_get128(shmem_ctx_t ctx, void *dest, const void *source, size_t nelems, int pe);
+    void shmem_ctx_get128(shmem_ctx_t ctx, void *dest, const void *source,
+                          size_t nelems, int pe);
     ```
   }];
 
@@ -1037,8 +1157,10 @@ def OpenSHMEM_CtxGet128Op : OpenSHMEM_Op<"ctx_get128", []> {
     I32:$pe
   );
   
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $source `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($source) `,`"
+                       " type($nelems) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -1048,14 +1170,16 @@ def OpenSHMEM_CtxGet128Op : OpenSHMEM_Op<"ctx_get128", []> {
 def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
   let summary = "Blocking getmem operation (matches shmem_getmem C API)";
   let description = [{
-    This operation performs a blocking getmem, copying raw memory from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `size` bytes and returns only after the
-    data has been delivered to the destination array on the local PE.
+    This operation performs a blocking getmem, copying raw memory from the
+    source symmetric memory region on the target PE to the destination local
+    memory region on the calling PE. The operation copies `size` bytes and
+    returns only after the data has been delivered to the destination array
+    on the local PE.
     
     Arguments:
     - dest: Destination local memory reference on the calling PE (any type)
-    - src: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
+    - src: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T>)
     - size: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -1064,7 +1188,8 @@ def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
     void shmem_getmem(void *dest, const void *src, size_t nelems, int pe);
     ```
     
-    Note: For getmem operations, nelems represents the number of bytes to transfer.
+    Note: For getmem operations, nelems represents the number of bytes to
+    transfer.
   }];
 
   let arguments = (ins
@@ -1074,21 +1199,25 @@ def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($src) `,` type($size) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $src `,` $size `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($src) `,` type($size) `,`"
+                       " type($pe)";
 }
 
 def OpenSHMEM_GetmemNbiOp : OpenSHMEM_Op<"getmem_nbi", []> {
   let summary = "Non-blocking getmem operation (matches shmem_getmem_nbi C API)";
   let description = [{
-    This operation performs a non-blocking getmem, copying raw memory from the source
-    symmetric memory region on the target PE to the destination local memory region on
-    the calling PE. The operation copies `size` bytes and returns immediately after the
-    data has been delivered to the destination array on the local PE.
+    This operation performs a non-blocking getmem, copying raw memory from
+    the source symmetric memory region on the target PE to the destination
+    local memory region on the calling PE. The operation copies `size` bytes
+    and returns immediately after the data has been delivered to the
+    destination array on the local PE.
 
     Arguments:
     - dest: Destination local memory reference on the calling PE (any type)
-    - src: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
+    - src: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
 
@@ -1097,7 +1226,8 @@ def OpenSHMEM_GetmemNbiOp : OpenSHMEM_Op<"getmem_nbi", []> {
     void shmem_getmem_nbi(void *dest, const void *src, size_t nelems, int pe);
     ```
 
-    Note: For getmem_nbi operations, nelems represents the number of bytes to transfer.
+    Note: For getmem_nbi operations, nelems represents the number of bytes
+    to transfer.
   }];
 
   let arguments = (ins
@@ -1107,8 +1237,10 @@ def OpenSHMEM_GetmemNbiOp : OpenSHMEM_Op<"getmem_nbi", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $dest `,` $src `,` $nelems `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($src) `,` type($nelems) `,` type($pe)";
+  let assemblyFormat = "`(` $dest `,` $src `,` $nelems `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($dest) `,` type($src) `,` type($nelems) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -1137,7 +1269,8 @@ def OpenSHMEM_POp : OpenSHMEM_Op<"p", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` attr-dict `:` "
+  let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
                        "type($dest) `,` type($value) `,` type($pe)";
 }
 
@@ -1169,8 +1302,10 @@ def OpenSHMEM_CtxPOp : OpenSHMEM_Op<"ctx_p", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($value) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -1183,7 +1318,8 @@ def OpenSHMEM_GOp : OpenSHMEM_Op<"g", []> {
     Copies one data item from a remote PE.
 
     Arguments:
-    - source: Source symmetric memory reference on the target PE (!openshmem.symmetric_memref<T>)
+    - source: Source symmetric memory reference on the target PE
+      (!openshmem.symmetric_memref<T>)
     - pe: Target PE number
 
     Signature:
@@ -1201,7 +1337,8 @@ def OpenSHMEM_GOp : OpenSHMEM_Op<"g", []> {
     AnyType:$value
   );
 
-  let assemblyFormat = "`(` $source `,` $pe `)` attr-dict `:` "
+  let assemblyFormat = "`(` $source `,` $pe `)` "
+                       "attr-dict `:` "
                        "type($source) `,` type($pe) `->` type($value)";
 }
 
@@ -1234,8 +1371,10 @@ def OpenSHMEM_CtxGOp : OpenSHMEM_Op<"ctx_g", []> {
     AnyType:$value
   );
 
-  let assemblyFormat = "`(` $ctx `,` $source `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($source) `,` type($pe) `->` type($value)";
+  let assemblyFormat = "`(` $ctx `,` $source `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($source) `,` type($pe) `->`"
+                       " type($value)";
 }
 
 //===----------------------------------------------------------------------===//

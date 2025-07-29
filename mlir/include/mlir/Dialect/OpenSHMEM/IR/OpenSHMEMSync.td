@@ -16,12 +16,15 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_BarrierAllOp : OpenSHMEM_Op<"barrier_all", []> {
-  let summary = "Barrier operation (matches shmem_barrier_all C API)";
+  let summary = "Equivalent to the shmem_barrier_all C API";
   let description = [{
-    This operation performs a barrier operation on all PEs in the program.
-    It is a collective operation - all PEs must participate.
+    Performs a barrier operation across all PEs. This is a collective
+    operation that blocks until all PEs in the program have called the
+    operation.
 
-    Signature:
+    Arguments:
+    - (none)
+
     ```c
     void shmem_barrier_all(void);
     ```
@@ -35,25 +38,25 @@ def OpenSHMEM_BarrierAllOp : OpenSHMEM_Op<"barrier_all", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_BarrierOp : OpenSHMEM_Op<"barrier", []> {
-  let summary = "Deprecated barrier operation";
+  let summary = "Equivalent to the shmem_barrier C API (deprecated)";
   let description = [{
-    This operation performs a barrier operation on a subset of PEs.
-    This is deprecated in favor of team-based barriers.
+    Performs a barrier operation on a subset of PEs. This operation is
+    deprecated in favor of team-based barriers.
 
     Arguments:
     - pe_start: Starting PE number in the active set
     - log_pe_stride: Log2 of the stride between PEs in the active set
     - pe_size: Number of PEs in the active set
     - psync: Symmetric memory array used for synchronization
-             (must be allocated with openshmem.malloc)
 
-    Signature:
     ```c
-    void shmem_barrier(int PE_start, int logPE_stride, int PE_size, long *pSync);
+    void shmem_barrier(int PE_start, int logPE_stride, int PE_size,
+                       long *pSync);
     ```
-    
-    Note: The psync array must be initialized to SHMEM_SYNC_VALUE before use and
-    must be allocated in symmetric memory accessible to all participating PEs.
+
+    Note: The psync array must be initialized to SHMEM_SYNC_VALUE before
+    use and must be allocated in symmetric memory accessible to all
+    participating PEs.
   }];
 
   let arguments = (ins 
@@ -62,8 +65,10 @@ def OpenSHMEM_BarrierOp : OpenSHMEM_Op<"barrier", []> {
     I32 : $pe_size, 
     OpenSHMEM_SymmetricMemRef : $psync
   );
-  let assemblyFormat = "`(` $pe_start `,` $log_pe_stride `,` $pe_size `,` $psync `)` attr-dict `:` "
-                       "type($pe_start) `,` type($log_pe_stride) `,` type($pe_size) `,` type($psync)";
+  let assemblyFormat = "`(` $pe_start `,` $log_pe_stride `,` $pe_size `,`"
+  " $psync `)` attr-dict `:` "
+                       "type($pe_start) `,` type($log_pe_stride) `,`"
+                       " type($pe_size) `,` type($psync)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -71,13 +76,15 @@ def OpenSHMEM_BarrierOp : OpenSHMEM_Op<"barrier", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_QuietOp : OpenSHMEM_Op<"quiet", []> {
-  let summary = "Quiet operation (matches shmem_quiet C API)";
+  let summary = "Equivalent to the shmem_quiet C API";
   let description = [{
-    This operation performs a quiet operation on the calling PE.
-    It ensures that all previously issued put/get operations from the 
-    calling PE have completed before returning.
+    Ensures completion of all previously issued RMA operations. This
+    operation blocks until all put and get operations issued by the
+    calling PE have completed on the target PEs.
 
-    Signature:
+    Arguments:
+    - (none)
+
     ```c
     void shmem_quiet(void);
     ```

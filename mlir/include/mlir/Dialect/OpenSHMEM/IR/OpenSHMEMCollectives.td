@@ -13,10 +13,6 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 
 //===----------------------------------------------------------------------===//
 // AlltoallmemOp
-//
-// TODO: Can we support both alltoall and alltoallmem with one operation and one
-//       lowering pass?
-// 
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_AlltoallmemOp : OpenSHMEM_Op<"alltoallmem", []> {
@@ -34,7 +30,8 @@ def OpenSHMEM_AlltoallmemOp : OpenSHMEM_Op<"alltoallmem", []> {
     - nelems: Number of elements to transfer
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
@@ -54,9 +51,9 @@ def OpenSHMEM_AlltoallmemOp : OpenSHMEM_Op<"alltoallmem", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -78,7 +75,8 @@ def OpenSHMEM_AlltoallOp : OpenSHMEM_Op<"alltoall", []> {
     - nelems: Number of elements to transfer
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
@@ -99,9 +97,9 @@ def OpenSHMEM_AlltoallOp : OpenSHMEM_Op<"alltoall", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -125,7 +123,8 @@ def OpenSHMEM_AlltoallsmemOp : OpenSHMEM_Op<"alltoallsmem", []> {
     - sst: Stride for source memory
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
@@ -147,9 +146,10 @@ def OpenSHMEM_AlltoallsmemOp : OpenSHMEM_Op<"alltoallsmem", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $dst `,` $sst `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($dst) `,` type($sst) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $dst `,` $sst `,` "
+                       "$nelems `)` attr-dict `:` type($team) `,` type($dest) "
+                       "`,` type($source) `,` type($dst) `,` type($sst) `,` "
+                       "type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -159,7 +159,8 @@ def OpenSHMEM_AlltoallsmemOp : OpenSHMEM_Op<"alltoallsmem", []> {
 def OpenSHMEM_AlltoallsOp : OpenSHMEM_Op<"alltoalls", []> {
   let summary = "Typed strided all-to-all communication";
   let description = [{
-    This operation performs a typed strided all-to-all communication operation.
+    This operation performs a typed strided all-to-all communication
+    operation.
 
     Exchanges a fixed amount of strided data blocks between all pairs of
     PEs participating in the collective routine.
@@ -173,12 +174,14 @@ def OpenSHMEM_AlltoallsOp : OpenSHMEM_Op<"alltoalls", []> {
     - nelems: Number of elements to transfer
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_<TYPE>_alltoalls(shmem_team_t team, TYPE *dest, const TYPE *source,
-                            ptrdiff_t dst, ptrdiff_t sst, size_t nelems);
+    int shmem_<TYPE>_alltoalls(shmem_team_t team, TYPE *dest, const TYPE
+                               *source, ptrdiff_t dst, ptrdiff_t sst, size_t
+                               nelems);
     ```
     where TYPE is one of the standard types (int, float, double, etc.)
   }];
@@ -196,9 +199,10 @@ def OpenSHMEM_AlltoallsOp : OpenSHMEM_Op<"alltoalls", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $dst `,` $sst `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($dst) `,` type($sst) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $dst `,` $sst `,` "
+                       "$nelems `)` attr-dict `:` type($team) `,` type($dest) "
+                       "`,` type($source) `,` type($dst) `,` type($sst) `,` "
+                       "type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -208,7 +212,8 @@ def OpenSHMEM_AlltoallsOp : OpenSHMEM_Op<"alltoalls", []> {
 def OpenSHMEM_BroadcastmemOp : OpenSHMEM_Op<"broadcastmem", []> {
   let summary = "Broadcast a value to all PEs in a team";
   let description = [{
-    This operation performs a broadcast operation on a value to all PEs in a team.
+    This operation performs a broadcast operation on a value to all PEs in a
+    team.
 
     Broadcasts a block of data from one PE to one or more destination PEs.
 
@@ -220,7 +225,8 @@ def OpenSHMEM_BroadcastmemOp : OpenSHMEM_Op<"broadcastmem", []> {
     - PE_root: Root PE number
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
@@ -241,9 +247,10 @@ def OpenSHMEM_BroadcastmemOp : OpenSHMEM_Op<"broadcastmem", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `,` $PE_root `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($PE_root) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `,` "
+                       "$PE_root `)` attr-dict `:` type($team) `,` type($dest) "
+                       "`,` type($source) `,` type($nelems) `,` type($PE_root) "
+                       "`->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -253,7 +260,8 @@ def OpenSHMEM_BroadcastmemOp : OpenSHMEM_Op<"broadcastmem", []> {
 def OpenSHMEM_BroadcastOp : OpenSHMEM_Op<"broadcast", []> {
   let summary = "Typed broadcast a value to all PEs in a team";
   let description = [{
-    This operation performs a typed broadcast operation on a value to all PEs in a team.
+    This operation performs a typed broadcast operation on a value to all PEs
+    in a team.
 
     Broadcasts a block of data from one PE to one or more destination PEs.
 
@@ -265,12 +273,13 @@ def OpenSHMEM_BroadcastOp : OpenSHMEM_Op<"broadcast", []> {
     - PE_root: Root PE number
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_<TYPE>_broadcast(shmem_team_t team, TYPE *dest, const TYPE *source,
-                           size_t nelems, int PE_root);
+    int shmem_<TYPE>_broadcast(shmem_team_t team, TYPE *dest, const TYPE
+                               *source, size_t nelems, int PE_root);
     ```
     where TYPE is one of the standard types (int, float, double, etc.)
   }];
@@ -287,9 +296,10 @@ def OpenSHMEM_BroadcastOp : OpenSHMEM_Op<"broadcast", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `,` $PE_root `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `,` type($PE_root) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `,` "
+                       "$PE_root `)` attr-dict `:` type($team) `,` type($dest) "
+                       "`,` type($source) `,` type($nelems) `,` type($PE_root) "
+                       "`->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -299,7 +309,8 @@ def OpenSHMEM_BroadcastOp : OpenSHMEM_Op<"broadcast", []> {
 def OpenSHMEM_CollectmemOp : OpenSHMEM_Op<"collectmem", []> {
   let summary = "Collect a value from all PEs in a team";
   let description = [{
-    This operation performs a collect operation on a value from all PEs in a team.
+    This operation performs a collect operation on a value from all PEs in a
+    team.
 
     Concatenates blocks of data from multiple PEs to an array in every PE
     participating in the collective routine.
@@ -311,11 +322,13 @@ def OpenSHMEM_CollectmemOp : OpenSHMEM_Op<"collectmem", []> {
     - nelems: Number of elements to transfer
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_collectmem(shmem_team_t team, void *dest, const void *source, size_t nelems);
+    int shmem_collectmem(shmem_team_t team, void *dest, const void *source,
+                         size_t nelems);
     ```
   }];
 
@@ -330,9 +343,9 @@ def OpenSHMEM_CollectmemOp : OpenSHMEM_Op<"collectmem", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -342,7 +355,8 @@ def OpenSHMEM_CollectmemOp : OpenSHMEM_Op<"collectmem", []> {
 def OpenSHMEM_CollectOp : OpenSHMEM_Op<"collect", []> {
   let summary = "Typed collect a value from all PEs in a team";
   let description = [{
-    This operation performs a typed collect operation on a value from all PEs in a team.
+    This operation performs a typed collect operation on a value from all PEs
+    in a team.
 
     Concatenates blocks of data from multiple PEs to an array in every PE
     participating in the collective routine.
@@ -354,11 +368,13 @@ def OpenSHMEM_CollectOp : OpenSHMEM_Op<"collect", []> {
     - nelems: Number of elements to transfer
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_<TYPE>_collect(shmem_team_t team, TYPE *dest, const TYPE *source, size_t nelems);
+    int shmem_<TYPE>_collect(shmem_team_t team, TYPE *dest, const TYPE
+                             *source, size_t nelems);
     ```
     where TYPE is one of the standard types (int, float, double, etc.)
   }];
@@ -374,9 +390,9 @@ def OpenSHMEM_CollectOp : OpenSHMEM_Op<"collect", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -386,7 +402,8 @@ def OpenSHMEM_CollectOp : OpenSHMEM_Op<"collect", []> {
 def OpenSHMEM_FCollectmemOp : OpenSHMEM_Op<"fcollectmem", []> {
   let summary = "Collect a value from all PEs in a team";
   let description = [{
-    This operation performs a fixed-size collect operation on a value from all PEs in a team.
+    This operation performs a fixed-size collect operation on a value from
+    all PEs in a team.
 
     Concatenates blocks of data from multiple PEs to an array in every PE
     participating in the collective routine.
@@ -398,11 +415,13 @@ def OpenSHMEM_FCollectmemOp : OpenSHMEM_Op<"fcollectmem", []> {
     - nelems: Number of elements to transfer
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_fcollectmem(shmem_team_t team, void *dest, const void *source, size_t nelems);
+    int shmem_fcollectmem(shmem_team_t team, void *dest, const void *source,
+                          size_t nelems);
     ```
   }];
 
@@ -417,9 +436,9 @@ def OpenSHMEM_FCollectmemOp : OpenSHMEM_Op<"fcollectmem", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -429,7 +448,8 @@ def OpenSHMEM_FCollectmemOp : OpenSHMEM_Op<"fcollectmem", []> {
 def OpenSHMEM_FCollectOp : OpenSHMEM_Op<"fcollect", []> {
   let summary = "Typed fixed-size collect a value from all PEs in a team";
   let description = [{
-    This operation performs a typed fixed-size collect operation on a value from all PEs in a team.
+    This operation performs a typed fixed-size collect operation on a value
+    from all PEs in a team.
 
     Concatenates blocks of data from multiple PEs to an array in every PE
     participating in the collective routine.
@@ -441,11 +461,13 @@ def OpenSHMEM_FCollectOp : OpenSHMEM_Op<"fcollect", []> {
     - nelems: Number of elements to transfer
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_<TYPE>_fcollect(shmem_team_t team, TYPE *dest, const TYPE *source, size_t nelems);
+    int shmem_<TYPE>_fcollect(shmem_team_t team, TYPE *dest, const TYPE
+                              *source, size_t nelems);
     ```
     where TYPE is one of the standard types (int, float, double, etc.)
   }];
@@ -461,9 +483,9 @@ def OpenSHMEM_FCollectOp : OpenSHMEM_Op<"fcollect", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nelems) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nelems `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nelems) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -473,7 +495,8 @@ def OpenSHMEM_FCollectOp : OpenSHMEM_Op<"fcollect", []> {
 def OpenSHMEM_AndReduceOp : OpenSHMEM_Op<"andreduce", []> {
   let summary = "Perform a bitwise AND reduction";
   let description = [{
-    This operation performs a bitwise AND reduction on a value from all PEs in a team.
+    This operation performs a bitwise AND reduction on a value from all PEs
+    in a team.
 
     Performs a bitwise AND reduction on a value from all PEs in a team.
 
@@ -484,11 +507,13 @@ def OpenSHMEM_AndReduceOp : OpenSHMEM_Op<"andreduce", []> {
     - nreduce: Number of elements in the source and dest arrays
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_and_reduce(shmem_team_t team, void *dest, const void *source, size_t nreduce);
+    int shmem_and_reduce(shmem_team_t team, void *dest, const void *source,
+                         size_t nreduce);
     ```
   }];
 
@@ -503,9 +528,9 @@ def OpenSHMEM_AndReduceOp : OpenSHMEM_Op<"andreduce", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nreduce) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nreduce) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -515,7 +540,8 @@ def OpenSHMEM_AndReduceOp : OpenSHMEM_Op<"andreduce", []> {
 def OpenSHMEM_OrReduceOp : OpenSHMEM_Op<"orreduce", []> {
   let summary = "Perform a bitwise OR reduction";
   let description = [{
-    This operation performs a bitwise OR reduction on a value from all PEs in a team.
+    This operation performs a bitwise OR reduction on a value from all PEs
+    in a team.
 
     Performs a bitwise OR reduction on a value from all PEs in a team.
 
@@ -526,11 +552,13 @@ def OpenSHMEM_OrReduceOp : OpenSHMEM_Op<"orreduce", []> {
     - nreduce: Number of elements in the source and dest arrays
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_or_reduce(shmem_team_t team, void *dest, const void *source, size_t nreduce);
+    int shmem_or_reduce(shmem_team_t team, void *dest, const void *source,
+                        size_t nreduce);
     ```
   }];
 
@@ -546,9 +574,9 @@ def OpenSHMEM_OrReduceOp : OpenSHMEM_Op<"orreduce", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nreduce) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nreduce) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -558,7 +586,8 @@ def OpenSHMEM_OrReduceOp : OpenSHMEM_Op<"orreduce", []> {
 def OpenSHMEM_XorReduceOp : OpenSHMEM_Op<"xorreduce", []> {
   let summary = "Perform a bitwise XOR reduction";
   let description = [{
-    This operation performs a bitwise XOR reduction on a value from all PEs in a team.
+    This operation performs a bitwise XOR reduction on a value from all PEs
+    in a team.
 
     Performs a bitwise XOR reduction on a value from all PEs in a team.
 
@@ -569,11 +598,13 @@ def OpenSHMEM_XorReduceOp : OpenSHMEM_Op<"xorreduce", []> {
     - nreduce: Number of elements in the source and dest arrays
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_xor_reduce(shmem_team_t team, void *dest, const void *source, size_t nreduce);
+    int shmem_xor_reduce(shmem_team_t team, void *dest, const void *source,
+                         size_t nreduce);
     ```
   }];
 
@@ -588,9 +619,9 @@ def OpenSHMEM_XorReduceOp : OpenSHMEM_Op<"xorreduce", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nreduce) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nreduce) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -600,7 +631,8 @@ def OpenSHMEM_XorReduceOp : OpenSHMEM_Op<"xorreduce", []> {
 def OpenSHMEM_MaxReduceOp : OpenSHMEM_Op<"maxreduce", []> {
   let summary = "Perform a maximum reduction";
   let description = [{
-    This operation performs a maximum reduction on a value from all PEs in a team.
+    This operation performs a maximum reduction on a value from all PEs in a
+    team.
 
     Performs a maximum reduction on a value from all PEs in a team.
 
@@ -611,11 +643,13 @@ def OpenSHMEM_MaxReduceOp : OpenSHMEM_Op<"maxreduce", []> {
     - nreduce: Number of elements in the source and dest arrays
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_max_reduce(shmem_team_t team, void *dest, const void *source, size_t nreduce);
+    int shmem_max_reduce(shmem_team_t team, void *dest, const void *source,
+                         size_t nreduce);
     ```
   }];
 
@@ -630,9 +664,9 @@ def OpenSHMEM_MaxReduceOp : OpenSHMEM_Op<"maxreduce", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nreduce) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nreduce) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -642,7 +676,8 @@ def OpenSHMEM_MaxReduceOp : OpenSHMEM_Op<"maxreduce", []> {
 def OpenSHMEM_MinReduceOp : OpenSHMEM_Op<"minreduce", []> {
   let summary = "Perform a minimum reduction";
   let description = [{
-    This operation performs a minimum reduction on a value from all PEs in a team.
+    This operation performs a minimum reduction on a value from all PEs in a
+    team.
 
     Performs a minimum reduction on a value from all PEs in a team.
 
@@ -654,11 +689,13 @@ def OpenSHMEM_MinReduceOp : OpenSHMEM_Op<"minreduce", []> {
     - nreduce: Number of elements in the source and dest arrays
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_min_reduce(shmem_team_t team, void *dest, const void *source, size_t nreduce);
+    int shmem_min_reduce(shmem_team_t team, void *dest, const void *source,
+                         size_t nreduce);
     ```
   }];
 
@@ -673,9 +710,9 @@ def OpenSHMEM_MinReduceOp : OpenSHMEM_Op<"minreduce", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nreduce) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nreduce) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -685,7 +722,8 @@ def OpenSHMEM_MinReduceOp : OpenSHMEM_Op<"minreduce", []> {
 def OpenSHMEM_SumReduceOp : OpenSHMEM_Op<"sumreduce", []> {
   let summary = "Perform a sum reduction";
   let description = [{
-    This operation performs a sum reduction on a value from all PEs in a team.
+    This operation performs a sum reduction on a value from all PEs in a
+    team.
 
     Performs a sum reduction on a value from all PEs in a team.
 
@@ -696,11 +734,13 @@ def OpenSHMEM_SumReduceOp : OpenSHMEM_Op<"sumreduce", []> {
     - nreduce: Number of elements in the source and dest arrays
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_sum_reduce(shmem_team_t team, void *dest, const void *source, size_t nreduce);
+    int shmem_sum_reduce(shmem_team_t team, void *dest, const void *source,
+                         size_t nreduce);
     ```
   }];
 
@@ -715,9 +755,9 @@ def OpenSHMEM_SumReduceOp : OpenSHMEM_Op<"sumreduce", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nreduce) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nreduce) `->` type($retval)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -727,7 +767,8 @@ def OpenSHMEM_SumReduceOp : OpenSHMEM_Op<"sumreduce", []> {
 def OpenSHMEM_ProdReduceOp : OpenSHMEM_Op<"prodreduce", []> {
   let summary = "Perform a product reduction";
   let description = [{
-    This operation performs a product reduction on a value from all PEs in a team.
+    This operation performs a product reduction on a value from all PEs in a
+    team.
 
     Performs a product reduction on a value from all PEs in a team.
 
@@ -738,11 +779,13 @@ def OpenSHMEM_ProdReduceOp : OpenSHMEM_Op<"prodreduce", []> {
     - nreduce: Number of elements in the source and dest arrays
 
     Results:
-    - retval: Return value for error checking (0 for success, non-zero for failure)
+    - retval: Return value for error checking (0 for success, non-zero for
+              failure)
 
     Signature:
     ```c
-    int shmem_prod_reduce(shmem_team_t team, void *dest, const void *source, size_t nreduce);
+    int shmem_prod_reduce(shmem_team_t team, void *dest, const void *source,
+                          size_t nreduce);
     ```
   }];
 
@@ -757,10 +800,9 @@ def OpenSHMEM_ProdReduceOp : OpenSHMEM_Op<"prodreduce", []> {
     I32:$retval
   );
 
-  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` attr-dict `:` "
-                       "type($team) `,` type($dest) `,` type($source) `,` type($nreduce) `->` "
-                       "type($retval)";
+  let assemblyFormat = "`(` $team `,` $dest `,` $source `,` $nreduce `)` "
+                       "attr-dict `:` type($team) `,` type($dest) `,` "
+                       "type($source) `,` type($nreduce) `->` type($retval)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMCOLLECTIVES_TD 
-

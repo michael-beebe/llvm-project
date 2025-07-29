@@ -16,29 +16,20 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
-  let summary = "Allocate symmetric memory";
+  let summary = "Equivalent to the shmem_malloc C API";
   let description = [{
-    This operation allocates symmetric memory that is accessible from all PEs.
-    The allocated memory can be used in putmem/getmem operations. The size parameter
-    specifies the number of bytes to allocate.
-    
-    This is a collective operation - all PEs must participate. The returned
-    memory reference points to symmetric memory that has the same virtual
-    address on all PEs.
-    
+    Allocates symmetric memory that is accessible from all PEs. This is a
+    collective operation that must be called by all PEs.
+
     Arguments:
-    - size: Number of bytes to allocate (index)
-    
+    - size: Number of bytes to allocate
+
     Results:
-    - ptr: A symmetric memory reference containing the allocated memory
-    
-    Signature:
+    - ptr: Symmetric memory reference to the allocated memory
+
     ```c
     void *shmem_malloc(size_t size);
     ```
-    
-    This operation can optionally return an `i32` value that can be used
-    to check for errors (0 for success, non-zero for failure).
   }];
 
   let arguments = (ins Index:$size);
@@ -56,19 +47,14 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
-  let summary = "Free symmetric memory";
+  let summary = "Equivalent to the shmem_free C API";
   let description = [{
-    This operation frees symmetric memory that was previously allocated with
-    openshmem.malloc. The memory reference must point to symmetric memory
-    allocated by a previous malloc operation.
-    
-    This is a collective operation - all PEs must participate and free the
-    same symmetric memory allocation.
-    
+    Frees symmetric memory that was previously allocated with shmem_malloc.
+    This is a collective operation that must be called by all PEs.
+
     Arguments:
-    - ptr: Symmetric address of an object in the symmetric heap.
-    
-    Signature:
+    - ptr: Symmetric memory address to free
+
     ```c
     void shmem_free(void *ptr);
     ```
@@ -83,18 +69,19 @@ def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_ReallocOp : OpenSHMEM_Op<"realloc", []> {
-  let summary = "Collectively resize an allocation of symmetric memory.";
+  let summary = "Equivalent to the shmem_realloc C API";
   let description = [{
-    Collective operation on the world team that changes the size of the block
-    to which ptr points to the size (in bytes) specified by size. The contents
-    of the block are unchanged up to the lesser of the new and old sizes.
+    Resizes a block of symmetric memory. The contents of the block are
+    unchanged up to the lesser of the new and old sizes. This is a
+    collective operation on the world team.
 
     Arguments:
-    - ptr: Symmetric address of an object in the symmetric heap
-    - size: The size, in bytes, of a block to be allocated from the
-            symmetric heap.
+    - ptr: Symmetric memory address to resize
+    - size: New size in bytes
 
-    Signature:
+    Results:
+    - retval: Symmetric memory reference to the resized block
+
     ```c
     void *shmem_realloc(void *ptr, size_t size);
     ```
@@ -118,22 +105,22 @@ def OpenSHMEM_ReallocOp : OpenSHMEM_Op<"realloc", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_AlignOp : OpenSHMEM_Op<"align", []> {
-  let summary = "Collectively allocate symmetric memory with a specified alignment.";
+  let summary = "Equivalent to the shmem_align C API";
   let description = [{
-    Collective operation on the world team that allocates a block in the symmetric
-    heap that has a byte alignment specified by the alignment argument. The value
-    of alignment shall be a multiple of sizeof(void *) that is also a power of
-    two; otherwise, the behavior is undefined. When size is zero, the shmem_align
-    routine performs no action and returns a null pointer; otherwise, shmem_align
-    calls a barrier on exit. The value of the alignment and size arguments must
-    be identical on all PEs; otherwise, the behavior is undefined.
+    Allocates symmetric memory with a specified byte alignment. The
+    alignment must be a multiple of sizeof(void *) and a power of two.
+    This is a collective operation on the world team.
 
     Arguments:
-    - alignment: Byte alignment of the block allocated from the symmetric heap.
-    - size: The size, in bytes, of a block to be allocated from the symmetric heap.
+    - alignment: Byte alignment of the allocated block
+    - size: Size in bytes of the block to allocate
 
-    Signature:
-    - void *shmem_align(size_t alignment, size_t size);
+    Results:
+    - retval: Symmetric memory reference to the allocated block
+
+    ```c
+    void *shmem_align(size_t alignment, size_t size);
+    ```
   }];
 
   let arguments = (ins
@@ -154,21 +141,18 @@ def OpenSHMEM_AlignOp : OpenSHMEM_Op<"align", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_CallocOp : OpenSHMEM_Op<"calloc", []> {
-  let summary = "Collectively allocate symmetric memory with a specified alignment.";
+  let summary = "Equivalent to the shmem_calloc C API";
   let description = [{
-    Collective operation on the world team that allocates a block in the symmetric
-    heap that has a byte alignment specified by the alignment argument. The value of
-    alignment shall be a multiple of sizeof(void *) that is also a power of two;
-    otherwise, the behavior is undefined. When size is zero, the shmem_align routine
-    performs no action and returns a null pointer; otherwise, shmem_align calls a
-    barrier on exit. The value of the alignment and size arguments must be identical
-    on all PEs; otherwise, the behavior is undefined.
+    Allocates and zero-initializes symmetric memory for an array of objects.
+    This is a collective operation on the world team.
 
     Arguments:
-    - count: The number of objects to allocate
-    - size: The size of each object
+    - count: Number of objects to allocate
+    - size: Size of each object in bytes
 
-    Signature:
+    Results:
+    - retval: Symmetric memory reference to the allocated block
+
     ```c
     void *shmem_calloc(size_t count, size_t size);
     ```

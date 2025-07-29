@@ -11,9 +11,6 @@
 
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 
-// TODO: double check that everything is spec compliant.
-// Update descriptions to match spec.
-
 //===----------------------------------------------------------------------===//
 // Atomic Operations
 //===----------------------------------------------------------------------===//
@@ -74,7 +71,8 @@ def OpenSHMEM_CtxAtomicFetchOp : OpenSHMEM_Op<"ctx_atomic_fetch", []> {
   let results = (outs AnyType:$result);
   
   let assemblyFormat = "`(` $ctx `,` $source `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($source) `,` type($pe) `->` type($result)";
+                       "type($ctx) `,` type($source) `,` type($pe) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -154,14 +152,16 @@ def OpenSHMEM_AtomicCompareSwapOp : OpenSHMEM_Op<"atomic_compare_swap", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $dest `,` $cond `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($cond) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($dest) `,` type($cond) `,` type($value) `,`"
+                       "type($pe) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
 // CtxAtomicCompareSwapOp (Typed - Context-aware)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxAtomicCompareSwapOp : OpenSHMEM_Op<"ctx_atomic_compare_swap", []> {
+def OpenSHMEM_CtxAtomicCompareSwapOp :
+  OpenSHMEM_Op<"ctx_atomic_compare_swap", []> {
   let summary = "Atomic compare-and-swap operation with context";
   let description = [{
     Atomically compares the value of a remote data object with a given value and
@@ -169,7 +169,8 @@ def OpenSHMEM_CtxAtomicCompareSwapOp : OpenSHMEM_Op<"ctx_atomic_compare_swap", [
 
     Signature:
     ```c
-    TYPE shmem_ctx_atomic_compare_swap(shmem_ctx_t ctx, TYPE *dest, TYPE cond, TYPE value, int pe);
+    TYPE shmem_ctx_atomic_compare_swap(shmem_ctx_t ctx, TYPE *dest, TYPE cond,
+                                       TYPE value, int pe);
     ```
   }];
 
@@ -183,8 +184,10 @@ def OpenSHMEM_CtxAtomicCompareSwapOp : OpenSHMEM_Op<"ctx_atomic_compare_swap", [
   
   let results = (outs AnyType:$result);
 
-  let assemblyFormat = "`(` $ctx `,` $dest `,` $cond `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($cond) `,` type($value) `,` type($pe) `->` type($result)";
+  let assemblyFormat = "`(` $ctx `,` $dest `,` $cond `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($dest) `,` type($cond) `,`"
+                       " type($value) `,` type($pe) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -211,7 +214,8 @@ def OpenSHMEM_AtomicSwapOp : OpenSHMEM_Op<"atomic_swap", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($dest) `,` type($value) `,` type($pe) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -239,7 +243,8 @@ def OpenSHMEM_CtxAtomicSwapOp : OpenSHMEM_Op<"ctx_atomic_swap", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($ctx) `,` type($dest) `,` type($value) `,`"
+                       " type($pe) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -293,7 +298,8 @@ def OpenSHMEM_CtxAtomicFetchIncOp : OpenSHMEM_Op<"ctx_atomic_fetch_inc", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $ctx `,` $dest `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($pe) `->` type($result)";
+                       "type($ctx) `,` type($dest) `,` type($pe) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -352,7 +358,8 @@ def OpenSHMEM_CtxAtomicIncOp : OpenSHMEM_Op<"ctx_atomic_inc", []> {
 def OpenSHMEM_AtomicFetchAddOp : OpenSHMEM_Op<"atomic_fetch_add", []> {
   let summary = "Atomic fetch-and-add operation (generic)";
   let description = [{
-    Atomically fetches the value of a remote data object and adds a given value to it.
+    Atomically fetches the value of a remote data object and adds a given
+    value to it.
 
     Signature:
     ```c
@@ -369,7 +376,8 @@ def OpenSHMEM_AtomicFetchAddOp : OpenSHMEM_Op<"atomic_fetch_add", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($dest) `,` type($value) `,` type($pe) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -379,7 +387,8 @@ def OpenSHMEM_AtomicFetchAddOp : OpenSHMEM_Op<"atomic_fetch_add", []> {
 def OpenSHMEM_CtxAtomicFetchAddOp : OpenSHMEM_Op<"ctx_atomic_fetch_add", []> {
   let summary = "Atomic fetch-and-add operation with context";
   let description = [{
-    Atomically fetches the value of a remote data object and adds a given value to it.
+    Atomically fetches the value of a remote data object and adds a given
+    value to it.
 
     Signature:
     ```c
@@ -397,7 +406,8 @@ def OpenSHMEM_CtxAtomicFetchAddOp : OpenSHMEM_Op<"ctx_atomic_fetch_add", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($ctx) `,` type($dest) `,` type($value) `,`"
+                       " type($pe) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -476,7 +486,8 @@ def OpenSHMEM_AtomicFetchAndOp : OpenSHMEM_Op<"atomic_fetch_and", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($dest) `,` type($value) `,` type($pe) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -505,7 +516,8 @@ def OpenSHMEM_CtxAtomicFetchAndOp : OpenSHMEM_Op<"ctx_atomic_fetch_and", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($ctx) `,` type($dest) `,` type($value) `,`"
+                       " type($pe) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -533,7 +545,8 @@ def OpenSHMEM_AtomicFetchOrOp : OpenSHMEM_Op<"atomic_fetch_or", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($dest) `,` type($value) `,` type($pe) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -562,7 +575,8 @@ def OpenSHMEM_CtxAtomicFetchOrOp : OpenSHMEM_Op<"ctx_atomic_fetch_or", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($ctx) `,` type($dest) `,` type($value) `,`"
+                       " type($pe) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -641,7 +655,8 @@ def OpenSHMEM_AtomicFetchXorOp : OpenSHMEM_Op<"atomic_fetch_xor", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($dest) `,` type($value) `,` type($pe) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -670,7 +685,8 @@ def OpenSHMEM_CtxAtomicFetchXorOp : OpenSHMEM_Op<"ctx_atomic_fetch_xor", []> {
   let results = (outs AnyType:$result);
 
   let assemblyFormat = "`(` $ctx `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($dest) `,` type($value) `,` type($pe) `->` type($result)";
+                       "type($ctx) `,` type($dest) `,` type($value) `,`"
+                       " type($pe) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -762,7 +778,8 @@ def OpenSHMEM_CtxAtomicFetchNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_nbi", []> {
 
     Signature:
     ```c
-    void shmem_ctx_atomic_fetch_nbi(shmem_ctx_t ctx, TYPE *fetch, const TYPE *source, int pe);
+    void shmem_ctx_atomic_fetch_nbi(shmem_ctx_t ctx, TYPE *fetch,
+                                    const TYPE *source, int pe);
     ```
   }];
 
@@ -773,15 +790,18 @@ def OpenSHMEM_CtxAtomicFetchNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_nbi", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $fetch `,` $source `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($source) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $fetch `,` $source `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($fetch) `,` type($source) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
 // AtomicCompareSwapNbiOp (Typed - Generic)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_AtomicCompareSwapNbiOp : OpenSHMEM_Op<"atomic_compare_swap_nbi", []> {
+def OpenSHMEM_AtomicCompareSwapNbiOp :
+  OpenSHMEM_Op<"atomic_compare_swap_nbi", []> {
   let summary = "Atomic compare-swap operation with nbi (generic)";
   let description = [{
     Atomically compares the value of a remote data object with a given value and
@@ -789,7 +809,8 @@ def OpenSHMEM_AtomicCompareSwapNbiOp : OpenSHMEM_Op<"atomic_compare_swap_nbi", [
 
     Signature:
     ```c
-    void shmem_atomic_compare_swap_nbi(TYPE *fetch, TYPE *dest, TYPE cond, TYPE value, int pe);
+    void shmem_atomic_compare_swap_nbi(TYPE *fetch, TYPE *dest, TYPE cond,
+                                       TYPE value, int pe);
     ```
   }];
 
@@ -801,15 +822,18 @@ def OpenSHMEM_AtomicCompareSwapNbiOp : OpenSHMEM_Op<"atomic_compare_swap_nbi", [
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $fetch `,` $dest `,` $cond `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($fetch) `,` type($dest) `,` type($cond) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $fetch `,` $dest `,` $cond `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($fetch) `,` type($dest) `,` type($cond) `,`"
+                       " type($value) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
 // CtxAtomicCompareSwapNbiOp (Typed - Context-aware)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxAtomicCompareSwapNbiOp : OpenSHMEM_Op<"ctx_atomic_compare_swap_nbi", []> {
+def OpenSHMEM_CtxAtomicCompareSwapNbiOp :
+  OpenSHMEM_Op<"ctx_atomic_compare_swap_nbi", []> {
   let summary = "Atomic compare-swap operation with nbi (context-aware)";
   let description = [{
     Atomically compares the value of a remote data object with a given value and
@@ -831,8 +855,10 @@ def OpenSHMEM_CtxAtomicCompareSwapNbiOp : OpenSHMEM_Op<"ctx_atomic_compare_swap_
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $cond `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($dest) `,` type($cond) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $cond `,` $value `,`"
+                       " $pe `)` attr-dict `:` "
+                       "type($ctx) `,` type($fetch) `,` type($dest) `,`"
+                       " type($cond) `,` type($value) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -857,8 +883,10 @@ def OpenSHMEM_AtomicSwapNbiOp : OpenSHMEM_Op<"atomic_swap_nbi", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $fetch `,` $dest `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($fetch) `,` type($dest) `,` type($value) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -872,7 +900,8 @@ def OpenSHMEM_CtxAtomicSwapNbiOp : OpenSHMEM_Op<"ctx_atomic_swap_nbi", []> {
 
     Signature:
     ```c
-    void shmem_ctx_atomic_swap_nbi(shmem_ctx_t ctx, TYPE *fetch, TYPE *dest, TYPE value, int pe);
+    void shmem_ctx_atomic_swap_nbi(shmem_ctx_t ctx, TYPE *fetch, TYPE *dest,
+                                   TYPE value, int pe);
     ```
   }];
 
@@ -884,8 +913,10 @@ def OpenSHMEM_CtxAtomicSwapNbiOp : OpenSHMEM_Op<"ctx_atomic_swap_nbi", []> {
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($fetch) `,` type($dest) `,`"
+                       " type($value) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -917,14 +948,16 @@ def OpenSHMEM_AtomicFetchIncNbiOp : OpenSHMEM_Op<"atomic_fetch_inc_nbi", []> {
 // CtxAtomicFetchIncNbiOp (Typed - Context-aware)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxAtomicFetchIncNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_inc_nbi", []> {
+def OpenSHMEM_CtxAtomicFetchIncNbiOp :
+  OpenSHMEM_Op<"ctx_atomic_fetch_inc_nbi", []> {
   let summary = "Atomic fetch-inc operation with nbi (context-aware)";
   let description = [{
     Atomically fetches the value of a remote data object and increments it by 1.
 
     Signature:
     ```c
-    void shmem_ctx_atomic_fetch_inc_nbi(shmem_ctx_t ctx, TYPE *fetch, TYPE *dest, int pe);
+    void shmem_ctx_atomic_fetch_inc_nbi(shmem_ctx_t ctx, TYPE *fetch,
+                                        TYPE *dest, int pe);
     ```
   }];
 
@@ -936,7 +969,8 @@ def OpenSHMEM_CtxAtomicFetchIncNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_inc_nbi", 
   );
 
   let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($dest) `,` type($pe)";
+                       "type($ctx) `,` type($fetch) `,` type($dest) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -946,7 +980,8 @@ def OpenSHMEM_CtxAtomicFetchIncNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_inc_nbi", 
 def OpenSHMEM_AtomicFetchAddNbiOp : OpenSHMEM_Op<"atomic_fetch_add_nbi", []> {
   let summary = "Atomic fetch-add operation with nbi (generic)";
   let description = [{
-    Atomically fetches the value of a remote data object and adds a given value to it.
+    Atomically fetches the value of a remote data object and adds a given
+    value to it.
 
     Signature:
     ```c
@@ -962,21 +997,25 @@ def OpenSHMEM_AtomicFetchAddNbiOp : OpenSHMEM_Op<"atomic_fetch_add_nbi", []> {
   );
 
   let assemblyFormat = "`(` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+                       "type($fetch) `,` type($dest) `,` type($value) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
 // CtxAtomicFetchAddNbiOp (Typed - Context-aware)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxAtomicFetchAddNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_add_nbi", []> {
+def OpenSHMEM_CtxAtomicFetchAddNbiOp :
+  OpenSHMEM_Op<"ctx_atomic_fetch_add_nbi", []> {
   let summary = "Atomic fetch-add operation with nbi (context-aware)";
   let description = [{
-    Atomically fetches the value of a remote data object and adds a given value to it.
+    Atomically fetches the value of a remote data object and adds a given
+    value to it.
 
     Signature:
     ```c
-    void shmem_ctx_atomic_fetch_add_nbi(shmem_ctx_t ctx, TYPE *fetch, TYPE *dest, TYPE value, int pe);
+    void shmem_ctx_atomic_fetch_add_nbi(shmem_ctx_t ctx, TYPE *fetch,
+                                        TYPE *dest, TYPE value, int pe);
     ```
   }];
   
@@ -988,8 +1027,10 @@ def OpenSHMEM_CtxAtomicFetchAddNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_add_nbi", 
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)`"
+                       " attr-dict `:` "
+                       "type($ctx) `,` type($fetch) `,` type($dest) `,`"
+                       " type($value) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -1016,14 +1057,16 @@ def OpenSHMEM_AtomicFetchAndNbiOp : OpenSHMEM_Op<"atomic_fetch_and_nbi", []> {
   );
 
   let assemblyFormat = "`(` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+                       "type($fetch) `,` type($dest) `,` type($value) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
 // CtxAtomicFetchAndNbiOp (Typed - Context-aware)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxAtomicFetchAndNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_and_nbi", []> {
+def OpenSHMEM_CtxAtomicFetchAndNbiOp :
+  OpenSHMEM_Op<"ctx_atomic_fetch_and_nbi", []> {
   let summary = "Atomic fetch-and operation with nbi (context-aware)";
   let description = [{
     Atomically fetches the value of a remote data object and performs a bitwise
@@ -1031,7 +1074,8 @@ def OpenSHMEM_CtxAtomicFetchAndNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_and_nbi", 
 
     Signature:
     ```c
-    void shmem_ctx_atomic_fetch_and_nbi(shmem_ctx_t ctx, TYPE *fetch, TYPE *dest, TYPE value, int pe);
+    void shmem_ctx_atomic_fetch_and_nbi(shmem_ctx_t ctx, TYPE *fetch,
+                                        TYPE *dest, TYPE value, int pe);
     ```
   }];
 
@@ -1043,8 +1087,10 @@ def OpenSHMEM_CtxAtomicFetchAndNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_and_nbi", 
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($fetch) `,` type($dest) `,`"
+                       " type($value) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -1071,14 +1117,16 @@ def OpenSHMEM_AtomicFetchOrNbiOp : OpenSHMEM_Op<"atomic_fetch_or_nbi", []> {
   );
 
   let assemblyFormat = "`(` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+                       "type($fetch) `,` type($dest) `,` type($value) `,`"
+                       " type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
 // CtxAtomicFetchOrNbiOp (Typed - Context-aware)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxAtomicFetchOrNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_or_nbi", []> {
+def OpenSHMEM_CtxAtomicFetchOrNbiOp :
+  OpenSHMEM_Op<"ctx_atomic_fetch_or_nbi", []> {
   let summary = "Atomic fetch-or operation with nbi (context-aware)";
   let description = [{
     Atomically fetches the value of a remote data object and performs a bitwise
@@ -1086,7 +1134,8 @@ def OpenSHMEM_CtxAtomicFetchOrNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_or_nbi", []
 
     Signature:
     ```c
-    void shmem_ctx_atomic_fetch_or_nbi(shmem_ctx_t ctx, TYPE *fetch, TYPE *dest, TYPE value, int pe);
+    void shmem_ctx_atomic_fetch_or_nbi(shmem_ctx_t ctx, TYPE *fetch,
+                                       TYPE *dest, TYPE value, int pe);
     ```
   }];
 
@@ -1098,8 +1147,10 @@ def OpenSHMEM_CtxAtomicFetchOrNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_or_nbi", []
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` "
+  "attr-dict `:` "
+                       "type($ctx) `,` type($fetch) `,` type($dest) `,`"
+                       " type($value) `,` type($pe)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -1126,13 +1177,15 @@ def OpenSHMEM_AtomicFetchXorNbiOp : OpenSHMEM_Op<"atomic_fetch_xor_nbi", []> {
   );
 
   let assemblyFormat = "`(` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+                       "type($fetch) `,` type($dest) `,` type($value) `,`"
+                       " type($pe)";
 }
 //===----------------------------------------------------------------------===//
 // CtxAtomicFetchXorNbiOp (Typed - Context-aware)
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_CtxAtomicFetchXorNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_xor_nbi", []> {
+def OpenSHMEM_CtxAtomicFetchXorNbiOp :
+  OpenSHMEM_Op<"ctx_atomic_fetch_xor_nbi", []> {
   let summary = "Atomic fetch-xor operation with nbi (context-aware)";
   let description = [{
     Atomically fetches the value of a remote data object and performs a bitwise
@@ -1140,7 +1193,8 @@ def OpenSHMEM_CtxAtomicFetchXorNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_xor_nbi", 
 
     Signature:
     ```c
-    void shmem_ctx_atomic_fetch_xor_nbi(shmem_ctx_t ctx, TYPE *fetch, TYPE *dest, TYPE value, int pe);
+    void shmem_ctx_atomic_fetch_xor_nbi(shmem_ctx_t ctx, TYPE *fetch,
+                                        TYPE *dest, TYPE value, int pe);
     ```
   }];
   
@@ -1152,8 +1206,10 @@ def OpenSHMEM_CtxAtomicFetchXorNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_xor_nbi", 
     I32:$pe
   );
 
-  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` attr-dict `:` "
-                       "type($ctx) `,` type($fetch) `,` type($dest) `,` type($value) `,` type($pe)";
+  let assemblyFormat = "`(` $ctx `,` $fetch `,` $dest `,` $value `,` $pe `)` "
+                       "attr-dict `:` "
+                       "type($ctx) `,` type($fetch) `,` type($dest) `,`"
+                       " type($value) `,` type($pe)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHEMATOMICS_TD 

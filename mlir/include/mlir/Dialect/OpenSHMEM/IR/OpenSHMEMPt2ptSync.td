@@ -16,12 +16,17 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_WaitUntilOp : OpenSHMEM_Op<"wait_until", []> {
-  let summary = "Equivalent to shmem_wait_until C API";
+  let summary = "Equivalent to the shmem_wait_until C API";
 
   let description = [{
-    Wait for a variable on the local PE to change
+    Blocks until a symmetric memory variable on the local PE satisfies the
+    specified wait condition.
 
-    C API:
+    Arguments:
+    - ivar: Symmetric memory variable to wait on
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
     ```c
     void shmem_wait_until(TYPE *ivar, int cmp, TYPE cmp_value);
     ```
@@ -42,13 +47,19 @@ def OpenSHMEM_WaitUntilOp : OpenSHMEM_Op<"wait_until", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_WaitUntilAllOp : OpenSHMEM_Op<"wait_until_all", []> {
-  let summary = "Equivalent to shmem_wait_until_all C API";
+  let summary = "Equivalent to the shmem_wait_until_all C API";
 
   let description = [{
-    Wait on an array of variables on the local PE until all variables meet
-    the specified wait condition.
+    Blocks until all variables in an array of symmetric memory variables
+    on the local PE satisfy the specified wait condition.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to wait on
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
     ```c
     void shmem_wait_until_all(TYPE *ivars, size_t nelems, const int *status,
                               int cmp, TYPE cmp_value);
@@ -63,8 +74,10 @@ def OpenSHMEM_WaitUntilAllOp : OpenSHMEM_Op<"wait_until_all", []> {
     AnyType:$cmp_value
   );
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_value)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_value `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_value)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -72,16 +85,22 @@ def OpenSHMEM_WaitUntilAllOp : OpenSHMEM_Op<"wait_until_all", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_WaitUntilAnyOp : OpenSHMEM_Op<"wait_until_any", []> {
-  let summary = "Equivalent to shmem_wait_until_any C API";
+  let summary = "Equivalent to the shmem_wait_until_any C API";
 
   let description = [{
-    Wait on an array of variables on the local PE until any variable meets
-    the specified wait condition.
+    Blocks until any variable in an array of symmetric memory variables
+    on the local PE satisfies the specified wait condition.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to wait on
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
     ```c
-    void shmem_wait_until_any(TYPE *ivars, size_t nelems, const int *status,
-                              int cmp, TYPE cmp_value);
+    size_t shmem_wait_until_any(TYPE *ivars, size_t nelems,
+                                const int *status, int cmp, TYPE cmp_value);
     ```
   }];
 
@@ -93,8 +112,10 @@ def OpenSHMEM_WaitUntilAnyOp : OpenSHMEM_Op<"wait_until_any", []> {
     AnyType:$cmp_value
   );
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_value)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_value `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_value)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -102,13 +123,23 @@ def OpenSHMEM_WaitUntilAnyOp : OpenSHMEM_Op<"wait_until_any", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_WaitUntilSomeOp : OpenSHMEM_Op<"wait_until_some", []> {
-  let summary = "Equivalent to shmem_wait_until_some C API";
+  let summary = "Equivalent to the shmem_wait_until_some C API";
 
   let description = [{
-    Wait on an array of variables on the local PE until at least one variable
-    meets the specified wait condition.
+    Blocks until at least one variable in an array of symmetric memory
+    variables on the local PE satisfies the specified wait condition.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to wait on
+    - nelems: Number of elements in the array
+    - indices: Array to store indices of satisfied variables
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
+    Results:
+    - result: Number of variables that satisfied the condition
+
     ```c
     size_t shmem_wait_until_some(TYPE *ivars, size_t nelems, size_t *indices,
                                  const int *status, int cmp, TYPE cmp_value);
@@ -126,8 +157,11 @@ def OpenSHMEM_WaitUntilSomeOp : OpenSHMEM_Op<"wait_until_some", []> {
 
   let results = (outs Index:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($indices) `,` type($status) `,` type($cmp) `,` type($cmp_value) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,`"
+                       " $cmp `,` $cmp_value `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($indices) `,`"
+                       " type($status) `,` type($cmp) `,` type($cmp_value) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -135,13 +169,19 @@ def OpenSHMEM_WaitUntilSomeOp : OpenSHMEM_Op<"wait_until_some", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_WaitUntilAllVectorOp : OpenSHMEM_Op<"wait_until_all_vector", []> {
-  let summary = "Equivalent to shmem_wait_until_all_vector C API";
+  let summary = "Equivalent to the shmem_wait_until_all_vector C API";
 
   let description = [{
-    Wait on an array of variables on the local PE until all variables
-    meet the specified wait conditions.
+    Blocks until all variables in an array of symmetric memory variables
+    on the local PE satisfy their corresponding wait conditions.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to wait on
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_values: Array of values to compare against
+
     ```c
     void shmem_wait_until_all_vector(TYPE *ivars, size_t nelems,
                                      const int *status, int cmp,
@@ -157,8 +197,10 @@ def OpenSHMEM_WaitUntilAllVectorOp : OpenSHMEM_Op<"wait_until_all_vector", []> {
     AnyMemRef:$cmp_values
   );
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_values `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_values)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_values `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_values)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -166,17 +208,23 @@ def OpenSHMEM_WaitUntilAllVectorOp : OpenSHMEM_Op<"wait_until_all_vector", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_WaitUntilAnyVectorOp : OpenSHMEM_Op<"wait_until_any_vector", []> {
-  let summary = "Equivalent to shmem_wait_until_any_vector C API";
+  let summary = "Equivalent to the shmem_wait_until_any_vector C API";
 
   let description = [{
-    Wait on an array of variables on the local PE until any variable meets
-    the specified wait conditions.
+    Blocks until any variable in an array of symmetric memory variables
+    on the local PE satisfies its corresponding wait condition.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to wait on
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_values: Array of values to compare against
+
     ```c
-    void shmem_wait_until_any_vector(TYPE *ivars, size_t nelems,
-                                     const int *status, int cmp,
-                                     TYPE *cmp_values);
+    size_t shmem_wait_until_any_vector(TYPE *ivars, size_t nelems,
+                                       const int *status, int cmp,
+                                       TYPE *cmp_values);
     ```
   }];
 
@@ -188,8 +236,10 @@ def OpenSHMEM_WaitUntilAnyVectorOp : OpenSHMEM_Op<"wait_until_any_vector", []> {
     AnyMemRef:$cmp_values
   );
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_values `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_values)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_values `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_values)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -197,17 +247,26 @@ def OpenSHMEM_WaitUntilAnyVectorOp : OpenSHMEM_Op<"wait_until_any_vector", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_WaitUntilSomeVectorOp : OpenSHMEM_Op<"wait_until_some_vector", []> {
-  let summary = "Equivalent to shmem_wait_until_some_vector C API";
+  let summary = "Equivalent to the shmem_wait_until_some_vector C API";
 
   let description = [{
-    Wait on an array of variables on the local PE until at least one variable
-    meets its specified wait condition.
+    Blocks until at least one variable in an array of symmetric memory
+    variables on the local PE satisfies its corresponding wait condition.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to wait on
+    - nelems: Number of elements in the array
+    - indices: Array to store indices of satisfied variables
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_values: Array of values to compare against
+
+    Results:
+    - result: Number of variables that satisfied the condition
+
     ```c
-    size_t shmem_wait_until_some_vector(TYPE *ivars, size_t nelems,
-                                        size_t *indices, const int *status,
-                                        int cmp, TYPE *cmp_values);
+    size_t shmem_wait_until_some_vector(TYPE *ivars, size_t nelems, size_t *indices,
+                                        const int *status, int cmp, TYPE *cmp_values);
     ```
   }];
 
@@ -222,8 +281,11 @@ def OpenSHMEM_WaitUntilSomeVectorOp : OpenSHMEM_Op<"wait_until_some_vector", []>
 
   let results = (outs Index:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,` $cmp `,` $cmp_values `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($indices) `,` type($status) `,` type($cmp) `,` type($cmp_values) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,`"
+                       " $cmp `,` $cmp_values `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($indices) `,`"
+                       " type($status) `,` type($cmp) `,` type($cmp_values) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -231,12 +293,20 @@ def OpenSHMEM_WaitUntilSomeVectorOp : OpenSHMEM_Op<"wait_until_some_vector", []>
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_TestOp : OpenSHMEM_Op<"test", []> {
-  let summary = "Equivalent to shmem_test C API";
+  let summary = "Equivalent to the shmem_test C API";
 
   let description = [{
-    Indicate whether a variable on the local PE meets the specified condition.
+    Tests whether a symmetric memory variable on the local PE satisfies
+    the specified condition without blocking.
 
-    C API:
+    Arguments:
+    - ivar: Symmetric memory variable to test
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
+    Results:
+    - result: Non-zero if condition is satisfied, zero otherwise
+
     ```c
     int shmem_test(TYPE *ivar, int cmp, TYPE cmp_value);
     ```
@@ -251,7 +321,8 @@ def OpenSHMEM_TestOp : OpenSHMEM_Op<"test", []> {
   let results = (outs I32:$result);
 
   let assemblyFormat = "`(` $ivar `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($ivar) `,` type($cmp) `,` type($cmp_value) `->` type($result)";
+                       "type($ivar) `,` type($cmp) `,` type($cmp_value) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -259,13 +330,22 @@ def OpenSHMEM_TestOp : OpenSHMEM_Op<"test", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_TestAllOp : OpenSHMEM_Op<"test_all", []> {
-  let summary = "Equivalent to shmem_test_all C API";
+  let summary = "Equivalent to the shmem_test_all C API";
 
   let description = [{
-    Indicate whether all variables within an array of variables on the local
-    PE meet a specified test condition.
+    Tests whether all variables in an array of symmetric memory variables
+    on the local PE satisfy the specified condition without blocking.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to test
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
+    Results:
+    - result: Non-zero if all conditions are satisfied, zero otherwise
+
     ```c
     int shmem_test_all(TYPE *ivars, size_t nelems, const int *status,
                        int cmp, TYPE cmp_value);
@@ -282,8 +362,10 @@ def OpenSHMEM_TestAllOp : OpenSHMEM_Op<"test_all", []> {
 
   let results = (outs I32:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_value) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_value `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_value) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -291,16 +373,25 @@ def OpenSHMEM_TestAllOp : OpenSHMEM_Op<"test_all", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_TestAnyOp : OpenSHMEM_Op<"test_any", []> {
-  let summary = "Equivalent to shmem_test_any C API";
+  let summary = "Equivalent to the shmem_test_any C API";
 
   let description = [{
-    Indicate whether any one variable within an array of variables on the
-    local PE meets a specified test condition.
+    Tests whether any variable in an array of symmetric memory variables
+    on the local PE satisfies the specified condition without blocking.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to test
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
+    Results:
+    - result: Index of first satisfied variable, SIZE_MAX if none
+
     ```c
     size_t shmem_test_any(TYPE *ivars, size_t nelems, const int *status,
-                       int cmp, TYPE cmp_value);
+                          int cmp, TYPE cmp_value);
     ```
   }];
 
@@ -314,8 +405,10 @@ def OpenSHMEM_TestAnyOp : OpenSHMEM_Op<"test_any", []> {
 
   let results = (outs Index:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_value) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_value `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_value) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -323,13 +416,24 @@ def OpenSHMEM_TestAnyOp : OpenSHMEM_Op<"test_any", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_TestSomeOp : OpenSHMEM_Op<"test_some", []> {
-  let summary = "Equivalent to shmem_test_some C API";
+  let summary = "Equivalent to the shmem_test_some C API";
 
   let description = [{
-    Indicate whether at least one variable within an array of variables on
-    the local PE meets a specified test condition.
+    Tests whether at least one variable in an array of symmetric memory
+    variables on the local PE satisfies the specified condition without
+    blocking.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to test
+    - nelems: Number of elements in the array
+    - indices: Array to store indices of satisfied variables
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
+    Results:
+    - result: Number of variables that satisfied the condition
+
     ```c
     size_t shmem_test_some(TYPE *ivars, size_t nelems, size_t *indices,
                            const int *status, int cmp, TYPE cmp_value);
@@ -347,8 +451,11 @@ def OpenSHMEM_TestSomeOp : OpenSHMEM_Op<"test_some", []> {
 
   let results = (outs Index:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($indices) `,` type($status) `,` type($cmp) `,` type($cmp_value) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,`"
+                       " $cmp `,` $cmp_value `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($indices) `,`"
+                       " type($status) `,` type($cmp) `,` type($cmp_value) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -356,12 +463,22 @@ def OpenSHMEM_TestSomeOp : OpenSHMEM_Op<"test_some", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_TestAllVectorOp : OpenSHMEM_Op<"test_all_vector", []> {
-  let summary = "Equivalent to shmem_test_all_vector C API";
+  let summary = "Equivalent to the shmem_test_all_vector C API";
 
   let description = [{
-    Test if all variables on the local PE meet the specified wait conditions.
+    Tests whether all variables in an array of symmetric memory variables
+    on the local PE satisfy their corresponding conditions without blocking.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to test
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_values: Array of values to compare against
+
+    Results:
+    - result: Non-zero if all conditions are satisfied, zero otherwise
+
     ```c
     int shmem_test_all_vector(TYPE *ivars, size_t nelems, const int *status,
                               int cmp, TYPE *cmp_values);
@@ -378,8 +495,10 @@ def OpenSHMEM_TestAllVectorOp : OpenSHMEM_Op<"test_all_vector", []> {
 
   let results = (outs I32:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_values `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_values) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_values `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_values) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -387,16 +506,26 @@ def OpenSHMEM_TestAllVectorOp : OpenSHMEM_Op<"test_all_vector", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_TestAnyVectorOp : OpenSHMEM_Op<"test_any_vector", []> {
-  let summary = "Equivalent to shmem_test_any_vector C API";
+  let summary = "Equivalent to the shmem_test_any_vector C API";
 
   let description = [{
-    Indicate whether any one variable within an array of variables on the
-    local PE meets its specified test condition.
+    Tests whether any variable in an array of symmetric memory variables
+    on the local PE satisfies its corresponding condition without blocking.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to test
+    - nelems: Number of elements in the array
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_values: Array of values to compare against
+
+    Results:
+    - result: Index of first satisfied variable, SIZE_MAX if none
+
     ```c
-    size_t shmem_test_any_vector(TYPE *ivars, size_t nelems, const int *status,
-                              int cmp, TYPE *cmp_values);
+    size_t shmem_test_any_vector(TYPE *ivars, size_t nelems,
+                                 const int *status, int cmp,
+                                 TYPE *cmp_values);
     ```
   }];
 
@@ -410,8 +539,10 @@ def OpenSHMEM_TestAnyVectorOp : OpenSHMEM_Op<"test_any_vector", []> {
 
   let results = (outs Index:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,` $cmp_values `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($status) `,` type($cmp) `,` type($cmp_values) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $status `,` $cmp `,`"
+                       " $cmp_values `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($status) `,`"
+                       " type($cmp) `,` type($cmp_values) `->` type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -419,16 +550,28 @@ def OpenSHMEM_TestAnyVectorOp : OpenSHMEM_Op<"test_any_vector", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_TestSomeVectorOp : OpenSHMEM_Op<"test_some_vector", []> {
-  let summary = "Equivalent to shmem_test_some_vector C API";
+  let summary = "Equivalent to the shmem_test_some_vector C API";
 
   let description = [{
-    Indicate whether at least one variable within an array of variables on
-    the local PE meets its specified test condition.
+    Tests whether at least one variable in an array of symmetric memory
+    variables on the local PE satisfies its corresponding condition without
+    blocking.
 
-    C API:
+    Arguments:
+    - ivars: Array of symmetric memory variables to test
+    - nelems: Number of elements in the array
+    - indices: Array to store indices of satisfied variables
+    - status: Status array indicating which elements to check
+    - cmp: Comparison operator
+    - cmp_values: Array of values to compare against
+
+    Results:
+    - result: Number of variables that satisfied the condition
+
     ```c
     size_t shmem_test_some_vector(TYPE *ivars, size_t nelems, size_t *indices,
-                                  const int *status, int cmp, TYPE *cmp_values);
+                                  const int *status, int cmp,
+                                  TYPE *cmp_values);
     ```
   }];
 
@@ -443,8 +586,11 @@ def OpenSHMEM_TestSomeVectorOp : OpenSHMEM_Op<"test_some_vector", []> {
 
   let results = (outs Index:$result);
 
-  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,` $cmp `,` $cmp_values `)` attr-dict `:` "
-                       "type($ivars) `,` type($nelems) `,` type($indices) `,` type($status) `,` type($cmp) `,` type($cmp_values) `->` type($result)";
+  let assemblyFormat = "`(` $ivars `,` $nelems `,` $indices `,` $status `,`"
+                       " $cmp `,` $cmp_values `)` attr-dict `:` "
+                       "type($ivars) `,` type($nelems) `,` type($indices) `,`"
+                       " type($status) `,` type($cmp) `,` type($cmp_values) `->`"
+                       " type($result)";
 }
 
 //===----------------------------------------------------------------------===//
@@ -452,12 +598,20 @@ def OpenSHMEM_TestSomeVectorOp : OpenSHMEM_Op<"test_some_vector", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_SignalWaitUntilOp : OpenSHMEM_Op<"signal_wait_until", []> {
-  let summary = "Equivalent to shmem_signal_wait_until C API";
+  let summary = "Equivalent to the shmem_signal_wait_until C API";
 
   let description = [{
-    Wait for a variable on the local PE to change from a signaling operation.
+    Blocks until a signal on the local PE satisfies the specified wait
+    condition and returns the signal value.
 
-    C API:
+    Arguments:
+    - sig_addr: Symmetric memory address of the signal
+    - cmp: Comparison operator
+    - cmp_value: Value to compare against
+
+    Results:
+    - result: Value of the signal when condition was satisfied
+
     ```c
     uint64_t shmem_signal_wait_until(uint64_t *sig_addr, int cmp,
                                      uint64_t cmp_value);
@@ -473,7 +627,8 @@ def OpenSHMEM_SignalWaitUntilOp : OpenSHMEM_Op<"signal_wait_until", []> {
   let results = (outs I64:$result);
 
   let assemblyFormat = "`(` $sig_addr `,` $cmp `,` $cmp_value `)` attr-dict `:` "
-                       "type($sig_addr) `,` type($cmp) `,` type($cmp_value) `->` type($result)";
+                       "type($sig_addr) `,` type($cmp) `,` type($cmp_value) `->`"
+                       " type($result)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMPT2PTSYNC_TD

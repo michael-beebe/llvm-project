@@ -16,12 +16,14 @@ include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_InitOp : OpenSHMEM_Op<"init", []> {
-  let summary = "Initialize the OpenSHMEM library";
+  let summary = "Equivalent to the shmem_init C API";
   let description = [{
-    This operation initializes the OpenSHMEM runtime environment.
-    It must be called before any other OpenSHMEM operations.
-    
-    Signature:
+    Initializes the OpenSHMEM runtime environment. This must be the first
+    OpenSHMEM routine called by a program.
+
+    Arguments:
+    - (none)
+
     ```c
     void shmem_init(void);
     ```
@@ -34,12 +36,14 @@ def OpenSHMEM_InitOp : OpenSHMEM_Op<"init", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_FinalizeOp : OpenSHMEM_Op<"finalize", []> {
-  let summary = "Finalize the OpenSHMEM library";
+  let summary = "Equivalent to the shmem_finalize C API";
   let description = [{
-    This operation finalizes the OpenSHMEM runtime environment.
-    It should be called before program termination.
-    
-    Signature:
+    Finalizes the OpenSHMEM runtime environment and cleans up resources.
+    This should be the last OpenSHMEM routine called by a program.
+
+    Arguments:
+    - (none)
+
     ```c
     void shmem_finalize(void);
     ```
@@ -52,12 +56,17 @@ def OpenSHMEM_FinalizeOp : OpenSHMEM_Op<"finalize", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_MyPeOp : OpenSHMEM_Op<"my_pe", []> {
-  let summary = "Get the current PE (Processing Element) number";
+  let summary = "Equivalent to the shmem_my_pe C API";
   let description = [{
-    This operation returns the number of the calling PE. PEs are numbered 
-    from 0 to n_pes()-1, where n_pes() is the total number of PEs.
-    
-    Signature:
+    Returns the processing element (PE) number of the calling PE. PE numbers
+    are integers from 0 to n_pes() - 1.
+
+    Arguments:
+    - (none)
+
+    Results:
+    - pe: The PE number of the calling PE
+
     ```c
     int shmem_my_pe(void);
     ```
@@ -72,11 +81,17 @@ def OpenSHMEM_MyPeOp : OpenSHMEM_Op<"my_pe", []> {
 //===----------------------------------------------------------------------===//
 
 def OpenSHMEM_NPesOp : OpenSHMEM_Op<"n_pes", []> {
-  let summary = "Get the total number of PEs";
+  let summary = "Equivalent to the shmem_n_pes C API";
   let description = [{
-    This operation returns the total number of PEs in the OpenSHMEM program.
-    
-    Signature:
+    Returns the total number of processing elements (PEs) in the OpenSHMEM
+    program.
+
+    Arguments:
+    - (none)
+
+    Results:
+    - n_pes: The total number of PEs
+
     ```c
     int shmem_n_pes(void);
     ```
