@@ -29,6 +29,43 @@ using namespace mlir::openshmem;
 #define GEN_PASS_DEF_MESSAGEAGGREGATION
 #include "mlir/Dialect/OpenSHMEM/Transforms/Passes.h.inc"
 
+// ===========================================
+// TODO: Message Aggregation Pass Improvements
+// ===========================================
+// Memory Layout Analysis (HIGH PRIORITY)
+// - Add stride pattern detection for regular non-contiguous access patterns
+// - Handle GEP-like operations for pointer arithmetic analysis
+// - Implement true contiguous memory region coalescing (multiple ops -> single larger op)
+//
+// Advanced Coalescing Strategies (MEDIUM PRIORITY)
+// - Add cross-operation type coalescing (e.g., put32 + put32 -> put64 when memory allows)
+// - Fix detectCrossOperationPatterns to avoid spurious grouping (currently disabled)
+// - Implement non-contiguous but optimizable patterns
+//
+// Context and Synchronization Awareness (MEDIUM PRIORITY)
+// - Add synchronization boundary analysis (quiet, fence, barriers)
+// - Respect context isolation boundaries for team-based operations
+// - Handle ordering constraints within and across contexts
+// - Implement safe coalescing across synchronization points
+//
+// Performance Heuristics (LOW PRIORITY)
+// - Add cost models for transformation decisions (when to coalesce vs not)
+// - Implement target-specific optimizations (network latency, bandwidth models)
+// - Add adaptive thresholds based on message sizes and hardware characteristics
+// - Performance analysis and benchmarking framework
+//
+// Advanced Features (FUTURE)
+// - Non-blocking operation scheduling and batching optimizations
+// - Collective operation integration (reduce, broadcast patterns)
+// - Inter-procedural analysis for cross-function coalescing
+// - Integration with other OpenSHMEM optimization passes
+//
+// Testing:
+// - Add tests for strided access patterns
+// - Add tests for synchronization boundary respect
+// - Add performance regression tests
+// - Add tests for edge cases (empty functions, single operations, etc.)
+
 namespace {
 
 //===----------------------------------------------------------------------===//
@@ -84,43 +121,174 @@ class MemoryLayoutAnalyzer {
 public:
   /// Represents a memory region with base address and offset
   struct MemoryRegion {
-    Value baseAddr;
-    int64_t offset;
-    int64_t size;
+    Value baseAddr;         // Base memory reference
+    int64_t offset;         // Offset in bytes from base
+    int64_t size;           // Size in bytes
+    Value indexValue;       // Dynamic index if not constant
+    bool hasConstantOffset; // Whether offset is statically known
 
-    MemoryRegion(Value base, int64_t off = 0, int64_t sz = 0)
-        : baseAddr(base), offset(off), size(sz) {}
+    MemoryRegion(Value base, int64_t off = 0, int64_t sz = 0,
+                 Value idx = nullptr, bool constOff = true)
+        : baseAddr(base), offset(off), size(sz), indexValue(idx),
+          hasConstantOffset(constOff) {}
   };
 
   /// Check if two memory accesses are contiguous
   bool areContiguous(const MemoryAccess &a, const MemoryAccess &b) const {
-    // For now, implement basic contiguity check
-    // TODO: Add more sophisticated memory layout analysis
+    // Must access same base memory references
     if (a.destMemRef != b.destMemRef || a.srcMemRef != b.srcMemRef)
       return false;
 
-    // Check if sizes are constant and can be analyzed
-    auto aSize = getConstantSize(a.size);
-    auto bSize = getConstantSize(b.size);
+    // Get memory regions for both accesses
+    auto regionA = getMemoryRegion(a);
+    auto regionB = getMemoryRegion(b);
 
-    return aSize && bSize && *aSize > 0 && *bSize > 0;
+    if (!regionA || !regionB)
+      return false;
+
+    // Both must have constant offsets for contiguity analysis
+    if (!regionA->hasConstantOffset || !regionB->hasConstantOffset)
+      return false;
+
+    // Check if regions are adjacent
+    // Pattern 1: A ends where B starts (A.offset + A.size == B.offset)
+    // Pattern 2: B ends where A starts (B.offset + B.size == A.offset)
+    return (regionA->offset + regionA->size == regionB->offset) ||
+           (regionB->offset + regionB->size == regionA->offset);
+  }
+
+  /// Check if accesses follow a strided pattern
+  bool areStrided(const MemoryAccess &a, const MemoryAccess &b,
+                  int64_t &stride) const {
+    // Must access same base memory references
+    if (a.destMemRef != b.destMemRef || a.srcMemRef != b.srcMemRef)
+      return false;
+
+    auto regionA = getMemoryRegion(a);
+    auto regionB = getMemoryRegion(b);
+
+    if (!regionA || !regionB)
+      return false;
+
+    // Both must have constant offsets for stride analysis
+    if (!regionA->hasConstantOffset || !regionB->hasConstantOffset)
+      return false;
+
+    // Calculate stride
+    stride = regionB->offset - regionA->offset;
+
+    // Valid stride must be non-zero and regions shouldn't overlap
+    return stride != 0 && abs(stride) >= std::max(regionA->size, regionB->size);
   }
 
   /// Extract memory region information from a memory access
   std::optional<MemoryRegion>
   getMemoryRegion(const MemoryAccess &access) const {
-    // Basic implementation - extract base address
-    return MemoryRegion(access.destMemRef, 0,
-                        getConstantSize(access.size).value_or(0));
+    int64_t size = getConstantSize(access.size).value_or(-1);
+    if (size <= 0)
+      return std::nullopt;
+
+    // Analyze the memory reference to extract offset information
+    auto offsetInfo = analyzeMemRefOffset(access.destMemRef);
+
+    return MemoryRegion(offsetInfo.baseMemRef, offsetInfo.offset, size,
+                        offsetInfo.indexValue, offsetInfo.hasConstantOffset);
   }
 
 private:
+  /// Information extracted from memory reference analysis
+  struct OffsetInfo {
+    Value baseMemRef;       // The base memory reference
+    int64_t offset;         // Constant offset in bytes (if known)
+    Value indexValue;       // Dynamic index value (if not constant)
+    bool hasConstantOffset; // Whether offset is statically determinable
+
+    OffsetInfo(Value base, int64_t off = 0, Value idx = nullptr,
+               bool constOff = true)
+        : baseMemRef(base), offset(off), indexValue(idx),
+          hasConstantOffset(constOff) {}
+  };
+
+  /// Analyze a memory reference to extract offset information
+  OffsetInfo analyzeMemRefOffset(Value memRef) const {
+    // Case 1: Direct memory reference (no indexing)
+    if (memRef.getDefiningOp<memref::AllocOp>() ||
+        memRef.getDefiningOp<openshmem::MallocOp>() ||
+        isa<BlockArgument>(memRef)) {
+      return OffsetInfo(memRef, 0, nullptr, true);
+    }
+
+    // Case 2: memref.subview operation
+    if (auto subviewOp = memRef.getDefiningOp<memref::SubViewOp>()) {
+      auto baseOffset = analyzeMemRefOffset(subviewOp.getSource());
+
+      // Try to extract constant offset from subview
+      auto offsets = subviewOp.getStaticOffsets();
+      if (offsets.size() == 1 && !ShapedType::isDynamic(offsets[0])) {
+        // Calculate byte offset (assuming element size can be determined)
+        auto elementSize = getElementSizeInBytes(subviewOp.getType());
+        if (elementSize) {
+          return OffsetInfo(baseOffset.baseMemRef,
+                            baseOffset.offset + offsets[0] * *elementSize,
+                            nullptr, baseOffset.hasConstantOffset);
+        }
+      }
+
+      // Dynamic offset - mark as non-constant
+      return OffsetInfo(baseOffset.baseMemRef, 0, memRef, false);
+    }
+
+    // Case 3: memref.view or similar offset operations
+    if (auto viewOp = memRef.getDefiningOp<memref::ViewOp>()) {
+      auto baseOffset = analyzeMemRefOffset(viewOp.getSource());
+
+      // Try to extract constant byte offset
+      if (auto constOffset = getConstantSize(viewOp.getByteShift())) {
+        return OffsetInfo(baseOffset.baseMemRef,
+                          baseOffset.offset + *constOffset, nullptr,
+                          baseOffset.hasConstantOffset);
+      }
+
+      // Dynamic offset
+      return OffsetInfo(baseOffset.baseMemRef, 0, viewOp.getByteShift(), false);
+    }
+
+    // Case 4: Unknown pattern - treat as separate base
+    return OffsetInfo(memRef, 0, nullptr, true);
+  }
+
   /// Extract constant size if available
   std::optional<int64_t> getConstantSize(Value size) const {
     if (auto constOp = size.getDefiningOp<arith::ConstantOp>()) {
       if (auto intAttr = llvm::dyn_cast<IntegerAttr>(constOp.getValue())) {
         return intAttr.getInt();
       }
+    }
+    return std::nullopt;
+  }
+
+  /// Get element size in bytes for a memref type
+  std::optional<int64_t> getElementSizeInBytes(Type memRefType) const {
+    if (auto memrefType = dyn_cast<MemRefType>(memRefType)) {
+      Type elementType = memrefType.getElementType();
+
+      // Handle common types
+      if (elementType.isInteger(8))
+        return 1;
+      if (elementType.isInteger(16))
+        return 2;
+      if (elementType.isInteger(32))
+        return 4;
+      if (elementType.isInteger(64))
+        return 8;
+      if (elementType.isF32())
+        return 4;
+      if (elementType.isF64())
+        return 8;
+
+      // For other types, try to get from DataLayout if available
+      // For now, return default assumption
+      return 4; // Assume 32-bit elements as default
     }
     return std::nullopt;
   }
@@ -592,10 +760,9 @@ public:
     }
 
     // Strategy 2: Try to create a single coalesced operation if possible
-    // TODO: Re-enable after fixing memory layout analysis
-    // if (canCreateCoalescedOperation(group)) {
-    //   return createAndReplaceWithCoalescedOperation(group);
-    // }
+    if (canCreateCoalescedOperation(group)) {
+      return createAndReplaceWithCoalescedOperation(group);
+    }
 
     // Strategy 3: Optimize non-blocking operations by batching
     if (group.isNonBlocking && canBatchNonBlockingOperations(group)) {
@@ -636,13 +803,20 @@ private:
 
   /// Check if a group can be transformed into a single coalesced operation
   bool canCreateCoalescedOperation(const CoalescingGroup &group) {
+    // Need at least 2 operations to coalesce
+    if (group.operations.size() < 2) {
+      return false;
+    }
+
     // Build a map from operations to their memory access info
     DenseMap<Operation *, const MemoryAccess *> opToAccess;
     for (const auto &access : memoryAccesses) {
       opToAccess[access.op] = &access;
     }
 
-    // Check if all operations access contiguous memory regions
+    MemoryLayoutAnalyzer layoutAnalyzer;
+
+    // Check if operations can be safely coalesced
     for (size_t i = 0; i < group.operations.size(); ++i) {
       for (size_t j = i + 1; j < group.operations.size(); ++j) {
         auto *accessI = opToAccess.lookup(group.operations[i]);
@@ -651,13 +825,27 @@ private:
           return false;
         }
 
-        // For simple coalescing, require same memory regions for now
-        // TODO: Implement proper contiguous memory analysis using
-        // MemoryLayoutAnalyzer
-        if (accessI->srcMemRef != accessJ->srcMemRef ||
-            accessI->destMemRef != accessJ->destMemRef) {
+        // Strategy 1: Check for contiguous memory access
+        if (layoutAnalyzer.areContiguous(*accessI, *accessJ)) {
+          continue; // Good - can coalesce contiguous accesses
+        }
+
+        // Strategy 2: Check for strided access (future enhancement)
+        int64_t stride;
+        if (layoutAnalyzer.areStrided(*accessI, *accessJ, stride)) {
+          // For now, don't coalesce strided accesses (future enhancement)
           return false;
         }
+
+        // Strategy 3: Check if operations are identical (safe to combine)
+        if (accessI->srcMemRef == accessJ->srcMemRef &&
+            accessI->destMemRef == accessJ->destMemRef) {
+          // Identical memory regions - safe to coalesce
+          continue;
+        }
+
+        // Operations cannot be safely coalesced
+        return false;
       }
     }
 

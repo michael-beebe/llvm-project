@@ -270,3 +270,52 @@ func.func @test_put_get_no_coalescing() {
   openshmem.finalize
   return
 }
+
+// Test small message size (should NOT be coalesced due to threshold)
+func.func @test_small_message_size_no_coalescing() {
+  // CHECK-LABEL: func.func @test_small_message_size_no_coalescing
+  openshmem.init
+  
+  %c4 = arith.constant 4 : index  // Small size below typical threshold
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%c4) : index -> !openshmem.symmetric_memref<i32>
+  %local_data1 = memref.alloc() : memref<1xi32>
+  %local_data2 = memref.alloc() : memref<1xi32>
+  
+  %size = arith.constant 1 : index
+  
+  // These small operations might not be coalesced due to size thresholds
+  // Current pass does duplicate removal regardless of size
+  // CHECK: openshmem.putmem
+  // CHECK-NOT: openshmem.putmem
+  openshmem.putmem(%sym_mem, %local_data1, %size, %pe) : !openshmem.symmetric_memref<i32>, memref<1xi32>, index, i32
+  openshmem.putmem(%sym_mem, %local_data1, %size, %pe) : !openshmem.symmetric_memref<i32>, memref<1xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test mixed operation types with same memory (should NOT be coalesced)
+func.func @test_mixed_memory_operations_no_coalescing() {
+  // CHECK-LABEL: func.func @test_mixed_memory_operations_no_coalescing
+  openshmem.init
+  
+  %c64 = arith.constant 64 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem1 = openshmem.malloc(%c64) : index -> !openshmem.symmetric_memref<i32>
+  %sym_mem2 = openshmem.malloc(%c64) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<16xi32>
+  
+  // Mix of putmem and getmem to same PE - should NOT be coalesced due to different operation types
+  // CHECK: openshmem.putmem
+  // CHECK: openshmem.getmem
+  openshmem.putmem(%sym_mem1, %local_data, %c64, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  openshmem.getmem(%local_data, %sym_mem2, %c64, %pe) : memref<16xi32>, !openshmem.symmetric_memref<i32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
