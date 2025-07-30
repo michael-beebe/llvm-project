@@ -71,3 +71,202 @@ func.func @test_different_pe_no_coalescing() {
   openshmem.finalize
   return
 }
+
+// Test coalescing of typed operations
+func.func @test_typed_put_coalescing() {
+  // CHECK-LABEL: func.func @test_typed_put_coalescing
+  openshmem.init
+  
+  %nelems = arith.constant 16 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%nelems) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<16xi32>
+  
+  // These typed operations should be coalesced
+  // CHECK: openshmem.put
+  // CHECK-NOT: openshmem.put
+  openshmem.put(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  openshmem.put(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test coalescing of non-blocking operations
+func.func @test_nbi_coalescing() {
+  // CHECK-LABEL: func.func @test_nbi_coalescing
+  openshmem.init
+  
+  %nelems = arith.constant 16 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%nelems) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<16xi32>
+  
+  // These non-blocking operations should be coalesced
+  // CHECK: openshmem.put_nbi
+  // CHECK-NOT: openshmem.put_nbi
+  openshmem.put_nbi(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  openshmem.put_nbi(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test that blocking and non-blocking operations are NOT coalesced
+func.func @test_blocking_nbi_no_coalescing() {
+  // CHECK-LABEL: func.func @test_blocking_nbi_no_coalescing
+  openshmem.init
+  
+  %nelems = arith.constant 16 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%nelems) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<16xi32>
+  
+  // These should NOT be coalesced due to different blocking behavior
+  // CHECK: openshmem.put
+  // CHECK: openshmem.put_nbi
+  openshmem.put(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  openshmem.put_nbi(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test context-aware operations
+func.func @test_context_aware_coalescing(%ctx: !openshmem.ctx) {
+  // CHECK-LABEL: func.func @test_context_aware_coalescing
+  openshmem.init
+  
+  %nelems = arith.constant 16 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%nelems) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<16xi32>
+  
+  // These context-aware operations should be coalesced
+  // CHECK: openshmem.ctx_put
+  // CHECK-NOT: openshmem.ctx_put
+  openshmem.ctx_put(%ctx, %sym_mem, %local_data, %nelems, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  openshmem.ctx_put(%ctx, %sym_mem, %local_data, %nelems, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test that operations with different contexts are NOT coalesced
+func.func @test_different_context_no_coalescing(%ctx1: !openshmem.ctx, %ctx2: !openshmem.ctx) {
+  // CHECK-LABEL: func.func @test_different_context_no_coalescing
+  openshmem.init
+  
+  %nelems = arith.constant 16 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%nelems) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<16xi32>
+  
+  // These should NOT be coalesced due to different contexts
+  // CHECK: openshmem.ctx_put
+  // CHECK: openshmem.ctx_put
+  openshmem.ctx_put(%ctx1, %sym_mem, %local_data, %nelems, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  openshmem.ctx_put(%ctx2, %sym_mem, %local_data, %nelems, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test sized operations coalescing
+func.func @test_sized_operations_coalescing() {
+  // CHECK-LABEL: func.func @test_sized_operations_coalescing
+  openshmem.init
+  
+  %nelems = arith.constant 8 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%nelems) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<8xi32>
+  
+  // These 32-bit operations should be coalesced
+  // CHECK: openshmem.put32
+  // CHECK-NOT: openshmem.put32
+  openshmem.put32(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<8xi32>, index, i32
+  openshmem.put32(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<8xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test that different sized operations are NOT coalesced
+func.func @test_different_sized_no_coalescing() {
+  // CHECK-LABEL: func.func @test_different_sized_no_coalescing
+  openshmem.init
+  
+  %nelems = arith.constant 8 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%nelems) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<8xi32>
+  
+  // These should NOT be coalesced due to different sizes
+  // CHECK: openshmem.put32
+  // CHECK: openshmem.put64
+  openshmem.put32(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<8xi32>, index, i32
+  openshmem.put64(%sym_mem, %local_data, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<8xi32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test GET operations coalescing
+func.func @test_get_coalescing() {
+  // CHECK-LABEL: func.func @test_get_coalescing
+  openshmem.init
+  
+  %size = arith.constant 64 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %local_data = memref.alloc() : memref<16xi32>
+  
+  // These GET operations should be coalesced
+  // CHECK: openshmem.getmem
+  // CHECK-NOT: openshmem.getmem
+  openshmem.getmem(%local_data, %sym_mem, %size, %pe) : memref<16xi32>, !openshmem.symmetric_memref<i32>, index, i32
+  openshmem.getmem(%local_data, %sym_mem, %size, %pe) : memref<16xi32>, !openshmem.symmetric_memref<i32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
+
+// Test that PUT and GET operations are NOT coalesced
+func.func @test_put_get_no_coalescing() {
+  // CHECK-LABEL: func.func @test_put_get_no_coalescing
+  openshmem.init
+  
+  %size = arith.constant 64 : index
+  %pe = arith.constant 1 : i32
+  
+  %sym_mem = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %local_data1 = memref.alloc() : memref<16xi32>
+  %local_data2 = memref.alloc() : memref<16xi32>
+  
+  // These should NOT be coalesced due to different operation types
+  // CHECK: openshmem.putmem
+  // CHECK: openshmem.getmem
+  openshmem.putmem(%sym_mem, %local_data1, %size, %pe) : !openshmem.symmetric_memref<i32>, memref<16xi32>, index, i32
+  openshmem.getmem(%local_data2, %sym_mem, %size, %pe) : memref<16xi32>, !openshmem.symmetric_memref<i32>, index, i32
+  
+  openshmem.quiet
+  openshmem.finalize
+  return
+}
