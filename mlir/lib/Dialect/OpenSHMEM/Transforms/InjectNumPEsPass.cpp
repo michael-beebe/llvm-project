@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.h"
-#include "mlir/Dialect/OpenSHMEM/Transforms/Transforms.h"
+#include "mlir/Dialect/OpenSHMEM/Transforms/Passes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 

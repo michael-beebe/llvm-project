@@ -1,7 +1,6 @@
 add_mlir_dialect_library(MLIROpenSHMEMTransforms
-  CoalesceGets.cpp
-  CoalescePuts.cpp
   InjectNumPEsPass.cpp
+  MessageAggregationPass.cpp
   Passes.cpp
 
   DEPENDS

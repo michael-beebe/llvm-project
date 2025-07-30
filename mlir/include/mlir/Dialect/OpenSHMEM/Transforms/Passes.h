@@ -10,6 +10,7 @@
 #define MLIR_DIALECT_OPENSHMEM_TRANSFORMS_PASSES_H
 
 #include "mlir/Pass/Pass.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 
 namespace mlir {
 namespace openshmem {
@@ -17,15 +18,23 @@ namespace openshmem {
 #define GEN_PASS_DECL
 #include "mlir/Dialect/OpenSHMEM/Transforms/Passes.h.inc"
 
-/// Create a pass that coalesces consecutive OpenSHMEM put operations.
-std::unique_ptr<Pass> createCoalescePutsPass();
+//===----------------------------------------------------------------------===//
+// Passes
+//===----------------------------------------------------------------------===//
 
-/// Create a pass that coalesces consecutive OpenSHMEM get operations.
-std::unique_ptr<Pass> createCoalesceGetsPass();
+/// Create a comprehensive message aggregation pass for OpenSHMEM operations.
+/// This pass performs analysis and optimization of communication patterns,
+/// coalescing multiple small transfers into fewer, larger ones across all
+/// RMA operation types while respecting OpenSHMEM semantics.
+std::unique_ptr<Pass> createMessageAggregationPass();
 
 /// Create a pass that injects or overrides the openshmem.num_pes module
 /// attribute.
 std::unique_ptr<Pass> createInjectNumPEsPass();
+
+//===----------------------------------------------------------------------===//
+// Registration
+//===----------------------------------------------------------------------===//
 
 /// Generate the code for registering passes.
 #define GEN_PASS_REGISTRATION
