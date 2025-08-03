@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file declares utility functions shared across OpenSHMEM to LLVM 
+// This file declares utility functions shared across OpenSHMEM to LLVM
 // conversion patterns. These utilities help eliminate code duplication
 // across the modular conversion files.
 //
@@ -28,16 +28,15 @@ namespace openshmem {
 //===----------------------------------------------------------------------===//
 
 /// Utility to get or define a function in the module. If the function with
-/// the given name already exists, returns it. Otherwise, creates a new 
+/// the given name already exists, returns it. Otherwise, creates a new
 /// function declaration with external linkage.
-LLVM::LLVMFuncOp getOrDefineFunction(ModuleOp &moduleOp,
-                                    const Location loc,
-                                    ConversionPatternRewriter &rewriter,
-                                    StringRef name,
-                                    LLVM::LLVMFunctionType type);
+LLVM::LLVMFuncOp getOrDefineFunction(ModuleOp &moduleOp, const Location loc,
+                                     ConversionPatternRewriter &rewriter,
+                                     StringRef name,
+                                     LLVM::LLVMFunctionType type);
 
 //===----------------------------------------------------------------------===//
-// Memory reference utilities  
+// Memory reference utilities
 //===----------------------------------------------------------------------===//
 
 /// Utility to extract the data pointer from a memref descriptor.
@@ -55,11 +54,17 @@ Type getSymmetricMemRefElementType(Value symmetricMemRef);
 //===----------------------------------------------------------------------===//
 
 /// Utility to generate typed function names based on element type.
-/// Maps MLIR types to OpenSHMEM type suffixes (e.g., "put" + i32 -> "shmem_put32").
-/// For unsupported types, falls back to generic name.
+/// Maps MLIR types to OpenSHMEM type names (e.g., "put" + f32 ->
+/// "shmem_float_put"). For unsupported types, falls back to generic name.
 std::string getTypedFunctionName(StringRef baseName, Type elementType);
+
+/// Utility to generate sized function names based on element type.
+/// Maps MLIR types to OpenSHMEM sized type names (e.g., "wait_until" + i32 ->
+/// "shmem_int32_wait_until"). Used for pt2pt sync operations that require sized
+/// names (especially vectors).
+std::string getSizedFunctionName(StringRef baseName, Type elementType);
 
 } // namespace openshmem
 } // namespace mlir
 
-#endif // MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_OPENSHMEMCONVERSIONUTILS_H 
+#endif // MLIR_LIB_CONVERSION_OPENSHMEMTOLLVM_OPENSHMEMCONVERSIONUTILS_H

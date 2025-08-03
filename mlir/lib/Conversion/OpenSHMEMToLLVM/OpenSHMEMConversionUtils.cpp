@@ -69,29 +69,55 @@ Type getSymmetricMemRefElementType(Value symmetricMemRef) {
 
 std::string getTypedFunctionName(StringRef baseName, Type elementType) {
   std::string funcName = "shmem_";
-  funcName += baseName.str();
-
-  // Map MLIR types to OpenSHMEM type suffixes
+  
+  // Map MLIR types to OpenSHMEM type names (not sizes!)
+  // These must match the actual function names in the OpenSHMEM library
   if (elementType.isInteger(8)) {
-    funcName += "8";
+    funcName += "char_";
   } else if (elementType.isInteger(16)) {
-    funcName += "16";
+    funcName += "short_";
   } else if (elementType.isInteger(32)) {
-    funcName += "32";
+    funcName += "int_";
   } else if (elementType.isInteger(64)) {
-    funcName += "64";
+    funcName += "long_";
   } else if (elementType.isF32()) {
-    funcName += "32";
+    funcName += "float_";
   } else if (elementType.isF64()) {
-    funcName += "64";
+    funcName += "double_";
   } else if (elementType.isF128()) {
-    funcName += "128";
+    // F128 uses sized functions, not typed functions
+    // Return early with sized pattern: shmem_put128, shmem_get128
+    funcName += baseName.str() + "128";
+    return funcName;
   } else {
     // For unsupported types, fall back to generic name
     // This should be validated earlier in the process
     funcName = "shmem_" + baseName.str();
+    return funcName;
   }
+  
+  funcName += baseName.str();
+  return funcName;
+}
 
+std::string getSizedFunctionName(StringRef baseName, Type elementType) {
+  std::string funcName = "shmem_";
+  
+  // Map MLIR types to OpenSHMEM sized type names
+  // Used for pt2pt sync operations that require sized names (especially vectors)
+  // Note: OpenSHMEM only has int32 and int64 sized functions for sync operations
+  if (elementType.isInteger(64)) {
+    funcName += "int64_";
+  } else if (elementType.isF64()) {
+    // Double operations in pt2pt sync use int64 for storage
+    funcName += "int64_";
+  } else {
+    // All other types (i8, i16, i32, f32, etc.) use int32
+    // This includes most common cases
+    funcName += "int32_";
+  }
+  
+  funcName += baseName.str();
   return funcName;
 }
 

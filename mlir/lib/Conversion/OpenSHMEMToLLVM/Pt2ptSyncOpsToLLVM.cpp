@@ -206,8 +206,13 @@ struct WaitUntilAllVectorOpLowering
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_wait_until_all_vector", funcType);
+    // Vector operations use sized function names
+    // Get element type from ivars symmetric memref for sized naming
+    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    std::string funcName =
+        getSizedFunctionName("wait_until_all_vector", elementType);
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
     // ivars is a symmetric memref (already converted to pointer)
     Value ivarsPtr = adaptor.getIvars();
@@ -248,8 +253,12 @@ struct WaitUntilAnyVectorOpLowering
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_wait_until_any_vector", funcType);
+    // Vector operations use sized function names
+    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    std::string funcName =
+        getSizedFunctionName("wait_until_any_vector", elementType);
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
     // ivars is a symmetric memref (already converted to pointer)
     Value ivarsPtr = adaptor.getIvars();
@@ -290,8 +299,12 @@ struct WaitUntilSomeVectorOpLowering
         sizeType,
         {ptrType, sizeType, ptrType, ptrType, rewriter.getI32Type(), ptrType});
 
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_wait_until_some_vector", funcType);
+    // Vector operations use sized function names
+    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    std::string funcName =
+        getSizedFunctionName("wait_until_some_vector", elementType);
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
     // ivars is a symmetric memref (already converted to pointer)
     Value ivarsPtr = adaptor.getIvars();
@@ -492,8 +505,11 @@ struct TestAllVectorOpLowering
         rewriter.getI32Type(),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_test_all_vector", funcType);
+    // Vector operations use sized function names
+    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    std::string funcName = getSizedFunctionName("test_all_vector", elementType);
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
     // ivars is a symmetric memref (already converted to pointer)
     Value ivarsPtr = adaptor.getIvars();
@@ -534,8 +550,11 @@ struct TestAnyVectorOpLowering
     auto funcType = LLVM::LLVMFunctionType::get(
         sizeType, {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_test_any_vector", funcType);
+    // Vector operations use sized function names
+    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    std::string funcName = getSizedFunctionName("test_any_vector", elementType);
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
     // ivars is a symmetric memref (already converted to pointer)
     Value ivarsPtr = adaptor.getIvars();
@@ -578,8 +597,12 @@ struct TestSomeVectorOpLowering
         sizeType,
         {ptrType, sizeType, ptrType, ptrType, rewriter.getI32Type(), ptrType});
 
-    LLVM::LLVMFuncOp funcDecl = getOrDefineFunction(
-        moduleOp, loc, rewriter, "shmem_test_some_vector", funcType);
+    // Vector operations use sized function names
+    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    std::string funcName =
+        getSizedFunctionName("test_some_vector", elementType);
+    LLVM::LLVMFuncOp funcDecl =
+        getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
     // ivars is a symmetric memref (already converted to pointer)
     Value ivarsPtr = adaptor.getIvars();
