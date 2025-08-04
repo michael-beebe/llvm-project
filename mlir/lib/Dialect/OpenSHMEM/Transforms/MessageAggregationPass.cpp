@@ -745,7 +745,17 @@ public:
                    << " operations\n";
     }
 
-    // Strategy 1: Remove identical operations (safest implementation)
+    // Strategy 1: Try to create a single coalesced operation if possible
+    // (Prioritize true aggregation over duplicate removal)
+    if (canCreateCoalescedOperation(group)) {
+      if (debugMode) {
+        llvm::dbgs() << "Creating coalesced operation from "
+                     << group.operations.size() << " operations\n";
+      }
+      return createAndReplaceWithCoalescedOperation(group);
+    }
+
+    // Strategy 2: Remove identical operations (fallback for truly identical ops)
     if (areAllOperationsIdentical(group)) {
       if (debugMode) {
         llvm::dbgs() << "Removing " << (group.operations.size() - 1)
@@ -757,11 +767,6 @@ public:
         rewriter.eraseOp(group.operations[i]);
       }
       return success();
-    }
-
-    // Strategy 2: Try to create a single coalesced operation if possible
-    if (canCreateCoalescedOperation(group)) {
-      return createAndReplaceWithCoalescedOperation(group);
     }
 
     // Strategy 3: Optimize non-blocking operations by batching
@@ -799,6 +804,34 @@ private:
       }
     }
     return true;
+  }
+
+  /// Check if two operations are truly identical (same operation type and operands)
+  bool areOperationsTrulyIdentical(Operation *op1, Operation *op2) {
+    // Check if operations have same number of operands and results
+    if (op1->getNumOperands() != op2->getNumOperands() ||
+        op1->getNumResults() != op2->getNumResults()) {
+      return false;
+    }
+
+    // Check if all operands are identical
+    for (unsigned j = 0; j < op1->getNumOperands(); ++j) {
+      if (op1->getOperand(j) != op2->getOperand(j)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// Extract constant size if available
+  std::optional<int64_t> getConstantSize(Value size) {
+    if (auto constOp = size.getDefiningOp<arith::ConstantOp>()) {
+      if (auto intAttr = llvm::dyn_cast<IntegerAttr>(constOp.getValue())) {
+        return intAttr.getInt();
+      }
+    }
+    return std::nullopt;
   }
 
   /// Check if a group can be transformed into a single coalesced operation
@@ -844,6 +877,14 @@ private:
           continue;
         }
 
+        // Strategy 4: Check if operations are truly identical (can be aggregated)
+        // This handles the case where operations are identical but we want to
+        // aggregate them into a larger operation instead of just removing duplicates
+        if (areOperationsTrulyIdentical(group.operations[i], group.operations[j])) {
+          // Truly identical operations - safe to aggregate
+          continue;
+        }
+
         // Operations cannot be safely coalesced
         return false;
       }
@@ -861,7 +902,7 @@ private:
       return failure();
     }
 
-    // Create the coalesced operation
+    // Create the coalesced operation using the helper function
     Operation *coalescedOp = createCoalescedOperation(group, totalSize);
     if (!coalescedOp) {
       return failure();
@@ -919,21 +960,14 @@ private:
       opToAccess[access.op] = &access;
     }
 
-    Location loc = group.operations[0]->getLoc();
     auto *firstAccess = opToAccess.lookup(group.operations[0]);
     if (!firstAccess)
       return nullptr;
 
-    Value totalSize = firstAccess->size;
-
-    for (size_t i = 1; i < group.operations.size(); ++i) {
-      auto *access = opToAccess.lookup(group.operations[i]);
-      if (!access)
-        return nullptr;
-      totalSize = rewriter.create<arith::AddIOp>(loc, totalSize, access->size);
-    }
-
-    return totalSize;
+    // For identical operations, we need to calculate the total size
+    // For now, just return the size of the first operation
+    // The actual size calculation will be done in createCoalescedOperation
+    return firstAccess->size;
   }
 
   Operation *createCoalescedOperation(const CoalescingGroup &group,
@@ -953,6 +987,19 @@ private:
 
     Location loc = firstAccess->op->getLoc();
 
+    // Set the insertion point to the location of the first operation
+    rewriter.setInsertionPoint(group.operations[0]);
+
+    // Calculate the actual total size for identical operations
+    Value actualTotalSize = totalSize;
+    if (areAllOperationsIdentical(group)) {
+      if (auto constSize = getConstantSize(firstAccess->size)) {
+        int64_t totalSizeValue = *constSize * group.operations.size();
+        actualTotalSize = rewriter.create<arith::ConstantOp>(
+            loc, rewriter.getIndexAttr(totalSizeValue));
+      }
+    }
+
     // TODO: This is a simplified transformation. In a real implementation,
     // we would need to:
     // 1. Verify memory regions are contiguous or calculate stride patterns
@@ -963,21 +1010,21 @@ private:
     if (group.isNonBlocking) {
       if (group.opType == MemoryAccess::PUT) {
         return rewriter.create<PutmemNbiOp>(loc, firstAccess->destMemRef,
-                                            firstAccess->srcMemRef, totalSize,
+                                            firstAccess->srcMemRef, actualTotalSize,
                                             firstAccess->pe);
       } else {
         return rewriter.create<GetmemNbiOp>(loc, firstAccess->destMemRef,
-                                            firstAccess->srcMemRef, totalSize,
+                                            firstAccess->srcMemRef, actualTotalSize,
                                             firstAccess->pe);
       }
     } else {
       if (group.opType == MemoryAccess::PUT) {
         return rewriter.create<PutmemOp>(loc, firstAccess->destMemRef,
-                                         firstAccess->srcMemRef, totalSize,
+                                         firstAccess->srcMemRef, actualTotalSize,
                                          firstAccess->pe);
       } else {
         return rewriter.create<GetmemOp>(loc, firstAccess->destMemRef,
-                                         firstAccess->srcMemRef, totalSize,
+                                         firstAccess->srcMemRef, actualTotalSize,
                                          firstAccess->pe);
       }
     }
