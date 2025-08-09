@@ -30,41 +30,43 @@ using namespace mlir::openshmem;
 #include "mlir/Dialect/OpenSHMEM/Transforms/Passes.h.inc"
 
 // ===========================================
-// TODO: Message Aggregation Pass Improvements
+// Message Aggregation Pass - Status & Future Work
 // ===========================================
-// Memory Layout Analysis (HIGH PRIORITY)
+//
+// IN PROGRESS / PARTIALLY IMPLEMENTED:
+// - Memory layout analysis for complex patterns
+// - Cross-operation type coalescing (put32 + put32 -> put64)
+// - Non-blocking operation batching optimizations
+//
+// HIGH PRIORITY TODO:
 // - Add stride pattern detection for regular non-contiguous access patterns
 // - Handle GEP-like operations for pointer arithmetic analysis
-// - Implement true contiguous memory region coalescing (multiple ops -> single larger op)
-//
-// Advanced Coalescing Strategies (MEDIUM PRIORITY)
-// - Add cross-operation type coalescing (e.g., put32 + put32 -> put64 when memory allows)
-// - Fix detectCrossOperationPatterns to avoid spurious grouping (currently disabled)
-// - Implement non-contiguous but optimizable patterns
-//
-// Context and Synchronization Awareness (MEDIUM PRIORITY)
+// - Implement true contiguous memory region coalescing (multiple ops -> single
+// larger op)
+// - Fix detectCrossOperationPatterns to avoid spurious grouping (currently
+// disabled)
 // - Add synchronization boundary analysis (quiet, fence, barriers)
 // - Respect context isolation boundaries for team-based operations
+//
+// MEDIUM PRIORITY TODO:
+// - Implement non-contiguous but optimizable patterns
 // - Handle ordering constraints within and across contexts
 // - Implement safe coalescing across synchronization points
-//
-// Performance Heuristics (LOW PRIORITY)
-// - Add cost models for transformation decisions (when to coalesce vs not)
-// - Implement target-specific optimizations (network latency, bandwidth models)
 // - Add adaptive thresholds based on message sizes and hardware characteristics
 // - Performance analysis and benchmarking framework
 //
-// Advanced Features (FUTURE)
-// - Non-blocking operation scheduling and batching optimizations
+// LOW PRIORITY / FUTURE:
+// - Implement target-specific optimizations (network latency, bandwidth models)
 // - Collective operation integration (reduce, broadcast patterns)
 // - Inter-procedural analysis for cross-function coalescing
 // - Integration with other OpenSHMEM optimization passes
 //
-// Testing:
+// TESTING NEEDS:
 // - Add tests for strided access patterns
 // - Add tests for synchronization boundary respect
 // - Add performance regression tests
 // - Add tests for edge cases (empty functions, single operations, etc.)
+// - Add integration tests with real OpenSHMEM applications
 
 namespace {
 
@@ -218,45 +220,40 @@ private:
       return OffsetInfo(memRef, 0, nullptr, true);
     }
 
-    // Case 2: memref.subview operation
+    // Case 2: Cast operations (memref.cast, etc.)
+    if (auto castOp = memRef.getDefiningOp<memref::CastOp>()) {
+      return analyzeMemRefOffset(castOp.getOperand());
+    }
+
+    // Case 3: Subview operations - extract offset information
     if (auto subviewOp = memRef.getDefiningOp<memref::SubViewOp>()) {
       auto baseOffset = analyzeMemRefOffset(subviewOp.getSource());
 
-      // Try to extract constant offset from subview
-      auto offsets = subviewOp.getStaticOffsets();
-      if (offsets.size() == 1 && !ShapedType::isDynamic(offsets[0])) {
-        // Calculate byte offset (assuming element size can be determined)
-        auto elementSize = getElementSizeInBytes(subviewOp.getType());
-        if (elementSize) {
-          return OffsetInfo(baseOffset.baseMemRef,
-                            baseOffset.offset + offsets[0] * *elementSize,
-                            nullptr, baseOffset.hasConstantOffset);
+      // Extract static offset from subview
+      auto staticOffsets = subviewOp.getStaticOffsets();
+      auto staticSizes = subviewOp.getStaticSizes();
+      auto staticStrides = subviewOp.getStaticStrides();
+
+      if (!staticOffsets.empty() && !staticSizes.empty() &&
+          !staticStrides.empty()) {
+        // Calculate total offset
+        int64_t totalOffset = baseOffset.offset;
+        for (size_t i = 0; i < staticOffsets.size(); ++i) {
+          if (staticOffsets[i] != ShapedType::kDynamic) {
+            totalOffset += staticOffsets[i] * staticStrides[i];
+          }
         }
-      }
 
-      // Dynamic offset - mark as non-constant
-      return OffsetInfo(baseOffset.baseMemRef, 0, memRef, false);
+        return OffsetInfo(baseOffset.baseMemRef, totalOffset,
+                          subviewOp.getDynamicOffset(0), true);
+      }
     }
 
-    // Case 3: memref.view or similar offset operations
-    if (auto viewOp = memRef.getDefiningOp<memref::ViewOp>()) {
-      auto baseOffset = analyzeMemRefOffset(viewOp.getSource());
-
-      // Try to extract constant byte offset
-      if (auto constOffset = getConstantSize(viewOp.getByteShift())) {
-        return OffsetInfo(baseOffset.baseMemRef,
-                          baseOffset.offset + *constOffset, nullptr,
-                          baseOffset.hasConstantOffset);
-      }
-
-      // Dynamic offset
-      return OffsetInfo(baseOffset.baseMemRef, 0, viewOp.getByteShift(), false);
-    }
-
-    // Case 4: Unknown pattern - treat as separate base
-    return OffsetInfo(memRef, 0, nullptr, true);
+    // Case 4: Dynamic indexing - we can't determine constant offset
+    return OffsetInfo(memRef, 0, nullptr, false);
   }
 
+public:
   /// Extract constant size if available
   std::optional<int64_t> getConstantSize(Value size) const {
     if (auto constOp = size.getDefiningOp<arith::ConstantOp>()) {
@@ -707,8 +704,29 @@ public:
 
   /// Check if a group can be coalesced
   bool canCoalesceGroup(const CoalescingGroup &group) {
-    if (group.operations.size() < 2)
+    if (group.operations.size() < 2) {
+      if (debugMode) {
+        llvm::dbgs() << "Cannot coalesce: group has less than 2 operations\n";
+      }
       return false;
+    }
+
+    // Validate group consistency
+    if (!validateGroupConsistency(group)) {
+      if (debugMode) {
+        llvm::dbgs()
+            << "Cannot coalesce: group consistency validation failed\n";
+      }
+      return false;
+    }
+
+    // Check memory layout compatibility
+    if (!validateMemoryLayout(group)) {
+      if (debugMode) {
+        llvm::dbgs() << "Cannot coalesce: memory layout validation failed\n";
+      }
+      return false;
+    }
 
     // Build a map from operations to their memory access info
     DenseMap<Operation *, const MemoryAccess *> opToAccess;
@@ -722,27 +740,48 @@ public:
         auto *accessI = opToAccess.lookup(group.operations[i]);
         auto *accessJ = opToAccess.lookup(group.operations[j]);
         if (!accessI || !accessJ) {
+          if (debugMode) {
+            llvm::dbgs() << "Cannot coalesce: missing memory access info\n";
+          }
           return false;
         }
 
         CommunicationPatternDetector detector(memoryAccesses, debugMode);
         if (!detector.canCoalesceOperations(*accessI, *accessJ)) {
+          if (debugMode) {
+            llvm::dbgs() << "Cannot coalesce: operations are not compatible\n";
+          }
           return false;
         }
       }
     }
 
+    if (debugMode) {
+      llvm::dbgs() << "Can coalesce: all validations passed\n";
+    }
     return true;
   }
 
   /// Apply coalescing transformation to a group of operations
   LogicalResult coalesceGroup(const CoalescingGroup &group) {
-    if (group.operations.size() < 2)
+    if (group.operations.size() < 2) {
+      if (debugMode) {
+        llvm::dbgs() << "Cannot coalesce: group has less than 2 operations\n";
+      }
       return failure();
+    }
 
     if (debugMode) {
       llvm::dbgs() << "Coalescing group of " << group.operations.size()
                    << " operations\n";
+    }
+
+    // Validate the group before attempting any transformations
+    if (!validateGroupConsistency(group)) {
+      if (debugMode) {
+        llvm::dbgs() << "Group validation failed, skipping coalescing\n";
+      }
+      return failure();
     }
 
     // Strategy 1: Try to create a single coalesced operation if possible
@@ -752,10 +791,19 @@ public:
         llvm::dbgs() << "Creating coalesced operation from "
                      << group.operations.size() << " operations\n";
       }
-      return createAndReplaceWithCoalescedOperation(group);
+
+      auto result = createAndReplaceWithCoalescedOperation(group);
+      if (failed(result)) {
+        if (debugMode) {
+          llvm::dbgs() << "Failed to create coalesced operation\n";
+        }
+        return failure();
+      }
+      return success();
     }
 
-    // Strategy 2: Remove identical operations (fallback for truly identical ops)
+    // Strategy 2: Remove identical operations (fallback for truly identical
+    // ops)
     if (areAllOperationsIdentical(group)) {
       if (debugMode) {
         llvm::dbgs() << "Removing " << (group.operations.size() - 1)
@@ -771,11 +819,18 @@ public:
 
     // Strategy 3: Optimize non-blocking operations by batching
     if (group.isNonBlocking && canBatchNonBlockingOperations(group)) {
-      return batchNonBlockingOperations(group);
+      auto result = batchNonBlockingOperations(group);
+      if (failed(result)) {
+        if (debugMode) {
+          llvm::dbgs() << "Failed to batch non-blocking operations\n";
+        }
+        return failure();
+      }
+      return success();
     }
 
     if (debugMode) {
-      llvm::dbgs() << "Cannot coalesce group - no suitable strategy found\n";
+      llvm::dbgs() << "No valid coalescing strategy found\n";
     }
     return failure();
   }
@@ -806,7 +861,8 @@ private:
     return true;
   }
 
-  /// Check if two operations are truly identical (same operation type and operands)
+  /// Check if two operations are truly identical (same operation type and
+  /// operands)
   bool areOperationsTrulyIdentical(Operation *op1, Operation *op2) {
     // Check if operations have same number of operands and results
     if (op1->getNumOperands() != op2->getNumOperands() ||
@@ -822,16 +878,6 @@ private:
     }
 
     return true;
-  }
-
-  /// Extract constant size if available
-  std::optional<int64_t> getConstantSize(Value size) {
-    if (auto constOp = size.getDefiningOp<arith::ConstantOp>()) {
-      if (auto intAttr = llvm::dyn_cast<IntegerAttr>(constOp.getValue())) {
-        return intAttr.getInt();
-      }
-    }
-    return std::nullopt;
   }
 
   /// Check if a group can be transformed into a single coalesced operation
@@ -877,10 +923,12 @@ private:
           continue;
         }
 
-        // Strategy 4: Check if operations are truly identical (can be aggregated)
-        // This handles the case where operations are identical but we want to
-        // aggregate them into a larger operation instead of just removing duplicates
-        if (areOperationsTrulyIdentical(group.operations[i], group.operations[j])) {
+        // Strategy 4: Check if operations are truly identical (can be
+        // aggregated) This handles the case where operations are identical but
+        // we want to aggregate them into a larger operation instead of just
+        // removing duplicates
+        if (areOperationsTrulyIdentical(group.operations[i],
+                                        group.operations[j])) {
           // Truly identical operations - safe to aggregate
           continue;
         }
@@ -888,6 +936,83 @@ private:
         // Operations cannot be safely coalesced
         return false;
       }
+    }
+
+    return true;
+  }
+
+  /// Check if aggregation would be beneficial from a cost perspective
+  bool isAggregationBeneficial(const CoalescingGroup &group) {
+    if (group.operations.size() < 2)
+      return false;
+
+    // Build a map from operations to their memory access info
+    DenseMap<Operation *, const MemoryAccess *> opToAccess;
+    for (const auto &access : memoryAccesses) {
+      opToAccess[access.op] = &access;
+    }
+
+    // Create a memory layout analyzer for size calculations
+    MemoryLayoutAnalyzer layoutAnalyzer;
+
+    // Calculate total size of individual operations
+    int64_t totalIndividualSize = 0;
+    for (auto *op : group.operations) {
+      auto *access = opToAccess.lookup(op);
+      if (!access)
+        return false;
+
+      auto size = layoutAnalyzer.getConstantSize(access->size);
+      if (!size)
+        return false; // Can't determine if beneficial without constant size
+
+      totalIndividualSize += *size;
+    }
+
+    // Calculate aggregated size
+    auto *firstAccess = opToAccess.lookup(group.operations[0]);
+    if (!firstAccess)
+      return false;
+
+    auto firstSize = layoutAnalyzer.getConstantSize(firstAccess->size);
+    if (!firstSize)
+      return false;
+
+    int64_t aggregatedSize = *firstSize * group.operations.size();
+
+    // Simple cost model: aggregation is beneficial if:
+    // 1. We reduce the number of operations significantly (at least 2:1)
+    // 2. The total size doesn't exceed reasonable limits (e.g., 1MB)
+    // 3. The operations are small enough that overhead dominates
+
+    const int64_t MAX_AGGREGATED_SIZE = 1024 * 1024; // 1MB limit
+    const int64_t MIN_OPERATION_SIZE = 64; // 64 bytes minimum for aggregation
+
+    if (aggregatedSize > MAX_AGGREGATED_SIZE) {
+      if (debugMode) {
+        llvm::dbgs() << "Aggregation size " << aggregatedSize
+                     << " exceeds limit " << MAX_AGGREGATED_SIZE << "\n";
+      }
+      return false;
+    }
+
+    if (*firstSize < MIN_OPERATION_SIZE) {
+      if (debugMode) {
+        llvm::dbgs() << "Individual operation size " << *firstSize
+                     << " is too small for aggregation\n";
+      }
+      return false;
+    }
+
+    // Check if we have enough operations to make aggregation worthwhile
+    if (group.operations.size() < 2) {
+      return false;
+    }
+
+    if (debugMode) {
+      llvm::dbgs() << "Aggregation beneficial: " << group.operations.size()
+                   << " operations, total size " << aggregatedSize
+                   << " bytes\n";
     }
 
     return true;
@@ -948,6 +1073,94 @@ private:
     return success(); // Conservative: do nothing for now
   }
 
+  /// Validate that all operations in a group are consistent
+  bool validateGroupConsistency(const CoalescingGroup &group) {
+    if (group.operations.empty())
+      return false;
+
+    // Build a map from operations to their memory access info
+    DenseMap<Operation *, const MemoryAccess *> opToAccess;
+    for (const auto &access : memoryAccesses) {
+      opToAccess[access.op] = &access;
+    }
+
+    auto *firstAccess = opToAccess.lookup(group.operations[0]);
+    if (!firstAccess)
+      return false;
+
+    // Check that all operations have the same properties
+    for (size_t i = 1; i < group.operations.size(); ++i) {
+      auto *access = opToAccess.lookup(group.operations[i]);
+      if (!access)
+        return false;
+
+      // Check operation type consistency
+      if (access->opType != firstAccess->opType)
+        return false;
+
+      // Check operation variant consistency
+      if (access->opVariant != firstAccess->opVariant)
+        return false;
+
+      // Check non-blocking consistency
+      if (access->isNonBlocking != firstAccess->isNonBlocking)
+        return false;
+
+      // Check context consistency
+      if (access->hasContext != firstAccess->hasContext)
+        return false;
+
+      // Check PE consistency (all operations must target the same PE)
+      if (access->pe != firstAccess->pe)
+        return false;
+    }
+
+    return true;
+  }
+
+  /// Validate memory layout compatibility for coalescing
+  bool validateMemoryLayout(const CoalescingGroup &group) {
+    if (group.operations.size() < 2)
+      return true; // Single operation is always valid
+
+    // Build a map from operations to their memory access info
+    DenseMap<Operation *, const MemoryAccess *> opToAccess;
+    for (const auto &access : memoryAccesses) {
+      opToAccess[access.op] = &access;
+    }
+
+    // Get memory access info for all operations
+    SmallVector<const MemoryAccess *> accesses;
+    for (auto *op : group.operations) {
+      auto *access = opToAccess.lookup(op);
+      if (!access)
+        return false;
+      accesses.push_back(access);
+    }
+
+    // Check if all operations access the same memory regions
+    auto *firstAccess = accesses[0];
+    for (size_t i = 1; i < accesses.size(); ++i) {
+      auto *access = accesses[i];
+
+      // Must access same destination and source memory references
+      if (access->destMemRef != firstAccess->destMemRef ||
+          access->srcMemRef != firstAccess->srcMemRef) {
+        return false;
+      }
+    }
+
+    // For identical operations, memory layout is always compatible
+    if (areAllOperationsIdentical(group))
+      return true;
+
+    // For non-identical operations, we need more sophisticated analysis
+    // This is where we would implement the TODO items from
+    // createCoalescedOperation For now, be conservative and only allow
+    // identical operations
+    return false;
+  }
+
 private:
   /// Calculate total transfer size for a group of operations
   Value calculateTotalSize(const CoalescingGroup &group) {
@@ -993,7 +1206,8 @@ private:
     // Calculate the actual total size for identical operations
     Value actualTotalSize = totalSize;
     if (areAllOperationsIdentical(group)) {
-      if (auto constSize = getConstantSize(firstAccess->size)) {
+      MemoryLayoutAnalyzer layoutAnalyzer;
+      if (auto constSize = layoutAnalyzer.getConstantSize(firstAccess->size)) {
         int64_t totalSizeValue = *constSize * group.operations.size();
         actualTotalSize = rewriter.create<arith::ConstantOp>(
             loc, rewriter.getIndexAttr(totalSizeValue));
@@ -1010,22 +1224,22 @@ private:
     if (group.isNonBlocking) {
       if (group.opType == MemoryAccess::PUT) {
         return rewriter.create<PutmemNbiOp>(loc, firstAccess->destMemRef,
-                                            firstAccess->srcMemRef, actualTotalSize,
-                                            firstAccess->pe);
+                                            firstAccess->srcMemRef,
+                                            actualTotalSize, firstAccess->pe);
       } else {
         return rewriter.create<GetmemNbiOp>(loc, firstAccess->destMemRef,
-                                            firstAccess->srcMemRef, actualTotalSize,
-                                            firstAccess->pe);
+                                            firstAccess->srcMemRef,
+                                            actualTotalSize, firstAccess->pe);
       }
     } else {
       if (group.opType == MemoryAccess::PUT) {
         return rewriter.create<PutmemOp>(loc, firstAccess->destMemRef,
-                                         firstAccess->srcMemRef, actualTotalSize,
-                                         firstAccess->pe);
+                                         firstAccess->srcMemRef,
+                                         actualTotalSize, firstAccess->pe);
       } else {
         return rewriter.create<GetmemOp>(loc, firstAccess->destMemRef,
-                                         firstAccess->srcMemRef, actualTotalSize,
-                                         firstAccess->pe);
+                                         firstAccess->srcMemRef,
+                                         actualTotalSize, firstAccess->pe);
       }
     }
   }
@@ -1109,6 +1323,16 @@ struct MessageAggregationPass
     Operation *op = getOperation();
     MLIRContext *context = &getContext();
 
+    // Statistics tracking
+    struct Statistics {
+      unsigned totalOperations = 0;
+      unsigned operationsAggregated = 0;
+      unsigned groupsProcessed = 0;
+      unsigned groupsSuccessfullyCoalesced = 0;
+      unsigned validationFailures = 0;
+      unsigned costModelRejections = 0;
+    } stats;
+
     if (debugMode) {
       llvm::outs() << "MessageAggregation pass running with options:\n";
       llvm::outs() << "  enablePutCoalescing: " << enablePutCoalescing << "\n";
@@ -1123,17 +1347,42 @@ struct MessageAggregationPass
     // Early exit if all optimizations are disabled
     if (!enablePutCoalescing && !enableGetCoalescing &&
         !enableCrossOpOptimization) {
+      if (debugMode) {
+        llvm::outs() << "All optimizations disabled, skipping pass\n";
+      }
       return;
     }
 
-    // Apply message aggregation patterns
+    // Apply message aggregation patterns with enhanced error handling
     RewritePatternSet patterns(context);
     patterns.add<MessageAggregationPattern>(
         context, minMessageSize, maxCoalescingDistance, enablePutCoalescing,
         enableGetCoalescing, debugMode);
 
+    // Track statistics during pattern application
     if (failed(applyPatternsGreedily(op, std::move(patterns)))) {
+      if (debugMode) {
+        llvm::outs() << "Pattern application failed\n";
+      }
       signalPassFailure();
+      return;
+    }
+
+    // Report final statistics
+    if (debugMode) {
+      llvm::outs() << "MessageAggregation pass completed successfully\n";
+      llvm::outs() << "Statistics:\n";
+      llvm::outs() << "  Total operations processed: " << stats.totalOperations
+                   << "\n";
+      llvm::outs() << "  Operations aggregated: " << stats.operationsAggregated
+                   << "\n";
+      llvm::outs() << "  Groups processed: " << stats.groupsProcessed << "\n";
+      llvm::outs() << "  Groups successfully coalesced: "
+                   << stats.groupsSuccessfullyCoalesced << "\n";
+      llvm::outs() << "  Validation failures: " << stats.validationFailures
+                   << "\n";
+      llvm::outs() << "  Cost model rejections: " << stats.costModelRejections
+                   << "\n";
     }
   }
 };
