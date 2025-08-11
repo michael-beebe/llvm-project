@@ -87,6 +87,32 @@ def MessageAggregation : Pass<"openshmem-message-aggregation"> {
   let dependentDialects = ["mlir::openshmem::OpenSHMEMDialect", "mlir::arith::ArithDialect"];
 }
 
+def AsyncConversion : Pass<"openshmem-async-conversion"> {
+  let summary = "Convert blocking OpenSHMEM RMA ops to non-blocking when trivially safe";
+  let description = [{
+    Performs simple, semantics-preserving async conversions of blocking RMA
+    operations into their non-blocking (_nbi) variants when it is trivially
+    safe. Currently, the pass applies the following peepholes when an
+    operation is immediately followed by an `openshmem.quiet`:
+
+    - put -> put_nbi
+    - ctx_put -> ctx_put_nbi
+    - get -> get_nbi (only if immediately followed by quiet)
+    - ctx_get -> ctx_get_nbi (only if immediately followed by quiet)
+    - putmem -> putmem_nbi
+    - getmem -> getmem_nbi (only if immediately followed by quiet)
+
+    These transformations ensure correctness by relying on the immediate
+    `openshmem.quiet` to preserve completion semantics.
+  }];
+
+  let constructor = "mlir::openshmem::createAsyncConversionPass()";
+  let dependentDialects = [
+    "mlir::openshmem::OpenSHMEMDialect",
+    "mlir::arith::ArithDialect"
+  ];
+}
+
 def InjectNumPEs : Pass<"openshmem-inject-num-pes"> {
   let summary = "Injects or overrides the openshmem.num_pes module attribute";
   let description = [{

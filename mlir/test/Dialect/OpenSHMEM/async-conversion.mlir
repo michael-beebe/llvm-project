@@ -1,0 +1,127 @@
+// RUN: mlir-opt %s --openshmem-async-conversion | FileCheck %s
+
+module {
+  // put -> put_nbi when followed by quiet
+  func.func @convert_put_nbi(%dst: !openshmem.symmetric_memref<i32>, %src: memref<i32>, %pe: i32) {
+    %c1 = arith.constant 1 : index
+    openshmem.put(%dst, %src, %c1, %pe) : !openshmem.symmetric_memref<i32>, memref<i32>, index, i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @convert_put_nbi
+  // CHECK: openshmem.put_nbi
+  // CHECK: openshmem.quiet
+
+  // ctx_put -> ctx_put_nbi when followed by quiet
+  func.func @convert_ctx_put_nbi(%ctx: !openshmem.ctx, %dst: !openshmem.symmetric_memref<i32>, %src: memref<i32>, %pe: i32) {
+    %c8 = arith.constant 8 : index
+    openshmem.ctx_put(%ctx, %dst, %src, %c8, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<i32>, index, i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @convert_ctx_put_nbi
+  // CHECK: openshmem.ctx_put_nbi
+  // CHECK: openshmem.quiet
+
+  // get -> get_nbi when followed by quiet
+  func.func @convert_get_nbi(%dst: memref<i32>, %src: !openshmem.symmetric_memref<i32>, %pe: i32) {
+    %c4 = arith.constant 4 : index
+    openshmem.get(%dst, %src, %c4, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, index, i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @convert_get_nbi
+  // CHECK: openshmem.get_nbi
+  // CHECK: openshmem.quiet
+
+  // putmem -> putmem_nbi when followed by quiet
+  func.func @convert_putmem_nbi(%dst: !openshmem.symmetric_memref<i8>, %src: memref<i8>, %pe: i32) {
+    %sz = arith.constant 16 : index
+    openshmem.putmem(%dst, %src, %sz, %pe) : !openshmem.symmetric_memref<i8>, memref<i8>, index, i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @convert_putmem_nbi
+  // CHECK: openshmem.putmem_nbi
+  // CHECK: openshmem.quiet
+
+  // getmem -> getmem_nbi when followed by quiet
+  func.func @convert_getmem_nbi(%dst: memref<i8>, %src: !openshmem.symmetric_memref<i8>, %pe: i32) {
+    %sz = arith.constant 32 : index
+    openshmem.getmem(%dst, %src, %sz, %pe) : memref<i8>, !openshmem.symmetric_memref<i8>, index, i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @convert_getmem_nbi
+  // CHECK: openshmem.getmem_nbi
+  // CHECK: openshmem.quiet
+}
+
+
+// Real-world style: multiple RMA ops before a single quiet
+module {
+  // Two puts followed by a single quiet → both convert
+  func.func @batch_puts(%d1: !openshmem.symmetric_memref<i32>, %s1: memref<i32>,
+                        %d2: !openshmem.symmetric_memref<i32>, %s2: memref<i32>,
+                        %pe: i32) {
+    %n = arith.constant 1 : index
+    openshmem.put(%d1, %s1, %n, %pe) : !openshmem.symmetric_memref<i32>, memref<i32>, index, i32
+    openshmem.put(%d2, %s2, %n, %pe) : !openshmem.symmetric_memref<i32>, memref<i32>, index, i32
+    %x = arith.constant 42 : i32
+    %y = arith.constant 1 : i32
+    %z = arith.addi %x, %y : i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @batch_puts
+  // CHECK: openshmem.put_nbi
+  // CHECK: openshmem.put_nbi
+  // CHECK: openshmem.quiet
+
+  // Mix ctx_put and putmem before a single quiet → both convert
+  func.func @mix_ctx_put_and_putmem(%ctx: !openshmem.ctx,
+                                    %d: !openshmem.symmetric_memref<i8>, %s: memref<i8>,
+                                    %d2: !openshmem.symmetric_memref<i32>, %s2: memref<i32>,
+                                    %pe: i32) {
+    %n8 = arith.constant 8 : index
+    %n1 = arith.constant 1 : index
+    openshmem.ctx_put(%ctx, %d2, %s2, %n1, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<i32>, index, i32
+    openshmem.putmem(%d, %s, %n8, %pe) : !openshmem.symmetric_memref<i8>, memref<i8>, index, i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @mix_ctx_put_and_putmem
+  // CHECK: openshmem.ctx_put_nbi
+  // CHECK: openshmem.putmem_nbi
+  // CHECK: openshmem.quiet
+
+  // get converts if destination not used before a later quiet
+  func.func @get_no_intervening_use(%dst: memref<i32>, %src: !openshmem.symmetric_memref<i32>, %pe: i32) {
+    %n = arith.constant 1 : index
+    openshmem.get(%dst, %src, %n, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, index, i32
+    %c = arith.constant 0 : i32
+    %d = arith.addi %c, %c : i32
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @get_no_intervening_use
+  // CHECK: openshmem.get_nbi
+  // CHECK: openshmem.quiet
+
+  // get does not convert if destination is used before the quiet
+  func.func @get_with_intervening_use(%dst: memref<i32>, %src: !openshmem.symmetric_memref<i32>, %sink: memref<i32>, %pe: i32) {
+    %n = arith.constant 1 : index
+    openshmem.get(%dst, %src, %n, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, index, i32
+    %val = memref.load %dst[] : memref<i32>
+    %e = arith.addi %val, %val : i32
+    memref.store %e, %sink[] : memref<i32>
+    openshmem.quiet
+    return
+  }
+  // CHECK-LABEL: func.func @get_with_intervening_use
+  // CHECK: openshmem.get(
+  // CHECK: memref.store
+  // CHECK: openshmem.quiet
+}
+
+

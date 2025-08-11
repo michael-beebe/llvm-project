@@ -32,6 +32,10 @@ std::unique_ptr<Pass> createMessageAggregationPass();
 /// the same address/PE/context into a single equivalent operation.
 std::unique_ptr<Pass> createAtomicFusionPass();
 
+/// Create a pass that converts blocking OpenSHMEM RMA ops to non-blocking
+/// variants when trivially safe.
+std::unique_ptr<Pass> createAsyncConversionPass();
+
 /// Create a pass that injects or overrides the openshmem.num_pes module
 /// attribute.
 std::unique_ptr<Pass> createInjectNumPEsPass();
