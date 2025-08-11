@@ -10,6 +10,7 @@
 #define MLIR_DIALECT_OPENSHMEM_IR_OPENSHEMMMEMORY_TD
 
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
 //===----------------------------------------------------------------------===//
 // MallocOp
@@ -169,6 +170,32 @@ def OpenSHMEM_CallocOp : OpenSHMEM_Op<"calloc", []> {
 
   let assemblyFormat = "`(` $count `,` $size `)` attr-dict `:` "
                        "type($count) `,` type($size) `->` type($retval)";
+}
+
+//===----------------------------------------------------------------------===//
+// OffsetOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_OffsetOp : OpenSHMEM_Op<"offset", []> {
+  let summary = "Element-wise offset into symmetric memory";
+  let description = [{
+    Returns a symmetric pointer advanced by `offsetElems` elements of the
+    underlying element type. This is the IR equivalent of `&base[offsetElems]`
+    in C and preserves symmetric provenance. The result can be used anywhere
+    a `!openshmem.symmetric_memref<T>` is expected (e.g., RMA ops).
+  }];
+
+  let arguments = (ins
+    OpenSHMEM_SymmetricMemRef:$base,
+    Index:$offsetElems
+  );
+
+  let results = (outs
+    OpenSHMEM_SymmetricMemRef:$result
+  );
+
+  let assemblyFormat = "`(` $base `,` $offsetElems `)` attr-dict `:` "
+                       "type($base) `,` type($offsetElems) `->` type($result)";
 }
 
 #endif // MLIR_DIALECT_OPENSHMEM_IR_OPENSHEMMMEMORY_TD 

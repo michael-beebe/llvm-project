@@ -17,6 +17,11 @@ while [[ $# -gt 0 ]]; do
     echo "Cleaning build directory..."
     rm -rf "$BUILD_DIR"
     ;;
+  --passes)
+    PROJECTS="mlir"
+    TARGETS="obj.MLIROpenSHMEMTransforms mlir-opt"
+    echo "Building OpenSHMEM transforms only (fast rebuild)"
+    ;;
   --mlir)
     PROJECTS="mlir"
     TARGETS="mlir-opt mlir-translate FileCheck"
@@ -35,11 +40,12 @@ while [[ $# -gt 0 ]]; do
   --help | -h)
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  --clean   Clean build directory"
-    echo "  --mlir    Build MLIR only (includes FileCheck)"
-    echo "  --clang   Build MLIR + Clang (includes FileCheck)"
-    echo "  --all     Build MLIR + Clang + LLD (includes FileCheck, default)"
-    echo "  --help    Show this help"
+    echo "  --clean     Clean build directory"
+    echo "  --passes Build OpenSHMEM transforms only (fast)"
+    echo "  --mlir      Build MLIR only (includes FileCheck)"
+    echo "  --clang     Build MLIR + Clang (includes FileCheck)"
+    echo "  --all       Build MLIR + Clang + LLD (includes FileCheck, default)"
+    echo "  --help      Show this help"
     exit 0
     ;;
   *)

@@ -172,6 +172,58 @@ struct CallocOpLowering : public ConvertOpToLLVMPattern<openshmem::CallocOp> {
   }
 };
 
+//===----------------------------------------------------------------------===//
+// OffsetOp Lowering
+//===----------------------------------------------------------------------===//
+
+static unsigned getScalarTypeSizeInBytes(Type t) {
+  if (auto it = dyn_cast<IntegerType>(t))
+    return it.getWidth() / 8;
+  if (t.isF16())
+    return 2;
+  if (t.isBF16())
+    return 2;
+  if (t.isF32())
+    return 4;
+  if (t.isF64())
+    return 8;
+  if (t.isF128())
+    return 16;
+  return 1;
+}
+
+struct OffsetOpLowering : public ConvertOpToLLVMPattern<openshmem::OffsetOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult matchAndRewrite(openshmem::OffsetOp op, OpAdaptor adaptor,
+                                ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    MLIRContext *ctx = rewriter.getContext();
+
+    Value basePtr = adaptor.getBase();
+    Value offElems = adaptor.getOffsetElems();
+
+    auto shmType = cast<openshmem::SymmetricMemRefType>(op.getBase().getType());
+    unsigned elemSizeBytes = getScalarTypeSizeInBytes(shmType.getElementType());
+
+    Type idxTy = getTypeConverter()->getIndexType();
+    Value elemSizeConst = rewriter.create<LLVM::ConstantOp>(
+        loc, idxTy, rewriter.getIntegerAttr(idxTy, elemSizeBytes));
+    Value byteOffset = rewriter.create<LLVM::MulOp>(loc, offElems, elemSizeConst);
+
+    auto i8Ty = IntegerType::get(ctx, 8);
+    auto i8PtrTy = LLVM::LLVMPointerType::get(ctx);
+    Value baseAsI8 = rewriter.create<LLVM::BitcastOp>(loc, i8PtrTy, basePtr);
+
+    Value gep = rewriter.create<LLVM::GEPOp>(loc, i8PtrTy, i8Ty, baseAsI8,
+                                             ArrayRef<Value>{byteOffset});
+
+    Value resultPtr = rewriter.create<LLVM::BitcastOp>(loc, i8PtrTy, gep);
+    rewriter.replaceOp(op, resultPtr);
+    return success();
+  }
+};
+
 } // namespace
 
 //===----------------------------------------------------------------------===//
@@ -181,5 +233,5 @@ struct CallocOpLowering : public ConvertOpToLLVMPattern<openshmem::CallocOp> {
 void openshmem::populateMemoryOpsToLLVMConversionPatterns(
     LLVMTypeConverter &converter, RewritePatternSet &patterns) {
   patterns.add<MallocOpLowering, FreeOpLowering, ReallocOpLowering,
-               AlignOpLowering, CallocOpLowering>(converter);
+               AlignOpLowering, CallocOpLowering, OffsetOpLowering>(converter);
 } 
