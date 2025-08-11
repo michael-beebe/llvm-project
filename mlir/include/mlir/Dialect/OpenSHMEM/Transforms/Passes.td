@@ -11,6 +11,31 @@
 
 include "mlir/Pass/PassBase.td"
 
+def AtomicFusion : Pass<"openshmem-atomic-fusion"> {
+  let summary = "Fuse adjacent OpenSHMEM atomic operations on the same location";
+  let description = [{
+    This pass performs simple, semantics-preserving fusion of adjacent atomic
+    operations on the same symmetric memory location, PE, and context.
+
+    Currently supported fusions (adjacent-only):
+    - atomic_add + atomic_add -> atomic_add with summed value
+    - atomic_or + atomic_or -> atomic_or with ORed value
+    - atomic_xor + atomic_xor -> atomic_xor with XORed value
+    - chains of atomic_inc -> a single atomic_add with a constant increment
+    - For fetch variants (e.g., atomic_fetch_add), if results are dead, they
+      are combined into a single non-fetch variant with the combined value
+
+    The pass is conservative: it only considers immediately adjacent operations
+    within a block and requires matching PE and, if present, matching context.
+  }];
+
+  let constructor = "mlir::openshmem::createAtomicFusionPass()";
+  let dependentDialects = [
+    "mlir::arith::ArithDialect",
+    "mlir::openshmem::OpenSHMEMDialect"
+  ];
+}
+
 def MessageAggregation : Pass<"openshmem-message-aggregation"> {
   let summary = "Comprehensive message aggregation for OpenSHMEM operations";
   let description = [{

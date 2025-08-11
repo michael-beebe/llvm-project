@@ -28,6 +28,10 @@ namespace openshmem {
 /// RMA operation types while respecting OpenSHMEM semantics.
 std::unique_ptr<Pass> createMessageAggregationPass();
 
+/// Create a pass that fuses adjacent OpenSHMEM atomic operations operating on
+/// the same address/PE/context into a single equivalent operation.
+std::unique_ptr<Pass> createAtomicFusionPass();
+
 /// Create a pass that injects or overrides the openshmem.num_pes module
 /// attribute.
 std::unique_ptr<Pass> createInjectNumPEsPass();

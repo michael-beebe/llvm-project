@@ -8,4 +8,5 @@
 
 #include "mlir/Dialect/OpenSHMEM/Transforms/Passes.h"
 
-// The registration code is now generated in the header file
+// Registration-only unit; implementations live in dedicated files.
+

@@ -148,7 +148,8 @@ public:
     if (!regionA->hasConstantOffset || !regionB->hasConstantOffset)
       return false;
 
-    // Must share same base symmetric allocation (value equality after stripping offsets)
+    // Must share same base symmetric allocation (value equality after stripping
+    // offsets)
     if (regionA->baseAddr != regionB->baseAddr)
       return false;
 
@@ -227,22 +228,31 @@ private:
 
       // Try to get constant element offset
       int64_t elemOff = -1;
-      if (auto cst = offOp.getOffsetElems().getDefiningOp<arith::ConstantOp>()) {
+      if (auto cst =
+              offOp.getOffsetElems().getDefiningOp<arith::ConstantOp>()) {
         if (auto intAttr = llvm::dyn_cast<IntegerAttr>(cst.getValue()))
           elemOff = intAttr.getInt();
       }
 
       // Compute element size in bytes from symmetric memref element type
       int64_t elemSizeBytes = 1;
-      if (auto shmTy = dyn_cast<openshmem::SymmetricMemRefType>(offOp.getBase().getType())) {
+      if (auto shmTy = dyn_cast<openshmem::SymmetricMemRefType>(
+              offOp.getBase().getType())) {
         Type et = shmTy.getElementType();
-        if (et.isInteger(8)) elemSizeBytes = 1;
-        else if (et.isInteger(16)) elemSizeBytes = 2;
-        else if (et.isInteger(32)) elemSizeBytes = 4;
-        else if (et.isInteger(64)) elemSizeBytes = 8;
-        else if (et.isF32()) elemSizeBytes = 4;
-        else if (et.isF64()) elemSizeBytes = 8;
-        else if (et.isF128()) elemSizeBytes = 16;
+        if (et.isInteger(8))
+          elemSizeBytes = 1;
+        else if (et.isInteger(16))
+          elemSizeBytes = 2;
+        else if (et.isInteger(32))
+          elemSizeBytes = 4;
+        else if (et.isInteger(64))
+          elemSizeBytes = 8;
+        else if (et.isF32())
+          elemSizeBytes = 4;
+        else if (et.isF64())
+          elemSizeBytes = 8;
+        else if (et.isF128())
+          elemSizeBytes = 16;
       }
 
       if (elemOff >= 0) {
@@ -1180,10 +1190,10 @@ private:
       return nullptr;
 
     Location loc = group.operations.front()->getLoc();
-    
+
     // For contiguous aggregation: span from first to last operation
     MemoryLayoutAnalyzer layoutAnalyzer;
-    
+
     // Check if we have contiguous memory layout
     bool isContiguous = true;
     for (size_t i = 1; i < group.operations.size(); ++i) {
@@ -1200,16 +1210,18 @@ private:
       auto firstRegion = layoutAnalyzer.getMemoryRegion(*firstAccess);
       auto *lastAccess = opToAccess.lookup(group.operations.back());
       auto lastRegion = layoutAnalyzer.getMemoryRegion(*lastAccess);
-      
-      if (firstRegion && lastRegion && 
-          firstRegion->hasConstantOffset && lastRegion->hasConstantOffset) {
-        int64_t spanSize = (lastRegion->offset + lastRegion->size) - firstRegion->offset;
+
+      if (firstRegion && lastRegion && firstRegion->hasConstantOffset &&
+          lastRegion->hasConstantOffset) {
+        int64_t spanSize =
+            (lastRegion->offset + lastRegion->size) - firstRegion->offset;
         return rewriter.create<arith::ConstantOp>(
             loc, rewriter.getIndexAttr(spanSize));
       }
     }
 
-    // Fallback: sum individual sizes (for identical or non-contiguous operations)
+    // Fallback: sum individual sizes (for identical or non-contiguous
+    // operations)
     MemoryLayoutAnalyzer analyzer;
     if (auto constSize = analyzer.getConstantSize(firstAccess->size)) {
       int64_t totalSize = *constSize * group.operations.size();
@@ -1221,7 +1233,8 @@ private:
     Value sum = firstAccess->size;
     for (size_t i = 1; i < group.operations.size(); ++i) {
       auto *acc = opToAccess.lookup(group.operations[i]);
-      if (!acc) return nullptr;
+      if (!acc)
+        return nullptr;
       sum = rewriter.create<arith::AddIOp>(loc, sum, acc->size);
     }
     return sum;
@@ -1245,11 +1258,12 @@ private:
     Location loc = firstAccess->op->getLoc();
 
     // Insertion point is already set by caller
-    // Use the calculated total size directly - it's already been computed correctly
+    // Use the calculated total size directly - it's already been computed
+    // correctly
     Value actualTotalSize = totalSize;
 
-    // For contiguous operations, use the first operation's destination and source
-    // For non-contiguous identical operations, this is also correct
+    // For contiguous operations, use the first operation's destination and
+    // source For non-contiguous identical operations, this is also correct
     if (group.isNonBlocking) {
       if (group.opType == MemoryAccess::PUT) {
         return rewriter.create<PutmemNbiOp>(loc, firstAccess->destMemRef,
@@ -1427,33 +1441,18 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 } // namespace openshmem
 } // namespace mlir
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// //===- MessageAggregationPass.cpp - OpenSHMEM message aggregation --------===//
+// //===- MessageAggregationPass.cpp - OpenSHMEM message aggregation
+// --------===//
 // //
-// // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// // Part of the LLVM Project, under the Apache License v2.0 with LLVM
+// Exceptions.
 // // See https://llvm.org/LICENSE.txt for license information.
 // // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // //
 // //===----------------------------------------------------------------------===//
 // //
-// // This file implements a comprehensive message aggregation pass for OpenSHMEM
+// // This file implements a comprehensive message aggregation pass for
+// OpenSHMEM
 // // operations that analyzes and optimizes communication patterns.
 // //
 // //===----------------------------------------------------------------------===//
@@ -1488,7 +1487,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 // // HIGH PRIORITY TODO:
 // // - Add stride pattern detection for regular non-contiguous access patterns
 // // - Handle GEP-like operations for pointer arithmetic analysis
-// // - Implement true contiguous memory region coalescing (multiple ops -> single
+// // - Implement true contiguous memory region coalescing (multiple ops ->
+// single
 // // larger op)
 // // - Fix detectCrossOperationPatterns to avoid spurious grouping (currently
 // // disabled)
@@ -1499,11 +1499,13 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 // // - Implement non-contiguous but optimizable patterns
 // // - Handle ordering constraints within and across contexts
 // // - Implement safe coalescing across synchronization points
-// // - Add adaptive thresholds based on message sizes and hardware characteristics
+// // - Add adaptive thresholds based on message sizes and hardware
+// characteristics
 // // - Performance analysis and benchmarking framework
 // //
 // // LOW PRIORITY / FUTURE:
-// // - Implement target-specific optimizations (network latency, bandwidth models)
+// // - Implement target-specific optimizations (network latency, bandwidth
+// models)
 // // - Collective operation integration (reduce, broadcast patterns)
 // // - Inter-procedural analysis for cross-function coalescing
 // // - Integration with other OpenSHMEM optimization passes
@@ -1542,7 +1544,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //   unsigned elementSize; // Size in bytes for sized operations
 //   Type elementType;     // Element type for typed operations
 
-//   MemoryAccess(Operation *op, Value dest, Value src, Value sz, Value targetPE,
+//   MemoryAccess(Operation *op, Value dest, Value src, Value sz, Value
+//   targetPE,
 //                bool nonBlocking, OpType type, OpVariant variant = GENERIC,
 //                Value context = nullptr, unsigned elemSize = 0,
 //                Type elemType = nullptr)
@@ -1627,7 +1630,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //     stride = regionB->offset - regionA->offset;
 
 //     // Valid stride must be non-zero and regions shouldn't overlap
-//     return stride != 0 && abs(stride) >= std::max(regionA->size, regionB->size);
+//     return stride != 0 && abs(stride) >= std::max(regionA->size,
+//     regionB->size);
 //   }
 
 //   /// Extract memory region information from a memory access
@@ -1856,54 +1860,64 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //     if (auto put8Op = dyn_cast<Put8Op>(op)) {
 //       return MemoryAccess(op, put8Op.getDest(), put8Op.getSource(),
 //                           put8Op.getNelems(), put8Op.getPe(), false,
-//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr, 8);
+//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr,
+//                           8);
 //     }
 //     if (auto put16Op = dyn_cast<Put16Op>(op)) {
 //       return MemoryAccess(op, put16Op.getDest(), put16Op.getSource(),
 //                           put16Op.getNelems(), put16Op.getPe(), false,
-//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr, 16);
+//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr,
+//                           16);
 //     }
 //     if (auto put32Op = dyn_cast<Put32Op>(op)) {
 //       return MemoryAccess(op, put32Op.getDest(), put32Op.getSource(),
 //                           put32Op.getNelems(), put32Op.getPe(), false,
-//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr, 32);
+//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr,
+//                           32);
 //     }
 //     if (auto put64Op = dyn_cast<Put64Op>(op)) {
 //       return MemoryAccess(op, put64Op.getDest(), put64Op.getSource(),
 //                           put64Op.getNelems(), put64Op.getPe(), false,
-//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr, 64);
+//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr,
+//                           64);
 //     }
 //     if (auto put128Op = dyn_cast<Put128Op>(op)) {
 //       return MemoryAccess(op, put128Op.getDest(), put128Op.getSource(),
 //                           put128Op.getNelems(), put128Op.getPe(), false,
-//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr, 128);
+//                           MemoryAccess::PUT, MemoryAccess::SIZED, nullptr,
+//                           128);
 //     }
 
 //     // Handle sized get operations
 //     if (auto get8Op = dyn_cast<Get8Op>(op)) {
 //       return MemoryAccess(op, get8Op.getDest(), get8Op.getSource(),
 //                           get8Op.getNelems(), get8Op.getPe(), false,
-//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr, 8);
+//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr,
+//                           8);
 //     }
 //     if (auto get16Op = dyn_cast<Get16Op>(op)) {
 //       return MemoryAccess(op, get16Op.getDest(), get16Op.getSource(),
 //                           get16Op.getNelems(), get16Op.getPe(), false,
-//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr, 16);
+//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr,
+//                           16);
 //     }
 //     if (auto get32Op = dyn_cast<Get32Op>(op)) {
 //       return MemoryAccess(op, get32Op.getDest(), get32Op.getSource(),
 //                           get32Op.getNelems(), get32Op.getPe(), false,
-//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr, 32);
+//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr,
+//                           32);
 //     }
 //     if (auto get64Op = dyn_cast<Get64Op>(op)) {
 //       return MemoryAccess(op, get64Op.getDest(), get64Op.getSource(),
 //                           get64Op.getNelems(), get64Op.getPe(), false,
-//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr, 64);
+//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr,
+//                           64);
 //     }
 //     if (auto get128Op = dyn_cast<Get128Op>(op)) {
 //       return MemoryAccess(op, get128Op.getDest(), get128Op.getSource(),
 //                           get128Op.getNelems(), get128Op.getPe(), false,
-//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr, 128);
+//                           MemoryAccess::GET, MemoryAccess::SIZED, nullptr,
+//                           128);
 //     }
 
 //     // Handle point-to-point operations
@@ -1912,7 +1926,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //       OpBuilder builder(op);
 //       auto indexType = IndexType::get(op->getContext());
 //       auto oneAttr = IntegerAttr::get(indexType, 1);
-//       Value sizeOne = builder.create<arith::ConstantOp>(op->getLoc(), oneAttr);
+//       Value sizeOne = builder.create<arith::ConstantOp>(op->getLoc(),
+//       oneAttr);
 
 //       return MemoryAccess(op, pOp.getDest(), pOp.getValue(), sizeOne,
 //                           pOp.getPe(), false, MemoryAccess::PUT,
@@ -1924,7 +1939,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //       OpBuilder builder(op);
 //       auto indexType = IndexType::get(op->getContext());
 //       auto oneAttr = IntegerAttr::get(indexType, 1);
-//       Value sizeOne = builder.create<arith::ConstantOp>(op->getLoc(), oneAttr);
+//       Value sizeOne = builder.create<arith::ConstantOp>(op->getLoc(),
+//       oneAttr);
 
 //       // For g operations, source and dest are swapped compared to normal
 //       // pattern
@@ -1961,14 +1977,15 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //         groupMap;
 
 //     for (const auto &access : memoryAccesses) {
-//       // Group by PE, context, blocking behavior, operation type, variant, and
+//       // Group by PE, context, blocking behavior, operation type, variant,
+//       and
 //       // element size For sized operations, element size must also match
 //       unsigned elementSizeKey =
 //           (access.opVariant == MemoryAccess::SIZED) ? access.elementSize : 0;
 //       auto key = std::make_tuple(
 //           access.pe, access.ctx, static_cast<int>(access.isNonBlocking),
-//           static_cast<int>(access.opType), static_cast<int>(access.opVariant),
-//           elementSizeKey);
+//           static_cast<int>(access.opType),
+//           static_cast<int>(access.opVariant), elementSizeKey);
 
 //       auto it = groupMap.find(key);
 //       if (it == groupMap.end()) {
@@ -2022,7 +2039,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //         // Check if operations can be combined into a larger operation
 //         if (canCombineOperations(access1, access2, layoutAnalyzer)) {
 //           if (debugMode) {
-//             llvm::dbgs() << "Found cross-operation optimization opportunity\n";
+//             llvm::dbgs() << "Found cross-operation optimization
+//             opportunity\n";
 //           }
 //           // Create a special group for cross-operation optimization
 //           auto group = std::make_unique<CoalescingGroup>();
@@ -2153,7 +2171,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //   bool canCoalesceGroup(const CoalescingGroup &group) {
 //     if (group.operations.size() < 2) {
 //       if (debugMode) {
-//         llvm::dbgs() << "Cannot coalesce: group has less than 2 operations\n";
+//         llvm::dbgs() << "Cannot coalesce: group has less than 2
+//         operations\n";
 //       }
 //       return false;
 //     }
@@ -2196,7 +2215,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //         CommunicationPatternDetector detector(memoryAccesses, debugMode);
 //         if (!detector.canCoalesceOperations(*accessI, *accessJ)) {
 //           if (debugMode) {
-//             llvm::dbgs() << "Cannot coalesce: operations are not compatible\n";
+//             llvm::dbgs() << "Cannot coalesce: operations are not
+//             compatible\n";
 //           }
 //           return false;
 //         }
@@ -2213,7 +2233,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //   LogicalResult coalesceGroup(const CoalescingGroup &group) {
 //     if (group.operations.size() < 2) {
 //       if (debugMode) {
-//         llvm::dbgs() << "Cannot coalesce: group has less than 2 operations\n";
+//         llvm::dbgs() << "Cannot coalesce: group has less than 2
+//         operations\n";
 //       }
 //       return failure();
 //     }
@@ -2371,7 +2392,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //         }
 
 //         // Strategy 4: Check if operations are truly identical (can be
-//         // aggregated) This handles the case where operations are identical but
+//         // aggregated) This handles the case where operations are identical
+//         but
 //         // we want to aggregate them into a larger operation instead of just
 //         // removing duplicates
 //         if (areOperationsTrulyIdentical(group.operations[i],
@@ -2433,7 +2455,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //     // 3. The operations are small enough that overhead dominates
 
 //     const int64_t MAX_AGGREGATED_SIZE = 1024 * 1024; // 1MB limit
-//     const int64_t MIN_OPERATION_SIZE = 64; // 64 bytes minimum for aggregation
+//     const int64_t MIN_OPERATION_SIZE = 64; // 64 bytes minimum for
+//     aggregation
 
 //     if (aggregatedSize > MAX_AGGREGATED_SIZE) {
 //       if (debugMode) {
@@ -2654,7 +2677,8 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //     Value actualTotalSize = totalSize;
 //     if (areAllOperationsIdentical(group)) {
 //       MemoryLayoutAnalyzer layoutAnalyzer;
-//       if (auto constSize = layoutAnalyzer.getConstantSize(firstAccess->size)) {
+//       if (auto constSize = layoutAnalyzer.getConstantSize(firstAccess->size))
+//       {
 //         int64_t totalSizeValue = *constSize * group.operations.size();
 //         actualTotalSize = rewriter.create<arith::ConstantOp>(
 //             loc, rewriter.getIndexAttr(totalSizeValue));
@@ -2672,11 +2696,13 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //       if (group.opType == MemoryAccess::PUT) {
 //         return rewriter.create<PutmemNbiOp>(loc, firstAccess->destMemRef,
 //                                             firstAccess->srcMemRef,
-//                                             actualTotalSize, firstAccess->pe);
+//                                             actualTotalSize,
+//                                             firstAccess->pe);
 //       } else {
 //         return rewriter.create<GetmemNbiOp>(loc, firstAccess->destMemRef,
 //                                             firstAccess->srcMemRef,
-//                                             actualTotalSize, firstAccess->pe);
+//                                             actualTotalSize,
+//                                             firstAccess->pe);
 //       }
 //     } else {
 //       if (group.opType == MemoryAccess::PUT) {
@@ -2782,9 +2808,9 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 
 //     if (debugMode) {
 //       llvm::outs() << "MessageAggregation pass running with options:\n";
-//       llvm::outs() << "  enablePutCoalescing: " << enablePutCoalescing << "\n";
-//       llvm::outs() << "  enableGetCoalescing: " << enableGetCoalescing << "\n";
-//       llvm::outs() << "  enableCrossOpOptimization: "
+//       llvm::outs() << "  enablePutCoalescing: " << enablePutCoalescing <<
+//       "\n"; llvm::outs() << "  enableGetCoalescing: " << enableGetCoalescing
+//       << "\n"; llvm::outs() << "  enableCrossOpOptimization: "
 //                    << enableCrossOpOptimization << "\n";
 //       llvm::outs() << "  maxCoalescingDistance: " << maxCoalescingDistance
 //                    << "\n";
@@ -2819,16 +2845,19 @@ std::unique_ptr<Pass> createMessageAggregationPass() {
 //     if (debugMode) {
 //       llvm::outs() << "MessageAggregation pass completed successfully\n";
 //       llvm::outs() << "Statistics:\n";
-//       llvm::outs() << "  Total operations processed: " << stats.totalOperations
+//       llvm::outs() << "  Total operations processed: " <<
+//       stats.totalOperations
 //                    << "\n";
-//       llvm::outs() << "  Operations aggregated: " << stats.operationsAggregated
+//       llvm::outs() << "  Operations aggregated: " <<
+//       stats.operationsAggregated
 //                    << "\n";
-//       llvm::outs() << "  Groups processed: " << stats.groupsProcessed << "\n";
-//       llvm::outs() << "  Groups successfully coalesced: "
+//       llvm::outs() << "  Groups processed: " << stats.groupsProcessed <<
+//       "\n"; llvm::outs() << "  Groups successfully coalesced: "
 //                    << stats.groupsSuccessfullyCoalesced << "\n";
 //       llvm::outs() << "  Validation failures: " << stats.validationFailures
 //                    << "\n";
-//       llvm::outs() << "  Cost model rejections: " << stats.costModelRejections
+//       llvm::outs() << "  Cost model rejections: " <<
+//       stats.costModelRejections
 //                    << "\n";
 //     }
 //   }

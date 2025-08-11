@@ -20,7 +20,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch()
-// CHECK: llvm.call @shmem_atomic_fetch32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch{{.*}}(
 
   func.func @test_i64_atomic_fetch() {
     openshmem.init
@@ -38,7 +38,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch()
-// CHECK: llvm.call @shmem_atomic_fetch64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch{{.*}}(
 
   func.func @test_f32_atomic_fetch() {
     openshmem.init
@@ -56,7 +56,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_fetch()
-// CHECK: llvm.call @shmem_atomic_fetch32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch{{.*}}(
 
   func.func @test_f64_atomic_fetch() {
     openshmem.init
@@ -74,7 +74,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_fetch()
-// CHECK: llvm.call @shmem_atomic_fetch64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch{{.*}}(
 
   // Test context-aware typed atomic fetch operations
   func.func @test_ctx_i32_atomic_fetch() {
@@ -96,7 +96,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch() {
     openshmem.init
@@ -117,7 +117,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch{{.*}}(
 
   func.func @test_ctx_f32_atomic_fetch() {
     openshmem.init
@@ -138,7 +138,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f32_atomic_fetch()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch{{.*}}(
 
   func.func @test_ctx_f64_atomic_fetch() {
     openshmem.init
@@ -159,7 +159,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_fetch()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch{{.*}}(
 
   // Test generic typed atomic set operations
   func.func @test_i32_atomic_set() {
@@ -179,7 +179,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_set()
-// CHECK: llvm.call @shmem_atomic_set32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_set{{.*}}(
 
   func.func @test_i64_atomic_set() {
     openshmem.init
@@ -198,7 +198,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_set()
-// CHECK: llvm.call @shmem_atomic_set64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_set{{.*}}(
 
   func.func @test_f32_atomic_set() {
     openshmem.init
@@ -217,7 +217,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_set()
-// CHECK: llvm.call @shmem_atomic_set32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_set{{.*}}(
 
   func.func @test_f64_atomic_set() {
     openshmem.init
@@ -236,7 +236,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_set()
-// CHECK: llvm.call @shmem_atomic_set64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_set{{.*}}(
 
   // Test context-aware typed atomic set operations
   func.func @test_ctx_i32_atomic_set() {
@@ -259,7 +259,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_set()
-// CHECK: llvm.call @shmem_ctx_atomic_set32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_set{{.*}}(
 
   func.func @test_ctx_i64_atomic_set() {
     openshmem.init
@@ -281,7 +281,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_set()
-// CHECK: llvm.call @shmem_ctx_atomic_set64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_set{{.*}}(
 
   func.func @test_ctx_f32_atomic_set() {
     openshmem.init
@@ -303,7 +303,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f32_atomic_set()
-// CHECK: llvm.call @shmem_ctx_atomic_set32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_set{{.*}}(
 
   func.func @test_ctx_f64_atomic_set() {
     openshmem.init
@@ -325,7 +325,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_set()
-// CHECK: llvm.call @shmem_ctx_atomic_set64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_set{{.*}}(
 
   // Test generic typed atomic compare-and-swap operations
   func.func @test_i32_atomic_compare_swap() {
@@ -346,7 +346,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_compare_swap()
-// CHECK: llvm.call @shmem_atomic_compare_swap32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap{{.*}}(
 
   func.func @test_i64_atomic_compare_swap() {
     openshmem.init
@@ -366,7 +366,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_compare_swap()
-// CHECK: llvm.call @shmem_atomic_compare_swap64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap{{.*}}(
 
   func.func @test_f32_atomic_compare_swap() {
     openshmem.init
@@ -386,7 +386,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_compare_swap()
-// CHECK: llvm.call @shmem_atomic_compare_swap32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap{{.*}}(
 
   func.func @test_f64_atomic_compare_swap() {
     openshmem.init
@@ -406,7 +406,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_compare_swap()
-// CHECK: llvm.call @shmem_atomic_compare_swap64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap{{.*}}(
 
   // Test context-aware typed atomic compare-and-swap operations
   func.func @test_ctx_i32_atomic_compare_swap() {
@@ -431,7 +431,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_compare_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_compare_swap32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap{{.*}}(
 
   func.func @test_ctx_i64_atomic_compare_swap() {
     openshmem.init
@@ -455,7 +455,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_compare_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_compare_swap64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap{{.*}}(
 
   func.func @test_ctx_f32_atomic_compare_swap() {
     openshmem.init
@@ -479,7 +479,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f32_atomic_compare_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_compare_swap32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap{{.*}}(
 
   func.func @test_ctx_f64_atomic_compare_swap() {
     openshmem.init
@@ -503,7 +503,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_compare_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_compare_swap64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap{{.*}}(
 
   // Test generic typed atomic swap operations
   func.func @test_i32_atomic_swap() {
@@ -524,7 +524,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_swap()
-// CHECK: llvm.call @shmem_atomic_swap32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_swap{{.*}}(
 
   func.func @test_i64_atomic_swap() {
     openshmem.init
@@ -543,7 +543,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_swap()
-// CHECK: llvm.call @shmem_atomic_swap64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_swap{{.*}}(
 
   // Test context-aware typed atomic swap operations
   func.func @test_ctx_i32_atomic_swap() {
@@ -566,7 +566,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_swap32( 
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap{{.*}}( 
 
   func.func @test_ctx_i64_atomic_swap() {
     openshmem.init
@@ -588,7 +588,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_swap64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap{{.*}}(
 
   // Test generic typed atomic swap operations
   func.func @test_f32_atomic_swap() {
@@ -608,7 +608,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_swap()
-// CHECK: llvm.call @shmem_atomic_swap32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_swap{{.*}}(
 
   func.func @test_f64_atomic_swap() {
     openshmem.init
@@ -627,7 +627,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_swap()
-// CHECK: llvm.call @shmem_atomic_swap64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_swap{{.*}}(
 
   // Test context-aware typed atomic swap operations
   func.func @test_ctx_f32_atomic_swap() {
@@ -651,7 +651,7 @@ module {
   }
 
 // CHECK-LABEL: llvm.func @test_ctx_f32_atomic_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_swap32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap{{.*}}(
 
   func.func @test_ctx_f64_atomic_swap() {
     openshmem.init
@@ -673,7 +673,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_swap()
-// CHECK: llvm.call @shmem_ctx_atomic_swap64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap{{.*}}(
 
   // Test generic typed atomic fetch-and-increment operations
   func.func @test_i32_atomic_fetch_inc() {
@@ -693,7 +693,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_inc()
-// CHECK: llvm.call @shmem_atomic_fetch_inc32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_inc{{.*}}(
 
   func.func @test_i64_atomic_fetch_inc() {
     openshmem.init
@@ -711,7 +711,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_inc()
-// CHECK: llvm.call @shmem_atomic_fetch_inc64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_inc{{.*}}(
 
   // Test context-aware typed atomic fetch-and-increment operations
   func.func @test_ctx_i32_atomic_fetch_inc() {
@@ -734,7 +734,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_inc()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_inc32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_inc{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_inc() {
     openshmem.init
@@ -755,7 +755,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_inc()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_inc64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_inc{{.*}}(
 
   // Test generic typed atomic increment operations
   func.func @test_i32_atomic_inc() {
@@ -775,7 +775,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_inc()
-// CHECK: llvm.call @shmem_atomic_inc32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_inc{{.*}}(
 
   func.func @test_i64_atomic_inc() {
     openshmem.init
@@ -794,7 +794,7 @@ module {
   }
 
 // CHECK-LABEL: llvm.func @test_i64_atomic_inc()
-// CHECK: llvm.call @shmem_atomic_inc64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_inc{{.*}}(
 
   // Test context-aware typed atomic increment operations
 
@@ -818,7 +818,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_inc()
-// CHECK: llvm.call @shmem_ctx_atomic_inc32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_inc{{.*}}(
 
   func.func @test_ctx_i64_atomic_inc() {
     openshmem.init
@@ -839,7 +839,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_inc()
-// CHECK: llvm.call @shmem_ctx_atomic_inc64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_inc{{.*}}(
 
   // Test generic typed atomic fetch-and-add operations
   func.func @test_i32_atomic_fetch_add() {
@@ -859,7 +859,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_add()
-// CHECK: llvm.call @shmem_atomic_fetch_add32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add{{.*}}(
 
   func.func @test_i64_atomic_fetch_add() {
     openshmem.init
@@ -878,7 +878,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_add()
-// CHECK: llvm.call @shmem_atomic_fetch_add64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add{{.*}}(
 
   func.func @test_f32_atomic_fetch_add() {
     openshmem.init
@@ -897,7 +897,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_fetch_add()
-// CHECK: llvm.call @shmem_atomic_fetch_add32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add{{.*}}(
 
   func.func @test_f64_atomic_fetch_add() {
     openshmem.init
@@ -916,7 +916,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_fetch_add()
-// CHECK: llvm.call @shmem_atomic_fetch_add64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add{{.*}}(
 
   // Test context-aware typed atomic fetch-and-add operations
   func.func @test_ctx_i32_atomic_fetch_add() {
@@ -939,7 +939,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_add()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_add32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_add{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_add() {
     openshmem.init
@@ -961,7 +961,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_add()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_add64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_add{{.*}}(
 
   // Test generic typed atomic add operations
   func.func @test_i32_atomic_add() {
@@ -981,7 +981,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_add()
-// CHECK: llvm.call @shmem_atomic_add32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_add{{.*}}(
 
   func.func @test_i64_atomic_add() {
     openshmem.init
@@ -1000,7 +1000,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_add()
-// CHECK: llvm.call @shmem_atomic_add64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_add{{.*}}(
 
   // Test context-aware typed atomic add operations
   func.func @test_ctx_i32_atomic_add() {
@@ -1023,7 +1023,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_add()
-// CHECK: llvm.call @shmem_ctx_atomic_add32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_add{{.*}}(
 
   func.func @test_ctx_i64_atomic_add() {
     openshmem.init
@@ -1045,7 +1045,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_add()
-// CHECK: llvm.call @shmem_ctx_atomic_add64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_add{{.*}}(
 
   // Test generic typed atomic fetch-and operations
   func.func @test_i32_atomic_fetch_and() {
@@ -1065,7 +1065,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_and()
-// CHECK: llvm.call @shmem_atomic_fetch_and32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_and{{.*}}(
 
   func.func @test_i64_atomic_fetch_and() {
     openshmem.init
@@ -1084,7 +1084,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_and()
-// CHECK: llvm.call @shmem_atomic_fetch_and64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_and{{.*}}(
 
   // Test context-aware typed atomic fetch-and operations
   func.func @test_ctx_i32_atomic_fetch_and() {
@@ -1107,7 +1107,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_and()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_and32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_and{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_and() {
     openshmem.init
@@ -1129,7 +1129,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_and()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_and64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_and{{.*}}(
 
   // Test generic typed atomic fetch-or operations
   func.func @test_i32_atomic_fetch_or() {
@@ -1149,7 +1149,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_or()
-// CHECK: llvm.call @shmem_atomic_fetch_or32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_or{{.*}}(
 
   func.func @test_i64_atomic_fetch_or() {
     openshmem.init
@@ -1168,7 +1168,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_or()
-// CHECK: llvm.call @shmem_atomic_fetch_or64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_or{{.*}}(
 
   // Test context-aware typed atomic fetch-or operations
   func.func @test_ctx_i32_atomic_fetch_or() {
@@ -1191,7 +1191,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_or()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_or32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_or{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_or() {
     openshmem.init
@@ -1213,7 +1213,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_or()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_or64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_or{{.*}}(
 
   // Test generic typed atomic or operations
   func.func @test_i32_atomic_or() {
@@ -1233,7 +1233,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_or()
-// CHECK: llvm.call @shmem_atomic_or32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_or{{.*}}(
 
   func.func @test_i64_atomic_or() {
     openshmem.init
@@ -1252,7 +1252,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_or()
-// CHECK: llvm.call @shmem_atomic_or64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_or{{.*}}(
 
   // Test context-aware typed atomic or operations
   func.func @test_ctx_i32_atomic_or() {
@@ -1275,7 +1275,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_or()
-// CHECK: llvm.call @shmem_ctx_atomic_or32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_or{{.*}}(
 
   func.func @test_ctx_i64_atomic_or() {
     openshmem.init
@@ -1297,7 +1297,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_or()
-// CHECK: llvm.call @shmem_ctx_atomic_or64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_or{{.*}}(
 
   // Test generic typed atomic fetch-xor operations
   func.func @test_i32_atomic_fetch_xor() {
@@ -1317,7 +1317,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_xor()
-// CHECK: llvm.call @shmem_atomic_fetch_xor32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_xor{{.*}}(
 
   func.func @test_i64_atomic_fetch_xor() {
     openshmem.init
@@ -1336,7 +1336,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_xor()
-// CHECK: llvm.call @shmem_atomic_fetch_xor64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_xor{{.*}}(
 
   // Test context-aware typed atomic fetch-xor operations
   func.func @test_ctx_i32_atomic_fetch_xor() {
@@ -1359,7 +1359,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_xor()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_xor32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_xor{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_xor() {
     openshmem.init
@@ -1381,7 +1381,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_xor()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_xor64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_xor{{.*}}(
 
   // Test generic typed atomic xor operations
   func.func @test_i32_atomic_xor() {
@@ -1401,7 +1401,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_xor()
-// CHECK: llvm.call @shmem_atomic_xor32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_xor{{.*}}(
 
   func.func @test_i64_atomic_xor() {
     openshmem.init
@@ -1420,7 +1420,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_xor()
-// CHECK: llvm.call @shmem_atomic_xor64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_xor{{.*}}(
 
   // Test context-aware typed atomic xor operations
   func.func @test_ctx_i32_atomic_xor() {
@@ -1443,7 +1443,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_xor()
-// CHECK: llvm.call @shmem_ctx_atomic_xor32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_xor{{.*}}(
 
   func.func @test_ctx_i64_atomic_xor() {
     openshmem.init
@@ -1465,7 +1465,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_xor()
-// CHECK: llvm.call @shmem_ctx_atomic_xor64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_xor{{.*}}(
 
   // Test non-blocking atomic fetch operations
   func.func @test_i32_atomic_fetch_nbi() {
@@ -1487,7 +1487,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_nbi() {
     openshmem.init
@@ -1508,7 +1508,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic fetch operations
   func.func @test_ctx_i32_atomic_fetch_nbi() {
@@ -1533,7 +1533,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_nbi() {
     openshmem.init
@@ -1557,7 +1557,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_nbi{{.*}}(
 
   // Test non-blocking atomic compare-and-swap operations
   func.func @test_i32_atomic_compare_swap_nbi() {
@@ -1581,7 +1581,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_compare_swap_nbi()
-// CHECK: llvm.call @shmem_atomic_compare_swap_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap_nbi{{.*}}(
 
   func.func @test_i64_atomic_compare_swap_nbi() {
     openshmem.init
@@ -1604,7 +1604,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_compare_swap_nbi()
-// CHECK: llvm.call @shmem_atomic_compare_swap_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic compare-and-swap operations
   func.func @test_ctx_i32_atomic_compare_swap_nbi() {
@@ -1631,7 +1631,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_compare_swap_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_compare_swap_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_compare_swap_nbi() {
     openshmem.init
@@ -1657,7 +1657,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_compare_swap_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_compare_swap_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap_nbi{{.*}}(
 
   // Test non-blocking atomic swap operations
   func.func @test_i32_atomic_swap_nbi() {
@@ -1680,7 +1680,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_swap_nbi()
-// CHECK: llvm.call @shmem_atomic_swap_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_swap_nbi{{.*}}(
 
   func.func @test_i64_atomic_swap_nbi() {
     openshmem.init
@@ -1702,7 +1702,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_swap_nbi()
-// CHECK: llvm.call @shmem_atomic_swap_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_swap_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic swap operations
   func.func @test_ctx_i32_atomic_swap_nbi() {
@@ -1728,7 +1728,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_swap_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_swap_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_swap_nbi() {
     openshmem.init
@@ -1753,7 +1753,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_swap_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_swap_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap_nbi{{.*}}(
 
   // Test non-blocking atomic fetch-and-increment operations
   func.func @test_i32_atomic_fetch_inc_nbi() {
@@ -1775,7 +1775,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_inc_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_inc_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_inc_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_inc_nbi() {
     openshmem.init
@@ -1796,7 +1796,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_inc_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_inc_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_inc_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic fetch-and-increment operations
   func.func @test_ctx_i32_atomic_fetch_inc_nbi() {
@@ -1821,7 +1821,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_inc_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_inc_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_inc_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_inc_nbi() {
     openshmem.init
@@ -1845,7 +1845,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_inc_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_inc_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_inc_nbi{{.*}}(
 
   // Test non-blocking atomic fetch-and-add operations
   func.func @test_i32_atomic_fetch_add_nbi() {
@@ -1868,7 +1868,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_add_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_add_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_add_nbi() {
     openshmem.init
@@ -1890,7 +1890,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_add_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_add_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic fetch-and-add operations
   func.func @test_ctx_i32_atomic_fetch_add_nbi() {
@@ -1916,7 +1916,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_add_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_add_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_add_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_add_nbi() {
     openshmem.init
@@ -1941,7 +1941,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_add_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_add_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_add_nbi{{.*}}(
 
   // Test non-blocking atomic fetch-and operations
   func.func @test_i32_atomic_fetch_and_nbi() {
@@ -1964,7 +1964,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_and_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_and_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_and_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_and_nbi() {
     openshmem.init
@@ -1986,7 +1986,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_and_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_and_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_and_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic fetch-and operations
   func.func @test_ctx_i32_atomic_fetch_and_nbi() {
@@ -2012,7 +2012,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_and_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_and_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_and_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_and_nbi() {
     openshmem.init
@@ -2037,7 +2037,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_and_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_and_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_and_nbi{{.*}}(
 
   // Test non-blocking atomic fetch-or operations
   func.func @test_i32_atomic_fetch_or_nbi() {
@@ -2060,7 +2060,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_or_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_or_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_or_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_or_nbi() {
     openshmem.init
@@ -2082,7 +2082,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_or_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_or_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_or_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic fetch-or operations
   func.func @test_ctx_i32_atomic_fetch_or_nbi() {
@@ -2108,7 +2108,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_or_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_or_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_or_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_or_nbi() {
     openshmem.init
@@ -2133,7 +2133,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_or_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_or_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_or_nbi{{.*}}(
 
   // Test non-blocking atomic fetch-xor operations
   func.func @test_i32_atomic_fetch_xor_nbi() {
@@ -2156,7 +2156,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_xor_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_xor_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_xor_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_xor_nbi() {
     openshmem.init
@@ -2178,7 +2178,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_xor_nbi()
-// CHECK: llvm.call @shmem_atomic_fetch_xor_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}atomic_fetch_xor_nbi{{.*}}(
 
   // Test context-aware non-blocking atomic fetch-xor operations
   func.func @test_ctx_i32_atomic_fetch_xor_nbi() {
@@ -2204,7 +2204,7 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_xor_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_xor_nbi32(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_xor_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_xor_nbi() {
     openshmem.init
@@ -2229,6 +2229,6 @@ module {
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_xor_nbi()
-// CHECK: llvm.call @shmem_ctx_atomic_fetch_xor_nbi64(
+// CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_xor_nbi{{.*}}(
 
 }
