@@ -34,35 +34,39 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
 
     RewritePatternSet patterns(ctx);
 
-    // Pattern 1: atomic_add + atomic_add -> atomic_add with summed constant
+    // Pattern 1: Fuse a chain of atomic_add with constant values
     struct FuseAdd final : OpRewritePattern<AtomicAddOp> {
       using OpRewritePattern::OpRewritePattern;
-      LogicalResult matchAndRewrite(AtomicAddOp add1,
+      LogicalResult matchAndRewrite(AtomicAddOp head,
                                     PatternRewriter &rewriter) const override {
-        Operation *next = add1->getNextNode();
-        auto add2 = dyn_cast_or_null<AtomicAddOp>(next);
-        if (!add2)
+        auto cHead = head.getValue().getDefiningOp<arith::ConstantOp>();
+        auto attrHead = dyn_cast_or_null<IntegerAttr>(cHead ? cHead.getValue()
+                                                            : Attribute());
+        if (!attrHead)
           return failure();
-        if (add1.getDest() != add2.getDest() || add1.getPe() != add2.getPe())
+        APInt sum = attrHead.getValue();
+        SmallVector<Operation *> toErase;
+        Operation *cursor = head->getNextNode();
+        while (auto addN = dyn_cast_or_null<AtomicAddOp>(cursor)) {
+          if (addN.getDest() != head.getDest() || addN.getPe() != head.getPe())
+            break;
+          auto cN = addN.getValue().getDefiningOp<arith::ConstantOp>();
+          auto aN =
+              dyn_cast_or_null<IntegerAttr>(cN ? cN.getValue() : Attribute());
+          if (!aN || aN.getType() != attrHead.getType())
+            break;
+          sum += aN.getValue();
+          toErase.push_back(addN);
+          cursor = addN->getNextNode();
+        }
+        if (toErase.empty())
           return failure();
-        // Check both values are arith.const and same type.
-        auto c1 = add1.getValue().getDefiningOp<arith::ConstantOp>();
-        auto c2 = add2.getValue().getDefiningOp<arith::ConstantOp>();
-        if (!c1 || !c2)
-          return failure();
-        auto attr1 = dyn_cast<IntegerAttr>(c1.getValue());
-        auto attr2 = dyn_cast<IntegerAttr>(c2.getValue());
-        if (!attr1 || !attr2 || attr1.getType() != attr2.getType())
-          return failure();
-        // Replace the first add with combined constant and erase the second.
-        APInt sum = attr1.getValue() + attr2.getValue();
-        auto loc = add1.getLoc();
         auto newConst = rewriter.create<arith::ConstantOp>(
-            loc, IntegerAttr::get(attr1.getType(), sum));
-        rewriter.modifyOpInPlace(add1, [&] {
-          add1.getValueMutable().assign(newConst.getResult());
-        });
-        rewriter.eraseOp(add2);
+            head.getLoc(), IntegerAttr::get(attrHead.getType(), sum));
+        rewriter.modifyOpInPlace(
+            head, [&] { head.getValueMutable().assign(newConst.getResult()); });
+        for (Operation *op : toErase)
+          rewriter.eraseOp(op);
         return success();
       }
     };
@@ -94,76 +98,193 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
           return failure();
         auto loc = inc1.getLoc();
         auto c = rewriter.create<arith::ConstantOp>(
-            loc, IntegerAttr::get(intElemTy, static_cast<int64_t>(chain.size())));
-        rewriter.replaceOpWithNewOp<AtomicAddOp>(
-            inc1, inc1.getDest(), c.getResult(), inc1.getPe());
+            loc,
+            IntegerAttr::get(intElemTy, static_cast<int64_t>(chain.size())));
+        rewriter.replaceOpWithNewOp<AtomicAddOp>(inc1, inc1.getDest(),
+                                                 c.getResult(), inc1.getPe());
         for (size_t i = 1; i < chain.size(); ++i)
           rewriter.eraseOp(chain[i]);
         return success();
       }
     };
 
-    // Pattern 3: atomic_or + atomic_or with constant operands
+    // Pattern 3: Fuse a chain of atomic_or with constant operands
     struct FuseOr final : OpRewritePattern<AtomicOrOp> {
       using OpRewritePattern::OpRewritePattern;
       LogicalResult matchAndRewrite(AtomicOrOp or1,
                                     PatternRewriter &rewriter) const override {
-        auto or2 = dyn_cast_or_null<AtomicOrOp>(or1->getNextNode());
-        if (!or2)
-          return failure();
-        if (or1.getDest() != or2.getDest() || or1.getPe() != or2.getPe())
-          return failure();
         auto c1 = or1.getValue().getDefiningOp<arith::ConstantOp>();
-        auto c2 = or2.getValue().getDefiningOp<arith::ConstantOp>();
-        if (!c1 || !c2)
+        auto a1 =
+            dyn_cast_or_null<IntegerAttr>(c1 ? c1.getValue() : Attribute());
+        if (!a1)
           return failure();
-        auto a1 = dyn_cast<IntegerAttr>(c1.getValue());
-        auto a2 = dyn_cast<IntegerAttr>(c2.getValue());
-        if (!a1 || !a2 || a1.getType() != a2.getType())
+        APInt combined = a1.getValue();
+        SmallVector<Operation *> toErase;
+        Operation *cursor = or1->getNextNode();
+        while (auto orN = dyn_cast_or_null<AtomicOrOp>(cursor)) {
+          if (orN.getDest() != or1.getDest() || orN.getPe() != or1.getPe())
+            break;
+          auto cN = orN.getValue().getDefiningOp<arith::ConstantOp>();
+          auto aN =
+              dyn_cast_or_null<IntegerAttr>(cN ? cN.getValue() : Attribute());
+          if (!aN || aN.getType() != a1.getType())
+            break;
+          combined |= aN.getValue();
+          toErase.push_back(orN);
+          cursor = orN->getNextNode();
+        }
+        if (toErase.empty())
           return failure();
-        APInt combined = a1.getValue() | a2.getValue();
-        auto loc = or1.getLoc();
         auto constCombined = rewriter.create<arith::ConstantOp>(
-            loc, IntegerAttr::get(a1.getType(), combined));
+            or1.getLoc(), IntegerAttr::get(a1.getType(), combined));
         rewriter.modifyOpInPlace(or1, [&] {
           or1.getValueMutable().assign(constCombined.getResult());
         });
-        rewriter.eraseOp(or2);
+        for (Operation *op : toErase)
+          rewriter.eraseOp(op);
         return success();
       }
     };
 
-    // Pattern 4: atomic_xor + atomic_xor with constant operands
+    // Pattern 4: Fuse a chain of atomic_xor with constant operands. If the
+    // combined constant is 0, erase the entire chain as a no-op.
     struct FuseXor final : OpRewritePattern<AtomicXorOp> {
       using OpRewritePattern::OpRewritePattern;
       LogicalResult matchAndRewrite(AtomicXorOp x1,
                                     PatternRewriter &rewriter) const override {
-        auto x2 = dyn_cast_or_null<AtomicXorOp>(x1->getNextNode());
-        if (!x2)
-          return failure();
-        if (x1.getDest() != x2.getDest() || x1.getPe() != x2.getPe())
-          return failure();
         auto c1 = x1.getValue().getDefiningOp<arith::ConstantOp>();
-        auto c2 = x2.getValue().getDefiningOp<arith::ConstantOp>();
-        if (!c1 || !c2)
+        auto a1 =
+            dyn_cast_or_null<IntegerAttr>(c1 ? c1.getValue() : Attribute());
+        if (!a1)
           return failure();
-        auto a1 = dyn_cast<IntegerAttr>(c1.getValue());
-        auto a2 = dyn_cast<IntegerAttr>(c2.getValue());
-        if (!a1 || !a2 || a1.getType() != a2.getType())
+        APInt combined = a1.getValue();
+        SmallVector<Operation *> toErase;
+        Operation *cursor = x1->getNextNode();
+        while (auto xN = dyn_cast_or_null<AtomicXorOp>(cursor)) {
+          if (xN.getDest() != x1.getDest() || xN.getPe() != x1.getPe())
+            break;
+          auto cN = xN.getValue().getDefiningOp<arith::ConstantOp>();
+          auto aN =
+              dyn_cast_or_null<IntegerAttr>(cN ? cN.getValue() : Attribute());
+          if (!aN || aN.getType() != a1.getType())
+            break;
+          combined ^= aN.getValue();
+          toErase.push_back(xN);
+          cursor = xN->getNextNode();
+        }
+        if (toErase.empty())
           return failure();
-        APInt combined = a1.getValue() ^ a2.getValue();
-        auto loc = x1.getLoc();
+        if (combined.isZero()) {
+          for (Operation *op : toErase)
+            rewriter.eraseOp(op);
+          rewriter.eraseOp(x1);
+          return success();
+        }
         auto constCombined = rewriter.create<arith::ConstantOp>(
-            loc, IntegerAttr::get(a1.getType(), combined));
+            x1.getLoc(), IntegerAttr::get(a1.getType(), combined));
         rewriter.modifyOpInPlace(x1, [&] {
           x1.getValueMutable().assign(constCombined.getResult());
         });
-        rewriter.eraseOp(x2);
+        for (Operation *op : toErase)
+          rewriter.eraseOp(op);
         return success();
       }
     };
 
-    patterns.add<FuseAdd, FuseIncChain, FuseOr, FuseXor>(ctx);
+    // Pattern 5: add followed by inc -> collapse into single add (increment +1)
+    struct FuseAddInc final : OpRewritePattern<AtomicAddOp> {
+      using OpRewritePattern::OpRewritePattern;
+      LogicalResult matchAndRewrite(AtomicAddOp add,
+                                    PatternRewriter &rewriter) const override {
+        auto inc = dyn_cast_or_null<AtomicIncOp>(add->getNextNode());
+        if (!inc)
+          return failure();
+        if (add.getDest() != inc.getDest() || add.getPe() != inc.getPe())
+          return failure();
+        auto c = add.getValue().getDefiningOp<arith::ConstantOp>();
+        auto a = dyn_cast_or_null<IntegerAttr>(c ? c.getValue() : Attribute());
+        if (!a)
+          return failure();
+        APInt sum = a.getValue() + 1;
+        auto newConst = rewriter.create<arith::ConstantOp>(
+            add.getLoc(), IntegerAttr::get(a.getType(), sum));
+        rewriter.modifyOpInPlace(
+            add, [&] { add.getValueMutable().assign(newConst.getResult()); });
+        rewriter.eraseOp(inc);
+        return success();
+      }
+    };
+
+    // Pattern 6: inc followed by add -> replace inc by add with (1+const) and
+    // erase add
+    struct FuseIncAdd final : OpRewritePattern<AtomicIncOp> {
+      using OpRewritePattern::OpRewritePattern;
+      LogicalResult matchAndRewrite(AtomicIncOp inc,
+                                    PatternRewriter &rewriter) const override {
+        auto add = dyn_cast_or_null<AtomicAddOp>(inc->getNextNode());
+        if (!add)
+          return failure();
+        if (inc.getDest() != add.getDest() || inc.getPe() != add.getPe())
+          return failure();
+        auto c = add.getValue().getDefiningOp<arith::ConstantOp>();
+        auto a = dyn_cast_or_null<IntegerAttr>(c ? c.getValue() : Attribute());
+        if (!a)
+          return failure();
+        APInt sum = a.getValue() + 1;
+        // Derive element integer type from symmetric memref.
+        auto symTy = dyn_cast<SymmetricMemRefType>(inc.getDest().getType());
+        if (!symTy)
+          return failure();
+        auto intElemTy = dyn_cast<IntegerType>(symTy.getElementType());
+        if (!intElemTy || intElemTy != a.getType())
+          return failure();
+        auto newConst = rewriter.create<arith::ConstantOp>(
+            inc.getLoc(), IntegerAttr::get(intElemTy, sum));
+        rewriter.replaceOpWithNewOp<AtomicAddOp>(
+            inc, inc.getDest(), newConst.getResult(), inc.getPe());
+        rewriter.eraseOp(add);
+        return success();
+      }
+    };
+
+    // Pattern 7: dead fetch variants -> non-fetch equivalent
+    struct DropDeadFetchAdd final : OpRewritePattern<AtomicFetchAddOp> {
+      using OpRewritePattern::OpRewritePattern;
+      LogicalResult matchAndRewrite(AtomicFetchAddOp op,
+                                    PatternRewriter &rewriter) const override {
+        if (!op->use_empty())
+          return failure();
+        rewriter.replaceOpWithNewOp<AtomicAddOp>(op, op.getDest(),
+                                                 op.getValue(), op.getPe());
+        return success();
+      }
+    };
+    struct DropDeadFetchOr final : OpRewritePattern<AtomicFetchOrOp> {
+      using OpRewritePattern::OpRewritePattern;
+      LogicalResult matchAndRewrite(AtomicFetchOrOp op,
+                                    PatternRewriter &rewriter) const override {
+        if (!op->use_empty())
+          return failure();
+        rewriter.replaceOpWithNewOp<AtomicOrOp>(op, op.getDest(), op.getValue(),
+                                                op.getPe());
+        return success();
+      }
+    };
+    struct DropDeadFetchXor final : OpRewritePattern<AtomicFetchXorOp> {
+      using OpRewritePattern::OpRewritePattern;
+      LogicalResult matchAndRewrite(AtomicFetchXorOp op,
+                                    PatternRewriter &rewriter) const override {
+        if (!op->use_empty())
+          return failure();
+        rewriter.replaceOpWithNewOp<AtomicXorOp>(op, op.getDest(),
+                                                 op.getValue(), op.getPe());
+        return success();
+      }
+    };
+    // Note: No non-fetch "atomic_and" op is defined in the dialect; skip it.
+
+    patterns.add<FuseAdd, FuseIncChain, FuseOr, FuseXor, FuseAddInc, FuseIncAdd,
+                 DropDeadFetchAdd, DropDeadFetchOr, DropDeadFetchXor>(ctx);
 
     if (failed(applyPatternsGreedily(op, std::move(patterns))))
       signalPassFailure();
@@ -175,5 +296,3 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
 std::unique_ptr<Pass> mlir::openshmem::createAtomicFusionPass() {
   return std::make_unique<AtomicFusionPass>();
 }
-
-
