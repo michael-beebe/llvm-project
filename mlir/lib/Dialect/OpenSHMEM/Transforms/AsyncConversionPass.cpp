@@ -16,15 +16,18 @@ using namespace mlir::openshmem;
 
 namespace {
 
-// Find a following openshmem.quiet in the same block.
-static QuietOp findFollowingQuietInBlock(Operation *op) {
+// Find a following sync (quiet or barrier_all) in the same block.
+static Operation *findFollowingSyncInBlock(Operation *op,
+                                           bool treatBarriersAsSync) {
   Operation *cursor = op->getNextNode();
   while (cursor) {
-    if (auto q = dyn_cast<QuietOp>(cursor))
-      return q;
+    if (isa<QuietOp>(cursor))
+      return cursor;
+    if (treatBarriersAsSync && isa<BarrierAllOp>(cursor))
+      return cursor;
     cursor = cursor->getNextNode();
   }
-  return QuietOp();
+  return nullptr;
 }
 
 // Returns true if 'val' has any use by an operation placed strictly between
@@ -42,12 +45,21 @@ static bool valueHasInterveningUse(Value val, Operation *start,
 }
 
 struct ConvertPut final : OpRewritePattern<PutOp> {
-  using OpRewritePattern::OpRewritePattern;
+  ConvertPut(MLIRContext *ctx, bool treatBarriers, bool aggressive)
+      : OpRewritePattern(ctx), treatBarriersAsSync(treatBarriers),
+        aggressiveInsertQuiet(aggressive) {}
+  bool treatBarriersAsSync;
+  bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(PutOp op,
                                 PatternRewriter &rewriter) const override {
-    auto q = findFollowingQuietInBlock(op);
-    if (!q)
-      return failure();
+    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    if (!sync) {
+      if (!aggressiveInsertQuiet)
+        return failure();
+      OpBuilder::InsertionGuard g(rewriter);
+      rewriter.setInsertionPointToEnd(op->getBlock());
+      sync = rewriter.create<QuietOp>(op.getLoc());
+    }
     rewriter.replaceOpWithNewOp<PutNbiOp>(op, op.getDest(), op.getSource(),
                                           op.getNelems(), op.getPe());
     return success();
@@ -55,12 +67,21 @@ struct ConvertPut final : OpRewritePattern<PutOp> {
 };
 
 struct ConvertCtxPut final : OpRewritePattern<CtxPutOp> {
-  using OpRewritePattern::OpRewritePattern;
+  ConvertCtxPut(MLIRContext *ctx, bool treatBarriers, bool aggressive)
+      : OpRewritePattern(ctx), treatBarriersAsSync(treatBarriers),
+        aggressiveInsertQuiet(aggressive) {}
+  bool treatBarriersAsSync;
+  bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(CtxPutOp op,
                                 PatternRewriter &rewriter) const override {
-    auto q = findFollowingQuietInBlock(op);
-    if (!q)
-      return failure();
+    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    if (!sync) {
+      if (!aggressiveInsertQuiet)
+        return failure();
+      OpBuilder::InsertionGuard g(rewriter);
+      rewriter.setInsertionPointToEnd(op->getBlock());
+      sync = rewriter.create<QuietOp>(op.getLoc());
+    }
     rewriter.replaceOpWithNewOp<CtxPutNbiOp>(op, op.getCtx(), op.getDest(),
                                              op.getSource(), op.getNelems(),
                                              op.getPe());
@@ -69,12 +90,21 @@ struct ConvertCtxPut final : OpRewritePattern<CtxPutOp> {
 };
 
 struct ConvertPutmem final : OpRewritePattern<PutmemOp> {
-  using OpRewritePattern::OpRewritePattern;
+  ConvertPutmem(MLIRContext *ctx, bool treatBarriers, bool aggressive)
+      : OpRewritePattern(ctx), treatBarriersAsSync(treatBarriers),
+        aggressiveInsertQuiet(aggressive) {}
+  bool treatBarriersAsSync;
+  bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(PutmemOp op,
                                 PatternRewriter &rewriter) const override {
-    auto q = findFollowingQuietInBlock(op);
-    if (!q)
-      return failure();
+    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    if (!sync) {
+      if (!aggressiveInsertQuiet)
+        return failure();
+      OpBuilder::InsertionGuard g(rewriter);
+      rewriter.setInsertionPointToEnd(op->getBlock());
+      sync = rewriter.create<QuietOp>(op.getLoc());
+    }
     rewriter.replaceOpWithNewOp<PutmemNbiOp>(op, op.getDest(), op.getSrc(),
                                              op.getSize(), op.getPe());
     return success();
@@ -83,14 +113,22 @@ struct ConvertPutmem final : OpRewritePattern<PutmemOp> {
 
 // get family (only safe when immediately followed by quiet)
 struct ConvertGet final : OpRewritePattern<GetOp> {
-  using OpRewritePattern::OpRewritePattern;
+  ConvertGet(MLIRContext *ctx, bool treatBarriers, bool aggressive)
+      : OpRewritePattern(ctx), treatBarriersAsSync(treatBarriers),
+        aggressiveInsertQuiet(aggressive) {}
+  bool treatBarriersAsSync;
+  bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(GetOp op,
                                 PatternRewriter &rewriter) const override {
-    auto q = findFollowingQuietInBlock(op);
-    if (!q)
-      return failure();
-    if (valueHasInterveningUse(op.getDest(), op.getOperation(),
-                               q.getOperation()))
+    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    if (!sync) {
+      if (!aggressiveInsertQuiet)
+        return failure();
+      OpBuilder::InsertionGuard g(rewriter);
+      rewriter.setInsertionPointToEnd(op->getBlock());
+      sync = rewriter.create<QuietOp>(op.getLoc());
+    }
+    if (valueHasInterveningUse(op.getDest(), op.getOperation(), sync))
       return failure();
     rewriter.replaceOpWithNewOp<GetNbiOp>(op, op.getDest(), op.getSource(),
                                           op.getNelems(), op.getPe());
@@ -99,14 +137,22 @@ struct ConvertGet final : OpRewritePattern<GetOp> {
 };
 
 struct ConvertCtxGet final : OpRewritePattern<CtxGetOp> {
-  using OpRewritePattern::OpRewritePattern;
+  ConvertCtxGet(MLIRContext *ctx, bool treatBarriers, bool aggressive)
+      : OpRewritePattern(ctx), treatBarriersAsSync(treatBarriers),
+        aggressiveInsertQuiet(aggressive) {}
+  bool treatBarriersAsSync;
+  bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(CtxGetOp op,
                                 PatternRewriter &rewriter) const override {
-    auto q = findFollowingQuietInBlock(op);
-    if (!q)
-      return failure();
-    if (valueHasInterveningUse(op.getDest(), op.getOperation(),
-                               q.getOperation()))
+    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    if (!sync) {
+      if (!aggressiveInsertQuiet)
+        return failure();
+      OpBuilder::InsertionGuard g(rewriter);
+      rewriter.setInsertionPointToEnd(op->getBlock());
+      sync = rewriter.create<QuietOp>(op.getLoc());
+    }
+    if (valueHasInterveningUse(op.getDest(), op.getOperation(), sync))
       return failure();
     rewriter.replaceOpWithNewOp<CtxGetNbiOp>(op, op.getCtx(), op.getDest(),
                                              op.getSource(), op.getNelems(),
@@ -116,14 +162,22 @@ struct ConvertCtxGet final : OpRewritePattern<CtxGetOp> {
 };
 
 struct ConvertGetmem final : OpRewritePattern<GetmemOp> {
-  using OpRewritePattern::OpRewritePattern;
+  ConvertGetmem(MLIRContext *ctx, bool treatBarriers, bool aggressive)
+      : OpRewritePattern(ctx), treatBarriersAsSync(treatBarriers),
+        aggressiveInsertQuiet(aggressive) {}
+  bool treatBarriersAsSync;
+  bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(GetmemOp op,
                                 PatternRewriter &rewriter) const override {
-    auto q = findFollowingQuietInBlock(op);
-    if (!q)
-      return failure();
-    if (valueHasInterveningUse(op.getDest(), op.getOperation(),
-                               q.getOperation()))
+    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    if (!sync) {
+      if (!aggressiveInsertQuiet)
+        return failure();
+      OpBuilder::InsertionGuard g(rewriter);
+      rewriter.setInsertionPointToEnd(op->getBlock());
+      sync = rewriter.create<QuietOp>(op.getLoc());
+    }
+    if (valueHasInterveningUse(op.getDest(), op.getOperation(), sync))
       return failure();
     rewriter.replaceOpWithNewOp<GetmemNbiOp>(op, op.getDest(), op.getSrc(),
                                              op.getSize(), op.getPe());
@@ -140,8 +194,19 @@ struct AsyncConversionPass
     MLIRContext *ctx = &getContext();
     RewritePatternSet patterns(ctx);
 
-    patterns.add<ConvertPut, ConvertCtxPut, ConvertPutmem, ConvertGet,
-                 ConvertCtxGet, ConvertGetmem>(ctx);
+    // Add patterns with options passed via constructors.
+    bool treatBarriersAsSync = true;
+    bool aggressiveInsertQuiet = false;
+    patterns.add<ConvertPut>(ctx, treatBarriersAsSync, aggressiveInsertQuiet);
+    patterns.add<ConvertCtxPut>(ctx, treatBarriersAsSync,
+                                aggressiveInsertQuiet);
+    patterns.add<ConvertPutmem>(ctx, treatBarriersAsSync,
+                                aggressiveInsertQuiet);
+    patterns.add<ConvertGet>(ctx, treatBarriersAsSync, aggressiveInsertQuiet);
+    patterns.add<ConvertCtxGet>(ctx, treatBarriersAsSync,
+                                aggressiveInsertQuiet);
+    patterns.add<ConvertGetmem>(ctx, treatBarriersAsSync,
+                                aggressiveInsertQuiet);
 
     if (failed(applyPatternsGreedily(op, std::move(patterns))))
       signalPassFailure();

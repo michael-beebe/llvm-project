@@ -124,4 +124,31 @@ module {
   // CHECK: openshmem.quiet
 }
 
+// Barrier treated as sync: conversions allowed by barrier
+// RUN: mlir-opt %s --openshmem-async-conversion='treat-barriers-as-sync=true' | FileCheck %s --check-prefix=BARRIER
+module {
+  func.func @barrier_sync_put(%d: !openshmem.symmetric_memref<i32>, %s: memref<i32>, %pe: i32) {
+    %n = arith.constant 1 : index
+    openshmem.put(%d, %s, %n, %pe) : !openshmem.symmetric_memref<i32>, memref<i32>, index, i32
+    openshmem.barrier_all
+    return
+  }
+  // BARRIER-LABEL: func.func @barrier_sync_put
+  // BARRIER: openshmem.put_nbi
+  // BARRIER: openshmem.barrier_all
+}
+
+// Aggressive mode: insert quiet at end to enable conversion
+// RUN: mlir-opt %s --openshmem-async-conversion='aggressive-insert-quiet=true treat-barriers-as-sync=false' | FileCheck %s --check-prefix=AGGR
+module {
+  func.func @aggressive_put(%d: !openshmem.symmetric_memref<i32>, %s: memref<i32>, %pe: i32) {
+    %n = arith.constant 1 : index
+    openshmem.put(%d, %s, %n, %pe) : !openshmem.symmetric_memref<i32>, memref<i32>, index, i32
+    return
+  }
+  // AGGR-LABEL: func.func @aggressive_put
+  // AGGR: openshmem.put_nbi
+  // AGGR: openshmem.quiet
+}
+
 
