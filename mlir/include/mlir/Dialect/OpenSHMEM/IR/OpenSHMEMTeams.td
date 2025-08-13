@@ -10,10 +10,32 @@
 #define MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMTEAMS_TD
 
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
+include "mlir/IR/AttrTypeBase.td"
 
 //===----------------------------------------------------------------------===//
 // Team Operations
 //===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+// shmem_team_config_t (dialect attribute)
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_TeamConfigAttr : AttrDef<OpenSHMEM_Dialect, "TeamConfig"> {
+  let mnemonic = "team_config";
+  let summary = "Configuration for team creation (subset of shmem_team_config_t)";
+  let description = [{
+    Represents configuration parameters for team creation and split operations.
+    Currently models the "num_contexts" field from the OpenSHMEM spec. This
+    attribute can be attached to team split/create operations to guide runtime
+    behavior and compiler heuristics.
+  }];
+
+  let parameters = (ins
+    "int32_t":$numContexts
+  );
+
+  let assemblyFormat = "`<` `num_contexts` `=` $numContexts `>`";
+}
 
 //===----------------------------------------------------------------------===//
 // TeamSplitStridedOp
