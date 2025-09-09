@@ -46,6 +46,7 @@
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/Dialect/Vector/Transforms/Passes.h"
 #include "mlir/Dialect/XeGPU/Transforms/Passes.h"
+#include "mlir/Target/LLVMIR/Transforms/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
 // This function may be called to register the MLIR passes with the
@@ -76,6 +77,7 @@ void mlir::registerAllPasses() {
   openshmem::registerOpenSHMEMPasses();
   registerSparseTensorPasses();
   LLVM::registerLLVMPasses();
+  LLVM::registerTargetLLVMIRTransformsPasses();
   math::registerMathPasses();
   memref::registerMemRefPasses();
   shard::registerShardPasses();

@@ -45,7 +45,7 @@ namespace dxbc {
 LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
 
 inline Triple::EnvironmentType getShaderStage(uint32_t Kind) {
-  assert(Kind <= Triple::Amplification - Triple::Pixel &&
+  assert(Kind <= Triple::RootSignature - Triple::Pixel &&
          "Shader kind out of expected range.");
   return static_cast<Triple::EnvironmentType>(Triple::Pixel + Kind);
 }
@@ -157,8 +157,6 @@ enum class FeatureFlags : uint64_t {
 };
 static_assert((uint64_t)FeatureFlags::NextUnusedBit <= 1ull << 63,
               "Shader flag bits exceed enum size.");
-
-LLVM_ABI ArrayRef<EnumEntry<llvm::dxil::ResourceClass>> getResourceClasses();
 
 #define ROOT_SIGNATURE_FLAG(Num, Val) Val = Num,
 enum class RootFlags : uint32_t {

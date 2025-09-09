@@ -29,6 +29,7 @@
 #include "mlir/Conversion/NVVMToLLVM/NVVMToLLVM.h"
 #include "mlir/Conversion/OpenMPToLLVM/ConvertOpenMPToLLVM.h"
 #include "mlir/Conversion/OpenSHMEMToLLVM/OpenSHMEMToLLVM.h"
+#include "mlir/Conversion/PtrToLLVM/PtrToLLVM.h"
 #include "mlir/Conversion/SCFToEmitC/SCFToEmitC.h"
 #include "mlir/Conversion/UBToLLVM/UBToLLVM.h"
 #include "mlir/Conversion/VectorToLLVM/ConvertVectorToLLVM.h"
@@ -59,6 +60,7 @@
 #include "mlir/Target/LLVMIR/Dialect/GPU/GPUToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/ROCDL/ROCDLToLLVMIRTranslation.h"
+#include "mlir/Target/LLVMIR/Dialect/XeVM/XeVMToLLVMIRTranslation.h"
 
 /// This function may be called to register all MLIR dialect extensions with the
 /// provided registry.
@@ -81,6 +83,7 @@ void mlir::registerAllExtensions(DialectRegistry &registry) {
   registerConvertMemRefToEmitCInterface(registry);
   registerConvertMemRefToLLVMInterface(registry);
   registerConvertNVVMToLLVMInterface(registry);
+  ptr::registerConvertPtrToLLVMInterface(registry);
   registerConvertOpenMPToLLVMInterface(registry);
   openshmem::registerConvertOpenSHMEMToLLVMInterface(registry);
   registerConvertSCFToEmitCInterface(registry);

@@ -954,7 +954,7 @@ def PatchableFunctionEntry
     : InheritableAttr,
       TargetSpecificAttr<TargetArch<
           ["aarch64", "aarch64_be", "loongarch32", "loongarch64", "riscv32",
-           "riscv64", "x86", "x86_64", "ppc", "ppc64"]>> {
+           "riscv64", "x86", "x86_64", "ppc", "ppc64", "ppc64le"]>> {
   let Spellings = [GCC<"patchable_function_entry">];
   let Subjects = SubjectList<[Function, ObjCMethod]>;
   let Args = [UnsignedArgument<"Count">, DefaultIntArgument<"Offset", 0>,
@@ -979,7 +979,7 @@ def AnalyzerNoReturn : InheritableAttr {
 }
 
 def InferredNoReturn : InheritableAttr {
-  let Spellings = []; 
+  let Spellings = [];
   let SemaHandler = 0;
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let Documentation = [InternalOnly];
@@ -1185,6 +1185,7 @@ static llvm::Triple::EnvironmentType getEnvironmentType(llvm::StringRef Environm
              .Case("callable", llvm::Triple::Callable)
              .Case("mesh", llvm::Triple::Mesh)
              .Case("amplification", llvm::Triple::Amplification)
+             .Case("rootsignature", llvm::Triple::RootSignature)
              .Case("library", llvm::Triple::Library)
              .Default(llvm::Triple::UnknownEnvironment);
 }
@@ -1454,9 +1455,13 @@ def ConstInit : InheritableAttr {
 
 def Constructor : InheritableAttr {
   let Spellings = [GCC<"constructor">];
-  let Args = [DefaultIntArgument<"Priority", 65535>];
+  let Args = [ExprArgument<"Priority", 1>];
   let Subjects = SubjectList<[Function]>;
+  let TemplateDependent = 1;
   let Documentation = [CtorDtorDocs];
+  let AdditionalMembers = [{
+    static constexpr unsigned DefaultPriority = 65535; 
+  }];
 }
 
 def CPUSpecific : InheritableAttr {
@@ -1632,6 +1637,13 @@ def DeviceKernel : DeclOrTypeAttr {
 }];
 }
 
+def SYCLExternal : InheritableAttr {
+  let Spellings = [CXX11<"clang", "sycl_external">];
+  let Subjects = SubjectList<[Function], ErrorDiag>;
+  let LangOpts = [SYCLHost, SYCLDevice];
+  let Documentation = [SYCLExternalDocs];
+}
+
 def SYCLKernelEntryPoint : InheritableAttr {
   let Spellings = [CXX11<"clang", "sycl_kernel_entry_point">];
   let Args = [
@@ -1788,9 +1800,13 @@ def Deprecated : InheritableAttr {
 
 def Destructor : InheritableAttr {
   let Spellings = [GCC<"destructor">];
-  let Args = [DefaultIntArgument<"Priority", 65535>];
+  let Args = [ExprArgument<"Priority", 1>];
   let Subjects = SubjectList<[Function]>;
+  let TemplateDependent = 1;
   let Documentation = [CtorDtorDocs];
+  let AdditionalMembers = [{
+    static constexpr unsigned int DefaultPriority = 65535; 
+  }];
 }
 
 def EmptyBases : InheritableAttr, TargetSpecificAttr<TargetMicrosoftRecordLayout> {
@@ -3922,6 +3938,14 @@ def CFICanonicalJumpTable : InheritableAttr {
   let SimpleHandler = 1;
 }
 
+def CFISalt : TypeAttr {
+  let Spellings = [Clang<"cfi_salt">];
+  let Args = [StringArgument<"Salt">];
+  let Subjects = SubjectList<[FunctionLike], ErrorDiag>;
+  let Documentation = [CFISaltDocs];
+  let LangOpts = [COnly];
+}
+
 // C/C++ Thread safety attributes (e.g. for deadlock, data race checking)
 // Not all of these attributes will be given a [[]] spelling. The attributes
 // which require access to function parameter names cannot use the [[]] spelling
@@ -4932,6 +4956,7 @@ def HLSLResourceBinding: InheritableAttr {
         return SpaceNumber;
       }
       void setImplicitBindingOrderID(uint32_t Value) {
+        assert(!hasImplicitBindingOrderID() && "attribute already has implicit binding order id");
         ImplicitBindingOrderID = Value;
       }
       bool hasImplicitBindingOrderID() const {
