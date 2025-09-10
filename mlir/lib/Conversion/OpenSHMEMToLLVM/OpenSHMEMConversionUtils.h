@@ -45,8 +45,8 @@ LLVM::LLVMFuncOp getOrDefineFunction(ModuleOp &moduleOp, const Location loc,
 Value getMemRefDataPtr(Location loc, ConversionPatternRewriter &rewriter,
                        Value memref);
 
-/// Utility to extract element type from symmetric memref.
-/// Returns nullptr if the value is not a SymmetricMemRefType.
+/// Utility to extract element type from memref with symmetric memory space.
+/// Returns nullptr if the value is not a memref with symmetric memory space.
 Type getSymmetricMemRefElementType(Value symmetricMemRef);
 
 //===----------------------------------------------------------------------===//
@@ -63,6 +63,24 @@ std::string getTypedFunctionName(StringRef baseName, Type elementType);
 /// "shmem_int32_wait_until"). Used for pt2pt sync operations that require sized
 /// names (especially vectors).
 std::string getSizedFunctionName(StringRef baseName, Type elementType);
+
+/// Utility to generate RMA sized function names based on element type.
+/// Maps MLIR types to OpenSHMEM RMA sized function names (e.g., "put" + i32 ->
+/// "shmem_put32"). Used for RMA operations that use sized names.
+std::string getRMASizedFunctionName(StringRef baseName, Type elementType);
+
+/// Utility to generate pt2pt sync sized function names based on comparison
+/// value type. Maps MLIR types to OpenSHMEM pt2pt sync sized function names
+/// (e.g., "wait_until" + i32 -> "shmem_wait_until32"). Used for pt2pt sync
+/// operations that use sized names.
+std::string getPt2ptSyncSizedFunctionName(StringRef baseName,
+                                          Type cmpValueType);
+
+/// Utility to generate pt2pt sync vector function names.
+/// Maps operation names to OpenSHMEM pt2pt sync vector function names (e.g.,
+/// "wait_until_all_vector" -> "shmem_wait_until_all_vector"). Used for pt2pt
+/// sync vector operations that use simple naming.
+std::string getPt2ptSyncVectorFunctionName(StringRef baseName);
 
 } // namespace openshmem
 } // namespace mlir

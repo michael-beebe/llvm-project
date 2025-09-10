@@ -10,6 +10,7 @@
 #define MLIR_DIALECT_OPENSHMEM_IR_OPENSHEMMMEMORY_TD
 
 include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
+include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMTypes.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
 //===----------------------------------------------------------------------===//
@@ -36,7 +37,7 @@ def OpenSHMEM_MallocOp : OpenSHMEM_Op<"malloc", []> {
   let arguments = (ins Index:$size);
   
   let results = (outs 
-    OpenSHMEM_SymmetricMemRef:$ptr
+    MemRefOf<[AnyTypeOf<[I8, I16, I32, I64, F16, F32, F64, F128]>]>:$ptr
   );
   
   let assemblyFormat = "`(` $size `)` attr-dict `:` type($size) `->` "
@@ -61,7 +62,7 @@ def OpenSHMEM_FreeOp : OpenSHMEM_Op<"free", []> {
     ```
   }];
   
-  let arguments = (ins OpenSHMEM_SymmetricMemRef:$ptr);
+  let arguments = (ins SymmetricMemRef:$ptr);
   let assemblyFormat = "`(` $ptr `)` attr-dict `:` type($ptr)";
 }
 
@@ -89,12 +90,12 @@ def OpenSHMEM_ReallocOp : OpenSHMEM_Op<"realloc", []> {
   }];
 
   let arguments = (ins
-    OpenSHMEM_SymmetricMemRef:$ptr,
+    SymmetricMemRef:$ptr,
     Index:$size
   );
 
   let results = (outs 
-    OpenSHMEM_SymmetricMemRef:$retval
+    MemRefOf<[AnyTypeOf<[I8, I16, I32, I64, F16, F32, F64, F128]>]>:$retval
   );
 
   let assemblyFormat = "`(` $ptr `,` $size `)` attr-dict `:` "
@@ -130,7 +131,7 @@ def OpenSHMEM_AlignOp : OpenSHMEM_Op<"align", []> {
   );
 
   let results = (outs 
-    OpenSHMEM_SymmetricMemRef:$retval
+    MemRefOf<[AnyTypeOf<[I8, I16, I32, I64, F16, F32, F64, F128]>]>:$retval
   );
 
   let assemblyFormat = "`(` $alignment `,` $size `)` attr-dict `:` "
@@ -165,7 +166,7 @@ def OpenSHMEM_CallocOp : OpenSHMEM_Op<"calloc", []> {
   );
 
   let results = (outs 
-    OpenSHMEM_SymmetricMemRef:$retval
+    MemRefOf<[AnyTypeOf<[I8, I16, I32, I64, F16, F32, F64, F128]>]>:$retval
   );
 
   let assemblyFormat = "`(` $count `,` $size `)` attr-dict `:` "
@@ -182,16 +183,16 @@ def OpenSHMEM_OffsetOp : OpenSHMEM_Op<"offset", []> {
     Returns a symmetric pointer advanced by `offsetElems` elements of the
     underlying element type. This is the IR equivalent of `&base[offsetElems]`
     in C and preserves symmetric provenance. The result can be used anywhere
-    a `!openshmem.symmetric_memref<T>` is expected (e.g., RMA ops).
+    a memref with symmetric memory space is expected (e.g., RMA ops).
   }];
 
   let arguments = (ins
-    OpenSHMEM_SymmetricMemRef:$base,
+    SymmetricMemRef:$base,
     Index:$offsetElems
   );
 
   let results = (outs
-    OpenSHMEM_SymmetricMemRef:$result
+    SymmetricMemRef:$result
   );
 
   let assemblyFormat = "`(` $base `,` $offsetElems `)` attr-dict `:` "

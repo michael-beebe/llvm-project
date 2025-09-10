@@ -41,7 +41,8 @@ struct WaitUntilOpLowering
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, rewriter.getI32Type(), cmpValueType});
 
-    std::string funcName = getTypedFunctionName("wait_until", cmpValueType);
+    std::string funcName =
+        getPt2ptSyncSizedFunctionName("wait_until", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -79,7 +80,8 @@ struct WaitUntilAllOpLowering
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), cmpValueType});
 
-    std::string funcName = getTypedFunctionName("wait_until_all", cmpValueType);
+    std::string funcName =
+        getPt2ptSyncSizedFunctionName("wait_until_all", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -121,7 +123,8 @@ struct WaitUntilAnyOpLowering
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), cmpValueType});
 
-    std::string funcName = getTypedFunctionName("wait_until_any", cmpValueType);
+    std::string funcName =
+        getPt2ptSyncSizedFunctionName("wait_until_any", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -163,7 +166,7 @@ struct WaitUntilSomeOpLowering
                    cmpValueType});
 
     std::string funcName =
-        getTypedFunctionName("wait_until_some", cmpValueType);
+        getPt2ptSyncSizedFunctionName("wait_until_some", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -206,11 +209,9 @@ struct WaitUntilAllVectorOpLowering
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    // Vector operations use sized function names
-    // Get element type from ivars symmetric memref for sized naming
-    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    // Vector operations use simple naming without size suffixes
     std::string funcName =
-        getSizedFunctionName("wait_until_all_vector", elementType);
+        getPt2ptSyncVectorFunctionName("wait_until_all_vector");
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -253,10 +254,9 @@ struct WaitUntilAnyVectorOpLowering
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    // Vector operations use sized function names
-    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    // Vector operations use simple naming without size suffixes
     std::string funcName =
-        getSizedFunctionName("wait_until_any_vector", elementType);
+        getPt2ptSyncVectorFunctionName("wait_until_any_vector");
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -299,10 +299,9 @@ struct WaitUntilSomeVectorOpLowering
         sizeType,
         {ptrType, sizeType, ptrType, ptrType, rewriter.getI32Type(), ptrType});
 
-    // Vector operations use sized function names
-    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
+    // Vector operations use simple naming without size suffixes
     std::string funcName =
-        getSizedFunctionName("wait_until_some_vector", elementType);
+        getPt2ptSyncVectorFunctionName("wait_until_some_vector");
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -344,7 +343,7 @@ struct TestOpLowering : public ConvertOpToLLVMPattern<openshmem::TestOp> {
     auto funcType = LLVM::LLVMFunctionType::get(
         rewriter.getI32Type(), {ptrType, rewriter.getI32Type(), cmpValueType});
 
-    std::string funcName = getTypedFunctionName("test", cmpValueType);
+    std::string funcName = getPt2ptSyncSizedFunctionName("test", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -382,7 +381,8 @@ struct TestAllOpLowering : public ConvertOpToLLVMPattern<openshmem::TestAllOp> {
         rewriter.getI32Type(),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), cmpValueType});
 
-    std::string funcName = getTypedFunctionName("test_all", cmpValueType);
+    std::string funcName =
+        getPt2ptSyncSizedFunctionName("test_all", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -422,7 +422,8 @@ struct TestAnyOpLowering : public ConvertOpToLLVMPattern<openshmem::TestAnyOp> {
         sizeType,
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), cmpValueType});
 
-    std::string funcName = getTypedFunctionName("test_any", cmpValueType);
+    std::string funcName =
+        getPt2ptSyncSizedFunctionName("test_any", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -463,7 +464,8 @@ struct TestSomeOpLowering
         sizeType, {ptrType, sizeType, ptrType, ptrType, rewriter.getI32Type(),
                    cmpValueType});
 
-    std::string funcName = getTypedFunctionName("test_some", cmpValueType);
+    std::string funcName =
+        getPt2ptSyncSizedFunctionName("test_some", cmpValueType);
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -505,9 +507,8 @@ struct TestAllVectorOpLowering
         rewriter.getI32Type(),
         {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    // Vector operations use sized function names
-    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
-    std::string funcName = getSizedFunctionName("test_all_vector", elementType);
+    // Vector operations use simple naming without size suffixes
+    std::string funcName = getPt2ptSyncVectorFunctionName("test_all_vector");
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -550,9 +551,8 @@ struct TestAnyVectorOpLowering
     auto funcType = LLVM::LLVMFunctionType::get(
         sizeType, {ptrType, sizeType, ptrType, rewriter.getI32Type(), ptrType});
 
-    // Vector operations use sized function names
-    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
-    std::string funcName = getSizedFunctionName("test_any_vector", elementType);
+    // Vector operations use simple naming without size suffixes
+    std::string funcName = getPt2ptSyncVectorFunctionName("test_any_vector");
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
@@ -597,10 +597,8 @@ struct TestSomeVectorOpLowering
         sizeType,
         {ptrType, sizeType, ptrType, ptrType, rewriter.getI32Type(), ptrType});
 
-    // Vector operations use sized function names
-    Type elementType = getSymmetricMemRefElementType(adaptor.getIvars());
-    std::string funcName =
-        getSizedFunctionName("test_some_vector", elementType);
+    // Vector operations use simple naming without size suffixes
+    std::string funcName = getPt2ptSyncVectorFunctionName("test_some_vector");
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 

@@ -126,7 +126,7 @@ module {
 
     // Allocate symmetric memory
     %mem_size = arith.constant 40 : index
-    %sym_mem = openshmem.malloc(%mem_size) : index -> !openshmem.symmetric_memref<i32>
+    %sym_mem = openshmem.malloc(%mem_size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Allocate local memory
     %local_data = memref.alloc() : memref<10xi32>
@@ -151,14 +151,14 @@ module {
     // Perform communication
     %put_size = arith.constant 40 : index
     openshmem.putmem(%sym_mem, %local_data, %put_size, %target_global_pe) : 
-      !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+      memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
 
     // Synchronize within team after communication
     openshmem.team_sync(%pair_team) : !openshmem.team
     
     // Clean up
     memref.dealloc %local_data : memref<10xi32>
-    openshmem.free(%sym_mem) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%sym_mem) : memref<i32, #openshmem.symmetric_memory>
     openshmem.team_destroy(%pair_team) : !openshmem.team
     
     openshmem.finalize
@@ -179,7 +179,7 @@ module {
     
     // Allocate memory
     %mem_size = arith.constant 40 : index
-    %sym_mem = openshmem.malloc(%mem_size) : index -> !openshmem.symmetric_memref<i32>
+    %sym_mem = openshmem.malloc(%mem_size) : index -> memref<i32, #openshmem.symmetric_memory>
     %local_mem = memref.alloc() : memref<10xi32>
     
     // Team sync before RMA
@@ -188,14 +188,14 @@ module {
     // Perform typed RMA operation
     %nelems = arith.constant 10 : index
     %pe = arith.constant 1 : i32
-    openshmem.put(%sym_mem, %local_mem, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+    openshmem.put(%sym_mem, %local_mem, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
     
     // Team sync after RMA
     openshmem.team_sync(%strided_team) : !openshmem.team
     
     // Cleanup
     memref.dealloc %local_mem : memref<10xi32>
-    openshmem.free(%sym_mem) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%sym_mem) : memref<i32, #openshmem.symmetric_memory>
     openshmem.team_destroy(%strided_team) : !openshmem.team
     openshmem.finalize
     return
@@ -251,7 +251,7 @@ module {
     
     // Allocate symmetric memory
     %mem_size = arith.constant 4 : index
-    %sym_mem = openshmem.malloc(%mem_size) : index -> !openshmem.symmetric_memref<i32>
+    %sym_mem = openshmem.malloc(%mem_size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Team sync before P2P
     openshmem.team_sync(%world_team) : !openshmem.team
@@ -259,15 +259,15 @@ module {
     // Point-to-point put
     %value = arith.constant 42 : i32
     %pe = arith.constant 1 : i32
-    openshmem.p(%sym_mem, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.p(%sym_mem, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
     
     // Point-to-point get
-    %result = openshmem.g(%sym_mem, %pe) : !openshmem.symmetric_memref<i32>, i32 -> i32
+    %result = openshmem.g(%sym_mem, %pe) : memref<i32, #openshmem.symmetric_memory>, i32 -> i32
     
     // Team sync after P2P
     openshmem.team_sync(%world_team) : !openshmem.team
     
-    openshmem.free(%sym_mem) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%sym_mem) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }

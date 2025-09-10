@@ -9,10 +9,30 @@
 #ifndef MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMBASE_TD
 #define MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMBASE_TD
 
-include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.td"
-include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMTypes.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
-include "mlir/IR/BuiltinTypes.td"
+include "mlir/IR/AttrTypeBase.td"
+include "mlir/IR/OpBase.td"
+include "mlir/IR/EnumAttr.td"
+
+//===----------------------------------------------------------------------===//
+// OpenSHMEM Dialect Definition
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_Dialect : Dialect {
+  let name = "openshmem";
+  let cppNamespace = "::mlir::openshmem";
+  let description = [{
+    This dialect models the OpenSHMEM (Open Symmetric Hierarchical Memory) 
+    programming model. It provides operations for one-sided communication
+    and symmetric memory management in PGAS (Partitioned Global Address Space)
+    programming.
+
+    This dialect is under active development and is designed as a proof-of-concept
+    for representing OpenSHMEM operations in MLIR.
+  }];
+
+  let useDefaultAttributePrinterParser = 1;
+  let useDefaultTypePrinterParser = 1;
+}
 
 //===----------------------------------------------------------------------===//
 // Traits

@@ -49,18 +49,23 @@ LLVM::LLVMFuncOp getOrDefineFunction(ModuleOp &moduleOp,
 
 Value getMemRefDataPtr(Location loc, ConversionPatternRewriter &rewriter,
                        Value memref) {
-  // Assumes memref is a MemRef descriptor (struct), extract the pointer (field 0)
+  // Check if the memref is already a pointer (our OpenSHMEM conversion)
+  if (llvm::isa<LLVM::LLVMPointerType>(memref.getType())) {
+    return memref;
+  }
+  
+  // Otherwise, assume it's a MemRef descriptor (struct), extract the pointer (field 0)
   auto ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
   return rewriter.create<LLVM::ExtractValueOp>(loc, ptrType, memref, 0);
 }
 
 Type getSymmetricMemRefElementType(Value symmetricMemRef) {
-  auto symMemRefType =
-      llvm::dyn_cast<openshmem::SymmetricMemRefType>(symmetricMemRef.getType());
-  if (!symMemRefType) {
+  auto memRefType = llvm::dyn_cast<MemRefType>(symmetricMemRef.getType());
+  if (!memRefType || !memRefType.getMemorySpace() ||
+      !llvm::isa<openshmem::SymmetricMemorySpaceAttr>(memRefType.getMemorySpace())) {
     return nullptr;
   }
-  return symMemRefType.getElementType();
+  return memRefType.getElementType();
 }
 
 //===----------------------------------------------------------------------===//
@@ -106,7 +111,10 @@ std::string getSizedFunctionName(StringRef baseName, Type elementType) {
   // Map MLIR types to OpenSHMEM sized type names
   // Used for pt2pt sync operations that require sized names (especially vectors)
   // Note: OpenSHMEM only has int32 and int64 sized functions for sync operations
-  if (elementType.isInteger(64)) {
+  if (!elementType) {
+    // If element type is null, fall back to int32
+    funcName += "int32_";
+  } else if (elementType.isInteger(64)) {
     funcName += "int64_";
   } else if (elementType.isF64()) {
     // Double operations in pt2pt sync use int64 for storage
@@ -118,6 +126,78 @@ std::string getSizedFunctionName(StringRef baseName, Type elementType) {
   }
   
   funcName += baseName.str();
+  return funcName;
+}
+
+std::string getRMASizedFunctionName(StringRef baseName, Type elementType) {
+  std::string funcName = "shmem_";
+  
+  // Map MLIR types to OpenSHMEM RMA sized function names
+  // These use the pattern: shmem_put32, shmem_put64, shmem_get32, etc.
+  if (elementType.isInteger(8)) {
+    funcName += baseName.str() + "8";
+  } else if (elementType.isInteger(16)) {
+    funcName += baseName.str() + "16";
+  } else if (elementType.isInteger(32)) {
+    funcName += baseName.str() + "32";
+  } else if (elementType.isInteger(64)) {
+    funcName += baseName.str() + "64";
+  } else if (elementType.isF16()) {
+    funcName += baseName.str() + "16";
+  } else if (elementType.isF32()) {
+    funcName += baseName.str() + "32";
+  } else if (elementType.isF64()) {
+    funcName += baseName.str() + "64";
+  } else if (elementType.isF128()) {
+    funcName += baseName.str() + "128";
+  } else {
+    // For unsupported types, fall back to generic name
+    funcName = "shmem_" + baseName.str();
+    return funcName;
+  }
+  
+  return funcName;
+}
+
+std::string getPt2ptSyncSizedFunctionName(StringRef baseName, Type cmpValueType) {
+  std::string funcName = "shmem_";
+  
+  // Map MLIR types to OpenSHMEM pt2pt sync sized function names
+  // These use the pattern: shmem_wait_until32, shmem_wait_until64, etc.
+  if (!cmpValueType) {
+    // If cmp value type is null, fall back to 32
+    funcName += baseName.str() + "32";
+  } else if (cmpValueType.isInteger(8)) {
+    funcName += baseName.str() + "8";
+  } else if (cmpValueType.isInteger(16)) {
+    funcName += baseName.str() + "16";
+  } else if (cmpValueType.isInteger(32)) {
+    funcName += baseName.str() + "32";
+  } else if (cmpValueType.isInteger(64)) {
+    funcName += baseName.str() + "64";
+  } else if (cmpValueType.isF16()) {
+    funcName += baseName.str() + "16";
+  } else if (cmpValueType.isF32()) {
+    funcName += baseName.str() + "32";
+  } else if (cmpValueType.isF64()) {
+    funcName += baseName.str() + "64";
+  } else if (cmpValueType.isF128()) {
+    funcName += baseName.str() + "128";
+  } else {
+    // For unsupported types, fall back to 32
+    funcName += baseName.str() + "32";
+  }
+  
+  return funcName;
+}
+
+std::string getPt2ptSyncVectorFunctionName(StringRef baseName) {
+  std::string funcName = "shmem_";
+  
+  // Vector operations use simple naming without size suffixes
+  // These use the pattern: shmem_wait_until_all_vector, shmem_wait_until_any_vector, etc.
+  funcName += baseName.str();
+  
   return funcName;
 }
 

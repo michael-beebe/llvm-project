@@ -40,14 +40,12 @@ echo -e "\n===== [ Testing Atomic Lowering ] ====="
 if "$MLIR_OPT" "$ATOMICS_TEST_FILE" \
     --convert-openshmem-to-llvm \
     --convert-arith-to-llvm \
-    --finalize-memref-to-llvm \
     --convert-func-to-llvm \
     --reconcile-unrealized-casts \
     -o "$ATOMICS_OUT" && \
    "$MLIR_OPT" "$ATOMICS_TEST_FILE" \
     --convert-openshmem-to-llvm \
     --convert-arith-to-llvm \
-    --finalize-memref-to-llvm \
     --convert-func-to-llvm \
     --reconcile-unrealized-casts \
     | "$FILECHECK" "$ATOMICS_TEST_FILE"; then

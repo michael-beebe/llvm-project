@@ -9,7 +9,7 @@
 #ifndef MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMTYPES_TD
 #define MLIR_DIALECT_OPENSHMEM_IR_OPENSHMEMTYPES_TD
 
-include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEM.td"
+include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMBase.td"
 include "mlir/IR/AttrTypeBase.td"
 
 //===----------------------------------------------------------------------===//
@@ -37,28 +37,15 @@ def OpenSHMEM_PE : OpenSHMEM_Type<"PE", "pe"> {
 }
 
 //===----------------------------------------------------------------------===//
-// Symmetric memory type
-//
-// TODO: should we add a way to represent shape?
+// Type constraints for symmetric memory
 //===----------------------------------------------------------------------===//
 
-def OpenSHMEM_SymmetricMemRef : OpenSHMEM_Type<"SymmetricMemRef", "symmetric_memref"> {
-  let summary = "Symmetric memory reference (distinct from memref)";
-  let description = [{
-    Represents a reference to symmetric memory that is accessible from all PEs.
-    This type is distinct from standard memref: it is only produced by openshmem.malloc
-    and is required for all OpenSHMEM operations that use symmetric memory
-    (e.g., putmem, getmem, free).
-    
-    Symmetric memory has the same virtual address on all PEs and can be used in
-    one-sided communication operations .Only values of this type are valid for
-    OpenSHMEM symmetric memory operations.
-}];
-
-  let parameters = (ins "Type" : $elementType);
-
-  let assemblyFormat = "`<` $elementType `>`";
-}
+// Constraint for memref types with symmetric memory space
+def SymmetricMemRef : TypeConstraint<
+  CPred<"llvm::isa<MemRefType>($_self) && "
+        "llvm::cast<MemRefType>($_self).getMemorySpace() && "
+        "llvm::isa<::mlir::openshmem::SymmetricMemorySpaceAttr>(llvm::cast<MemRefType>($_self).getMemorySpace())">,
+  "memref with symmetric memory space">;
 
 //===----------------------------------------------------------------------===//
 // Team type

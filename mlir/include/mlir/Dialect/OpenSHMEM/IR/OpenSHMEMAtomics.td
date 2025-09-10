@@ -35,7 +35,7 @@ def OpenSHMEM_AtomicFetchOp : OpenSHMEM_Op<"atomic_fetch", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     I32:$pe
   );
   
@@ -64,7 +64,7 @@ def OpenSHMEM_CtxAtomicFetchOp : OpenSHMEM_Op<"ctx_atomic_fetch", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     I32:$pe
   );
   
@@ -91,7 +91,7 @@ def OpenSHMEM_AtomicSetOp : OpenSHMEM_Op<"atomic_set", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -117,7 +117,7 @@ def OpenSHMEM_CtxAtomicSetOp : OpenSHMEM_Op<"ctx_atomic_set", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -143,7 +143,7 @@ def OpenSHMEM_AtomicCompareSwapOp : OpenSHMEM_Op<"atomic_compare_swap", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$cond,
     AnyType:$value,
     I32:$pe
@@ -176,7 +176,7 @@ def OpenSHMEM_CtxAtomicCompareSwapOp :
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$cond,
     AnyType:$value,
     I32:$pe
@@ -206,7 +206,7 @@ def OpenSHMEM_AtomicSwapOp : OpenSHMEM_Op<"atomic_swap", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -235,7 +235,7 @@ def OpenSHMEM_CtxAtomicSwapOp : OpenSHMEM_Op<"ctx_atomic_swap", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -264,7 +264,7 @@ def OpenSHMEM_AtomicFetchIncOp : OpenSHMEM_Op<"atomic_fetch_inc", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     I32:$pe
   );
 
@@ -291,7 +291,7 @@ def OpenSHMEM_CtxAtomicFetchIncOp : OpenSHMEM_Op<"ctx_atomic_fetch_inc", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     I32:$pe
   );
 
@@ -318,7 +318,7 @@ def OpenSHMEM_AtomicIncOp : OpenSHMEM_Op<"atomic_inc", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     I32:$pe
   );
 
@@ -343,7 +343,7 @@ def OpenSHMEM_CtxAtomicIncOp : OpenSHMEM_Op<"ctx_atomic_inc", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     I32:$pe
   );
 
@@ -368,7 +368,7 @@ def OpenSHMEM_AtomicFetchAddOp : OpenSHMEM_Op<"atomic_fetch_add", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -398,7 +398,7 @@ def OpenSHMEM_CtxAtomicFetchAddOp : OpenSHMEM_Op<"ctx_atomic_fetch_add", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -426,7 +426,7 @@ def OpenSHMEM_AtomicAddOp : OpenSHMEM_Op<"atomic_add", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -452,7 +452,7 @@ def OpenSHMEM_CtxAtomicAddOp : OpenSHMEM_Op<"ctx_atomic_add", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -478,7 +478,7 @@ def OpenSHMEM_AtomicFetchAndOp : OpenSHMEM_Op<"atomic_fetch_and", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -508,7 +508,7 @@ def OpenSHMEM_CtxAtomicFetchAndOp : OpenSHMEM_Op<"ctx_atomic_fetch_and", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -537,7 +537,7 @@ def OpenSHMEM_AtomicFetchOrOp : OpenSHMEM_Op<"atomic_fetch_or", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -567,7 +567,7 @@ def OpenSHMEM_CtxAtomicFetchOrOp : OpenSHMEM_Op<"ctx_atomic_fetch_or", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -595,7 +595,7 @@ def OpenSHMEM_AtomicOrOp : OpenSHMEM_Op<"atomic_or", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -621,7 +621,7 @@ def OpenSHMEM_CtxAtomicOrOp : OpenSHMEM_Op<"ctx_atomic_or", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -647,7 +647,7 @@ def OpenSHMEM_AtomicFetchXorOp : OpenSHMEM_Op<"atomic_fetch_xor", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -677,7 +677,7 @@ def OpenSHMEM_CtxAtomicFetchXorOp : OpenSHMEM_Op<"ctx_atomic_fetch_xor", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -705,7 +705,7 @@ def OpenSHMEM_AtomicXorOp : OpenSHMEM_Op<"atomic_xor", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -731,7 +731,7 @@ def OpenSHMEM_CtxAtomicXorOp : OpenSHMEM_Op<"ctx_atomic_xor", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -747,8 +747,11 @@ def OpenSHMEM_CtxAtomicXorOp : OpenSHMEM_Op<"ctx_atomic_xor", []> {
 def OpenSHMEM_AtomicFetchNbiOp : OpenSHMEM_Op<"atomic_fetch_nbi", []> {
   let summary = "Atomic fetch-nbi operation (generic)";
   let description = [{
-    Atomically fetches the value of a remote data object and performs a bitwise
-    AND operation with a given value.
+    Perform a nonblocking fetch of a value atomically from a remote
+    data object. This routine returns after initiating the operation.
+    The operation is considered complete after a subsequent call to
+    shmem_quiet. At the completion of shmem_quiet, contents of the source data
+    object from PE has been fetched into fetch local data object.
 
     Signature:
     ```c
@@ -758,7 +761,7 @@ def OpenSHMEM_AtomicFetchNbiOp : OpenSHMEM_Op<"atomic_fetch_nbi", []> {
 
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     I32:$pe
   );
 
@@ -773,8 +776,11 @@ def OpenSHMEM_AtomicFetchNbiOp : OpenSHMEM_Op<"atomic_fetch_nbi", []> {
 def OpenSHMEM_CtxAtomicFetchNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_nbi", []> {
   let summary = "Atomic fetch-nbi operation with context";
   let description = [{
-    Atomically fetches the value of a remote data object and performs a bitwise
-    AND operation with a given value.
+    Perform a nonblocking fetch of a value atomically from a remote
+    data object using a context. This routine returns after initiating
+    the operation. The operation is considered complete after a subsequent
+    call to shmem_quiet. At the completion of shmem_quiet, contents of the
+    source data object from PE has been fetched into fetch local data object.
 
     Signature:
     ```c
@@ -786,7 +792,7 @@ def OpenSHMEM_CtxAtomicFetchNbiOp : OpenSHMEM_Op<"ctx_atomic_fetch_nbi", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     I32:$pe
   );
 
@@ -816,7 +822,7 @@ def OpenSHMEM_AtomicCompareSwapNbiOp :
 
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$cond,
     AnyType:$value,
     I32:$pe
@@ -849,7 +855,7 @@ def OpenSHMEM_CtxAtomicCompareSwapNbiOp :
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$cond,
     AnyType:$value,
     I32:$pe
@@ -878,7 +884,7 @@ def OpenSHMEM_AtomicSwapNbiOp : OpenSHMEM_Op<"atomic_swap_nbi", []> {
 
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -908,7 +914,7 @@ def OpenSHMEM_CtxAtomicSwapNbiOp : OpenSHMEM_Op<"ctx_atomic_swap_nbi", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -936,7 +942,7 @@ def OpenSHMEM_AtomicFetchIncNbiOp : OpenSHMEM_Op<"atomic_fetch_inc_nbi", []> {
 
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     I32:$pe
   );
 
@@ -964,7 +970,7 @@ def OpenSHMEM_CtxAtomicFetchIncNbiOp :
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     I32:$pe
   );
 
@@ -991,7 +997,7 @@ def OpenSHMEM_AtomicFetchAddNbiOp : OpenSHMEM_Op<"atomic_fetch_add_nbi", []> {
 
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1022,7 +1028,7 @@ def OpenSHMEM_CtxAtomicFetchAddNbiOp :
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1051,7 +1057,7 @@ def OpenSHMEM_AtomicFetchAndNbiOp : OpenSHMEM_Op<"atomic_fetch_and_nbi", []> {
   
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1082,7 +1088,7 @@ def OpenSHMEM_CtxAtomicFetchAndNbiOp :
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1111,7 +1117,7 @@ def OpenSHMEM_AtomicFetchOrNbiOp : OpenSHMEM_Op<"atomic_fetch_or_nbi", []> {
 
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1142,7 +1148,7 @@ def OpenSHMEM_CtxAtomicFetchOrNbiOp :
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1171,7 +1177,7 @@ def OpenSHMEM_AtomicFetchXorNbiOp : OpenSHMEM_Op<"atomic_fetch_xor_nbi", []> {
 
   let arguments = (ins 
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1201,7 +1207,7 @@ def OpenSHMEM_CtxAtomicFetchXorNbiOp :
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$fetch,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );

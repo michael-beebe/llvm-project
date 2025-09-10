@@ -29,11 +29,11 @@ def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
     
     This is the generic typed equivalent of putmem, providing type safety
     and better performance for known data types. The element type is
-    inferred from the symmetric memref type.
+    inferred from the memref type with symmetric memory space.
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - source: Source local memory reference on the calling PE (memref<T>)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
@@ -48,7 +48,7 @@ def OpenSHMEM_PutOp : OpenSHMEM_Op<"put", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -75,7 +75,7 @@ def OpenSHMEM_CtxPutOp : OpenSHMEM_Op<"ctx_put", []> {
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - source: Source local memory reference on the calling PE (memref<T>)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
@@ -92,7 +92,7 @@ def OpenSHMEM_CtxPutOp : OpenSHMEM_Op<"ctx_put", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -122,7 +122,7 @@ def OpenSHMEM_PutNbiOp : OpenSHMEM_Op<"put_nbi", []> {
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - source: Source local memory reference on the calling PE (memref<T>)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
@@ -137,7 +137,7 @@ def OpenSHMEM_PutNbiOp : OpenSHMEM_Op<"put_nbi", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -165,7 +165,7 @@ def OpenSHMEM_CtxPutNbiOp : OpenSHMEM_Op<"ctx_put_nbi", []> {
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - source: Source local memory reference on the calling PE (memref<T>)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
@@ -182,7 +182,7 @@ def OpenSHMEM_CtxPutNbiOp : OpenSHMEM_Op<"ctx_put_nbi", []> {
 
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -207,7 +207,7 @@ def OpenSHMEM_Put8Op : OpenSHMEM_Op<"put8", []> {
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i8>)
+      (memref<i8, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i8>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -219,7 +219,7 @@ def OpenSHMEM_Put8Op : OpenSHMEM_Op<"put8", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -240,7 +240,7 @@ def OpenSHMEM_Put16Op : OpenSHMEM_Op<"put16", []> {
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i16>)
+      (memref<i16, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i16>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -252,7 +252,7 @@ def OpenSHMEM_Put16Op : OpenSHMEM_Op<"put16", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -273,7 +273,7 @@ def OpenSHMEM_Put32Op : OpenSHMEM_Op<"put32", []> {
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i32>)
+      (memref<i32, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i32>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -285,7 +285,7 @@ def OpenSHMEM_Put32Op : OpenSHMEM_Op<"put32", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -306,7 +306,7 @@ def OpenSHMEM_Put64Op : OpenSHMEM_Op<"put64", []> {
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i64>)
+      (memref<i64, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i64>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -318,7 +318,7 @@ def OpenSHMEM_Put64Op : OpenSHMEM_Op<"put64", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -339,7 +339,7 @@ def OpenSHMEM_Put128Op : OpenSHMEM_Op<"put128", []> {
     
     Arguments:
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<f128> or vector type)
+      (memref<f128, #openshmem.symmetric_memory> or vector type)
     - source: Source local memory reference on the calling PE (memref<f128>
       or vector type)
     - nelems: Number of bytes to transfer (index)
@@ -352,7 +352,7 @@ def OpenSHMEM_Put128Op : OpenSHMEM_Op<"put128", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -379,7 +379,7 @@ def OpenSHMEM_CtxPut8Op : OpenSHMEM_Op<"ctx_put8", []> {
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i8>)
+      (memref<i8, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i8>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -393,7 +393,7 @@ def OpenSHMEM_CtxPut8Op : OpenSHMEM_Op<"ctx_put8", []> {
 
   let arguments = (ins
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -416,7 +416,7 @@ def OpenSHMEM_CtxPut16Op : OpenSHMEM_Op<"ctx_put16", []> {
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i16>)
+      (memref<i16, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i16>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -430,7 +430,7 @@ def OpenSHMEM_CtxPut16Op : OpenSHMEM_Op<"ctx_put16", []> {
 
   let arguments = (ins
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -453,7 +453,7 @@ def OpenSHMEM_CtxPut32Op : OpenSHMEM_Op<"ctx_put32", []> {
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i32>)
+      (memref<i32, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i32>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -467,7 +467,7 @@ def OpenSHMEM_CtxPut32Op : OpenSHMEM_Op<"ctx_put32", []> {
 
   let arguments = (ins
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -490,7 +490,7 @@ def OpenSHMEM_CtxPut64Op : OpenSHMEM_Op<"ctx_put64", []> {
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i64>)
+      (memref<i64, #openshmem.symmetric_memory>)
     - source: Source local memory reference on the calling PE (memref<i64>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -504,7 +504,7 @@ def OpenSHMEM_CtxPut64Op : OpenSHMEM_Op<"ctx_put64", []> {
 
   let arguments = (ins
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -527,7 +527,7 @@ def OpenSHMEM_CtxPut128Op : OpenSHMEM_Op<"ctx_put128", []> {
     Arguments:
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<f128> or vector type)
+      (memref<f128, #openshmem.symmetric_memory> or vector type)
     - source: Source local memory reference on the calling PE (memref<f128>
       or vector type)
     - nelems: Number of bytes to transfer (index)
@@ -542,7 +542,7 @@ def OpenSHMEM_CtxPut128Op : OpenSHMEM_Op<"ctx_put128", []> {
 
   let arguments = (ins
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyMemRef:$source,
     Index:$nelems,
     I32:$pe
@@ -569,7 +569,7 @@ def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
     
     Arguments:
     - dest: Destination symmetric memory reference on the target 
-      PE (!openshmem.symmetric_memref<T>)
+      PE (memref<T, #openshmem.symmetric_memory>)
     - src: Source local memory reference on the calling PE (any type)
     - size: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -584,7 +584,7 @@ def OpenSHMEM_PutmemOp : OpenSHMEM_Op<"putmem", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$src,
     Index:$size,
     I32:$pe
@@ -607,7 +607,7 @@ def OpenSHMEM_PutmemNbiOp : OpenSHMEM_Op<"putmem_nbi", []> {
 
     Arguments:
     - dest: Destination symmetric memory reference on the target
-      PE (!openshmem.symmetric_memref<T>)
+      PE (memref<T, #openshmem.symmetric_memory>)
     - src: Source local memory reference on the calling PE (any type)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
@@ -622,7 +622,7 @@ def OpenSHMEM_PutmemNbiOp : OpenSHMEM_Op<"putmem_nbi", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$src,
     Index:$nelems,
     I32:$pe
@@ -653,7 +653,7 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<T>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -668,7 +668,7 @@ def OpenSHMEM_GetOp : OpenSHMEM_Op<"get", []> {
 
   let arguments = (ins 
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -691,7 +691,7 @@ def OpenSHMEM_CtxGetOp : OpenSHMEM_Op<"ctx_get", []> {
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<T>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -708,7 +708,7 @@ def OpenSHMEM_CtxGetOp : OpenSHMEM_Op<"ctx_get", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -731,7 +731,7 @@ def OpenSHMEM_GetNbiOp : OpenSHMEM_Op<"get_nbi", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<T>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -746,7 +746,7 @@ def OpenSHMEM_GetNbiOp : OpenSHMEM_Op<"get_nbi", []> {
 
   let arguments = (ins 
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -770,7 +770,7 @@ def OpenSHMEM_CtxGetNbiOp : OpenSHMEM_Op<"ctx_get_nbi", []> {
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<T>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T> where T is a supported RMA type)
+      (memref<T, #openshmem.symmetric_memory> where T is a supported RMA type)
     - nelems: Number of elements to transfer (index)
     - pe: Target PE number (i32)
     
@@ -787,7 +787,7 @@ def OpenSHMEM_CtxGetNbiOp : OpenSHMEM_Op<"ctx_get_nbi", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -813,7 +813,7 @@ def OpenSHMEM_Get8Op : OpenSHMEM_Op<"get8", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i8>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i8>)
+      (memref<i8, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -825,7 +825,7 @@ def OpenSHMEM_Get8Op : OpenSHMEM_Op<"get8", []> {
 
   let arguments = (ins 
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -847,7 +847,7 @@ def OpenSHMEM_Get16Op : OpenSHMEM_Op<"get16", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i16>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i16>)
+      (memref<i16, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -859,7 +859,7 @@ def OpenSHMEM_Get16Op : OpenSHMEM_Op<"get16", []> {
 
   let arguments = (ins 
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -881,7 +881,7 @@ def OpenSHMEM_Get32Op : OpenSHMEM_Op<"get32", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i32>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i32>)
+      (memref<i32, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -893,7 +893,7 @@ def OpenSHMEM_Get32Op : OpenSHMEM_Op<"get32", []> {
 
   let arguments = (ins 
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -915,7 +915,7 @@ def OpenSHMEM_Get64Op : OpenSHMEM_Op<"get64", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (memref<i64>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i64>)
+      (memref<i64, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -927,7 +927,7 @@ def OpenSHMEM_Get64Op : OpenSHMEM_Op<"get64", []> {
 
   let arguments = (ins 
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -950,7 +950,7 @@ def OpenSHMEM_Get128Op : OpenSHMEM_Op<"get128", []> {
     - dest: Destination local memory reference on the calling PE (memref<f128>
       or vector type)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<f128> or vector type)
+      (memref<f128, #openshmem.symmetric_memory> or vector type)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -962,7 +962,7 @@ def OpenSHMEM_Get128Op : OpenSHMEM_Op<"get128", []> {
 
   let arguments = (ins 
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -989,7 +989,7 @@ def OpenSHMEM_CtxGet8Op : OpenSHMEM_Op<"ctx_get8", []> {
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i8>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i8>)
+      (memref<i8, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -1003,7 +1003,7 @@ def OpenSHMEM_CtxGet8Op : OpenSHMEM_Op<"ctx_get8", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -1026,7 +1026,7 @@ def OpenSHMEM_CtxGet16Op : OpenSHMEM_Op<"ctx_get16", []> {
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i16>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i16>)
+      (memref<i16, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -1040,7 +1040,7 @@ def OpenSHMEM_CtxGet16Op : OpenSHMEM_Op<"ctx_get16", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -1063,7 +1063,7 @@ def OpenSHMEM_CtxGet32Op : OpenSHMEM_Op<"ctx_get32", []> {
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i32>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i32>)
+      (memref<i32, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -1077,7 +1077,7 @@ def OpenSHMEM_CtxGet32Op : OpenSHMEM_Op<"ctx_get32", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -1100,7 +1100,7 @@ def OpenSHMEM_CtxGet64Op : OpenSHMEM_Op<"ctx_get64", []> {
     - ctx: OpenSHMEM context handle (!openshmem.ctx)
     - dest: Destination local memory reference on the calling PE (memref<i64>)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<i64>)
+      (memref<i64, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -1114,7 +1114,7 @@ def OpenSHMEM_CtxGet64Op : OpenSHMEM_Op<"ctx_get64", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -1138,7 +1138,7 @@ def OpenSHMEM_CtxGet128Op : OpenSHMEM_Op<"ctx_get128", []> {
     - dest: Destination local memory reference on the calling PE (memref<f128>
       or vector type)
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<f128> or vector type)
+      (memref<f128, #openshmem.symmetric_memory> or vector type)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -1152,7 +1152,7 @@ def OpenSHMEM_CtxGet128Op : OpenSHMEM_Op<"ctx_get128", []> {
   let arguments = (ins 
     OpenSHMEM_Ctx:$ctx,
     AnyMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$pe
   );
@@ -1179,7 +1179,7 @@ def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (any type)
     - src: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T>)
+      (memref<T, #openshmem.symmetric_memory>)
     - size: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
     
@@ -1194,7 +1194,7 @@ def OpenSHMEM_GetmemOp : OpenSHMEM_Op<"getmem", []> {
 
   let arguments = (ins
     AnyType:$dest,
-    OpenSHMEM_SymmetricMemRef:$src,
+    SymmetricMemRef:$src,
     Index:$size,
     I32:$pe
   );
@@ -1217,7 +1217,7 @@ def OpenSHMEM_GetmemNbiOp : OpenSHMEM_Op<"getmem_nbi", []> {
     Arguments:
     - dest: Destination local memory reference on the calling PE (any type)
     - src: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T>)
+      (memref<T, #openshmem.symmetric_memory>)
     - nelems: Number of bytes to transfer (index)
     - pe: Target PE number (i32)
 
@@ -1232,7 +1232,7 @@ def OpenSHMEM_GetmemNbiOp : OpenSHMEM_Op<"getmem_nbi", []> {
 
   let arguments = (ins
     AnyType:$dest,
-    OpenSHMEM_SymmetricMemRef:$src,
+    SymmetricMemRef:$src,
     Index:$nelems,
     I32:$pe
   );
@@ -1264,7 +1264,7 @@ def OpenSHMEM_POp : OpenSHMEM_Op<"p", []> {
   }];
 
   let arguments = (ins
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1297,7 +1297,7 @@ def OpenSHMEM_CtxPOp : OpenSHMEM_Op<"ctx_p", []> {
 
   let arguments = (ins
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$dest,
+    SymmetricMemRef:$dest,
     AnyType:$value,
     I32:$pe
   );
@@ -1319,7 +1319,7 @@ def OpenSHMEM_GOp : OpenSHMEM_Op<"g", []> {
 
     Arguments:
     - source: Source symmetric memory reference on the target PE
-      (!openshmem.symmetric_memref<T>)
+      (memref<T, #openshmem.symmetric_memory>)
     - pe: Target PE number
 
     Signature:
@@ -1329,7 +1329,7 @@ def OpenSHMEM_GOp : OpenSHMEM_Op<"g", []> {
   }];
 
   let arguments = (ins
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     I32:$pe
   );
 
@@ -1363,7 +1363,7 @@ def OpenSHMEM_CtxGOp : OpenSHMEM_Op<"ctx_g", []> {
 
   let arguments = (ins
     OpenSHMEM_Ctx:$ctx,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$source,
     I32:$pe
   );
 

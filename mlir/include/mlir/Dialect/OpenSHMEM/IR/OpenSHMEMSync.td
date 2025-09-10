@@ -63,7 +63,7 @@ def OpenSHMEM_BarrierOp : OpenSHMEM_Op<"barrier", []> {
     I32 : $pe_start, 
     I32 : $log_pe_stride, 
     I32 : $pe_size, 
-    OpenSHMEM_SymmetricMemRef : $psync
+    SymmetricMemRef : $psync
   );
   let assemblyFormat = "`(` $pe_start `,` $log_pe_stride `,` $pe_size `,`"
   " $psync `)` attr-dict `:` "

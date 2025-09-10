@@ -13,15 +13,15 @@ module {
     %pe = arith.constant 1 : i32 // Target PE
 
     // Allocate symmetric memory for dest
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for src
     %src = memref.alloc() : memref<10xi32>
 
     // Perform putmem operation
-    openshmem.putmem(%dest, %src, %size, %pe) : !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+    openshmem.putmem(%dest, %src, %size, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
 
     // Free symmetric memory
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
 
     // Finalize OpenSHMEM
     openshmem.finalize
@@ -39,10 +39,10 @@ module {
     // Allocate local memory for dest
     %dest = memref.alloc() : memref<10xi32>
     // Allocate symmetric memory for src
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Perform getmem operation
-    openshmem.getmem(%dest, %src, %size, %pe) : memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.getmem(%dest, %src, %size, %pe) : memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -54,11 +54,11 @@ module {
     %nelems = arith.constant 10 : index
     %size = arith.constant 40 : index
     %pe = arith.constant 1 : i32
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     %src = memref.alloc() : memref<10xi32>
-    openshmem.putmem_nbi(%dest, %src, %size, %pe) : !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+    openshmem.putmem_nbi(%dest, %src, %size, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
     openshmem.quiet
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -71,10 +71,10 @@ module {
     %size = arith.constant 40 : index
     %pe = arith.constant 1 : i32
     %dest = memref.alloc() : memref<10xi32>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-    openshmem.getmem_nbi(%dest, %src, %size, %pe) : memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+    openshmem.getmem_nbi(%dest, %src, %size, %pe) : memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
     openshmem.quiet
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -89,14 +89,14 @@ module {
     %size = arith.constant 40 : index // 10 * 4 bytes
     
     // Allocate symmetric memory for dest (i32 type)
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for src
     %src = memref.alloc() : memref<10xi32>
     
     // Perform typed put operation
-    openshmem.put(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+    openshmem.put(%dest, %src, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -111,14 +111,14 @@ module {
     %size = arith.constant 80 : index // 10 * 8 bytes
     
     // Allocate symmetric memory for dest (i64 type)
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for src
     %src = memref.alloc() : memref<10xi64>
     
     // Perform typed put operation
-    openshmem.put(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<i64>, memref<10xi64>, index, i32
+    openshmem.put(%dest, %src, %nelems, %pe) : memref<i64, #openshmem.symmetric_memory>, memref<10xi64>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -132,14 +132,14 @@ module {
     %size = arith.constant 40 : index // 10 * 4 bytes
     
     // Allocate symmetric memory for dest (f32 type)
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     // Allocate local memory for src
     %src = memref.alloc() : memref<10xf32>
     
     // Perform typed put operation
-    openshmem.put(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<f32>, memref<10xf32>, index, i32
+    openshmem.put(%dest, %src, %nelems, %pe) : memref<f32, #openshmem.symmetric_memory>, memref<10xf32>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -154,15 +154,15 @@ module {
     %size = arith.constant 40 : index
     
     // Allocate symmetric memory for dest (f32 type)
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     // Allocate local memory for src
     %src = memref.alloc() : memref<10xf32>
     
     // Perform non-blocking typed put operation
-    openshmem.put_nbi(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<f32>, memref<10xf32>, index, i32
+    openshmem.put_nbi(%dest, %src, %nelems, %pe) : memref<f32, #openshmem.symmetric_memory>, memref<10xf32>, index, i32
     
     openshmem.quiet
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -177,14 +177,14 @@ module {
     %size = arith.constant 10 : index // 10 bytes for put8
     
     // Allocate symmetric memory for dest (i8 type)
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i8>
+    %dest = openshmem.malloc(%size) : index -> memref<i8, #openshmem.symmetric_memory>
     // Allocate local memory for src
     %src = memref.alloc() : memref<10xi8>
     
     // Perform sized put operations
-    openshmem.put8(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<i8>, memref<10xi8>, index, i32
+    openshmem.put8(%dest, %src, %nelems, %pe) : memref<i8, #openshmem.symmetric_memory>, memref<10xi8>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i8>
+    openshmem.free(%dest) : memref<i8, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -197,12 +197,12 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 20 : index // 10 * 2 bytes
     
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i16>
+    %dest = openshmem.malloc(%size) : index -> memref<i16, #openshmem.symmetric_memory>
     %src = memref.alloc() : memref<10xi16>
     
-    openshmem.put16(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<i16>, memref<10xi16>, index, i32
+    openshmem.put16(%dest, %src, %nelems, %pe) : memref<i16, #openshmem.symmetric_memory>, memref<10xi16>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i16>
+    openshmem.free(%dest) : memref<i16, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -215,12 +215,12 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 40 : index // 10 * 4 bytes
     
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     %src = memref.alloc() : memref<10xi32>
     
-    openshmem.put32(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+    openshmem.put32(%dest, %src, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -233,12 +233,12 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 80 : index // 10 * 8 bytes
     
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     %src = memref.alloc() : memref<10xi64>
     
-    openshmem.put64(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<i64>, memref<10xi64>, index, i32
+    openshmem.put64(%dest, %src, %nelems, %pe) : memref<i64, #openshmem.symmetric_memory>, memref<10xi64>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -251,12 +251,12 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 160 : index // 10 * 16 bytes
     
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f128>
+    %dest = openshmem.malloc(%size) : index -> memref<f128, #openshmem.symmetric_memory>
     %src = memref.alloc() : memref<10xf128>
     
-    openshmem.put128(%dest, %src, %nelems, %pe) : !openshmem.symmetric_memref<f128>, memref<10xf128>, index, i32
+    openshmem.put128(%dest, %src, %nelems, %pe) : memref<f128, #openshmem.symmetric_memory>, memref<10xf128>, index, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f128>
+    openshmem.free(%dest) : memref<f128, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -270,9 +270,9 @@ module {
     %nelems = arith.constant 10 : index
     %pe = arith.constant 1 : i32
     %size = arith.constant 40 : index
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     %src = memref.alloc() : memref<10xi32>
-    openshmem.ctx_put(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, memref<10xi32>, index, i32
+    openshmem.ctx_put(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -289,10 +289,10 @@ module {
     // Allocate local memory for dest (i32 type)
     %dest = memref.alloc() : memref<10xi32>
     // Allocate symmetric memory for src
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Perform typed get operation
-    openshmem.get(%dest, %src, %nelems, %pe) : memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.get(%dest, %src, %nelems, %pe) : memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -308,8 +308,8 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 40 : index
     %dest = memref.alloc() : memref<10xi32>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-    openshmem.ctx_get(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+    openshmem.ctx_get(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -324,10 +324,10 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 40 : index
     %dest = memref.alloc() : memref<10xi32>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-    openshmem.get_nbi(%dest, %src, %nelems, %pe) : memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+    openshmem.get_nbi(%dest, %src, %nelems, %pe) : memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
     openshmem.quiet
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -343,8 +343,8 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 40 : index
     %dest = memref.alloc() : memref<10xi32>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-    openshmem.ctx_get_nbi(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+    openshmem.ctx_get_nbi(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -359,9 +359,9 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 10 : index // 10 bytes for get8
     %dest = memref.alloc() : memref<10xi8>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i8>
-    openshmem.get8(%dest, %src, %nelems, %pe) : memref<10xi8>, !openshmem.symmetric_memref<i8>, index, i32
-    openshmem.free(%src) : !openshmem.symmetric_memref<i8>
+    %src = openshmem.malloc(%size) : index -> memref<i8, #openshmem.symmetric_memory>
+    openshmem.get8(%dest, %src, %nelems, %pe) : memref<10xi8>, memref<i8, #openshmem.symmetric_memory>, index, i32
+    openshmem.free(%src) : memref<i8, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -374,9 +374,9 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 20 : index // 10 * 2 bytes
     %dest = memref.alloc() : memref<10xi16>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i16>
-    openshmem.get16(%dest, %src, %nelems, %pe) : memref<10xi16>, !openshmem.symmetric_memref<i16>, index, i32
-    openshmem.free(%src) : !openshmem.symmetric_memref<i16>
+    %src = openshmem.malloc(%size) : index -> memref<i16, #openshmem.symmetric_memory>
+    openshmem.get16(%dest, %src, %nelems, %pe) : memref<10xi16>, memref<i16, #openshmem.symmetric_memory>, index, i32
+    openshmem.free(%src) : memref<i16, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -389,9 +389,9 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 40 : index // 10 * 4 bytes
     %dest = memref.alloc() : memref<10xi32>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-    openshmem.get32(%dest, %src, %nelems, %pe) : memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+    openshmem.get32(%dest, %src, %nelems, %pe) : memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -404,9 +404,9 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 80 : index // 10 * 8 bytes
     %dest = memref.alloc() : memref<10xi64>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
-    openshmem.get64(%dest, %src, %nelems, %pe) : memref<10xi64>, !openshmem.symmetric_memref<i64>, index, i32
-    openshmem.free(%src) : !openshmem.symmetric_memref<i64>
+    %src = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
+    openshmem.get64(%dest, %src, %nelems, %pe) : memref<10xi64>, memref<i64, #openshmem.symmetric_memory>, index, i32
+    openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -419,9 +419,9 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 160 : index // 10 * 16 bytes
     %dest = memref.alloc() : memref<10xf128>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f128>
-    openshmem.get128(%dest, %src, %nelems, %pe) : memref<10xf128>, !openshmem.symmetric_memref<f128>, index, i32
-    openshmem.free(%src) : !openshmem.symmetric_memref<f128>
+    %src = openshmem.malloc(%size) : index -> memref<f128, #openshmem.symmetric_memory>
+    openshmem.get128(%dest, %src, %nelems, %pe) : memref<10xf128>, memref<f128, #openshmem.symmetric_memory>, index, i32
+    openshmem.free(%src) : memref<f128, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -437,8 +437,8 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 10 : index
     %dest = memref.alloc() : memref<10xi8>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i8>
-    openshmem.ctx_get8(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi8>, !openshmem.symmetric_memref<i8>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i8, #openshmem.symmetric_memory>
+    openshmem.ctx_get8(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi8>, memref<i8, #openshmem.symmetric_memory>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -454,8 +454,8 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 20 : index
     %dest = memref.alloc() : memref<10xi16>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i16>
-    openshmem.ctx_get16(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi16>, !openshmem.symmetric_memref<i16>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i16, #openshmem.symmetric_memory>
+    openshmem.ctx_get16(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi16>, memref<i16, #openshmem.symmetric_memory>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -471,8 +471,8 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 40 : index
     %dest = memref.alloc() : memref<10xi32>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-    openshmem.ctx_get32(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi32>, !openshmem.symmetric_memref<i32>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+    openshmem.ctx_get32(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -488,8 +488,8 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 80 : index
     %dest = memref.alloc() : memref<10xi64>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
-    openshmem.ctx_get64(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi64>, !openshmem.symmetric_memref<i64>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
+    openshmem.ctx_get64(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xi64>, memref<i64, #openshmem.symmetric_memory>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -505,8 +505,8 @@ module {
     %pe = arith.constant 1 : i32
     %size = arith.constant 160 : index
     %dest = memref.alloc() : memref<10xf128>
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f128>
-    openshmem.ctx_get128(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xf128>, !openshmem.symmetric_memref<f128>, index, i32
+    %src = openshmem.malloc(%size) : index -> memref<f128, #openshmem.symmetric_memory>
+    openshmem.ctx_get128(%ctx, %dest, %src, %nelems, %pe) : !openshmem.ctx, memref<10xf128>, memref<f128, #openshmem.symmetric_memory>, index, i32
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -522,11 +522,11 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
     
     // Allocate symmetric memory for dest
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
-    openshmem.p(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.p(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -542,11 +542,11 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
     
     // Allocate symmetric memory for dest
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
-    openshmem.ctx_p(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_p(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return
@@ -560,11 +560,11 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
     
     // Allocate symmetric memory for source
-    %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
-    %value = openshmem.g(%source, %pe) : !openshmem.symmetric_memref<i32>, i32 -> i32
+    %value = openshmem.g(%source, %pe) : memref<i32, #openshmem.symmetric_memory>, i32 -> i32
     
-    openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -579,11 +579,11 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
     
     // Allocate symmetric memory for source
-    %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
-    %value = openshmem.ctx_g(%ctx, %source, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32 -> i32
+    %value = openshmem.ctx_g(%ctx, %source, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32 -> i32
     
-    openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.finalize
     return

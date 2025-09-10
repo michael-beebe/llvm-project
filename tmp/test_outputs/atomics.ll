@@ -1,10 +1,6 @@
 ; ModuleID = 'LLVMDialectModule'
 source_filename = "LLVMDialectModule"
 
-declare void @free(ptr)
-
-declare ptr @malloc(i64)
-
 declare void @shmem_long_ctx_atomic_fetch_xor_nbi(ptr, ptr, ptr, i64, i32)
 
 declare void @shmem_int_ctx_atomic_fetch_xor_nbi(ptr, ptr, ptr, i32, i32)
@@ -1004,14 +1000,8 @@ define void @test_ctx_i64_atomic_xor() {
 define void @test_i32_atomic_fetch_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_fetch_nbi(ptr %6, ptr %1, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_fetch_nbi(ptr %2, ptr %1, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1020,14 +1010,8 @@ define void @test_i32_atomic_fetch_nbi() {
 define void @test_i64_atomic_fetch_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_fetch_nbi(ptr %6, ptr %1, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_fetch_nbi(ptr %2, ptr %1, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1039,15 +1023,9 @@ define void @test_ctx_i32_atomic_fetch_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_fetch_nbi(ptr %3, ptr %9, ptr %4, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_fetch_nbi(ptr %3, ptr %5, ptr %4, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1059,15 +1037,9 @@ define void @test_ctx_i64_atomic_fetch_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_fetch_nbi(ptr %3, ptr %9, ptr %4, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_fetch_nbi(ptr %3, ptr %5, ptr %4, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1076,14 +1048,8 @@ define void @test_ctx_i64_atomic_fetch_nbi() {
 define void @test_i32_atomic_compare_swap_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_compare_swap_nbi(ptr %6, ptr %1, i32 42, i32 43, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_compare_swap_nbi(ptr %2, ptr %1, i32 42, i32 43, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1092,14 +1058,8 @@ define void @test_i32_atomic_compare_swap_nbi() {
 define void @test_i64_atomic_compare_swap_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_compare_swap_nbi(ptr %6, ptr %1, i64 42, i64 43, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_compare_swap_nbi(ptr %2, ptr %1, i64 42, i64 43, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1111,15 +1071,9 @@ define void @test_ctx_i32_atomic_compare_swap_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_compare_swap_nbi(ptr %3, ptr %9, ptr %4, i32 42, i32 43, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_compare_swap_nbi(ptr %3, ptr %5, ptr %4, i32 42, i32 43, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1131,15 +1085,9 @@ define void @test_ctx_i64_atomic_compare_swap_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_compare_swap_nbi(ptr %3, ptr %9, ptr %4, i64 42, i64 43, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_compare_swap_nbi(ptr %3, ptr %5, ptr %4, i64 42, i64 43, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1148,14 +1096,8 @@ define void @test_ctx_i64_atomic_compare_swap_nbi() {
 define void @test_i32_atomic_swap_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_swap_nbi(ptr %6, ptr %1, i32 42, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_swap_nbi(ptr %2, ptr %1, i32 42, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1164,14 +1106,8 @@ define void @test_i32_atomic_swap_nbi() {
 define void @test_i64_atomic_swap_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_swap_nbi(ptr %6, ptr %1, i64 42, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_swap_nbi(ptr %2, ptr %1, i64 42, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1183,15 +1119,9 @@ define void @test_ctx_i32_atomic_swap_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_swap_nbi(ptr %3, ptr %9, ptr %4, i32 42, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_swap_nbi(ptr %3, ptr %5, ptr %4, i32 42, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1203,15 +1133,9 @@ define void @test_ctx_i64_atomic_swap_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_swap_nbi(ptr %3, ptr %9, ptr %4, i64 42, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_swap_nbi(ptr %3, ptr %5, ptr %4, i64 42, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1220,14 +1144,8 @@ define void @test_ctx_i64_atomic_swap_nbi() {
 define void @test_i32_atomic_fetch_inc_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_fetch_inc_nbi(ptr %6, ptr %1, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_fetch_inc_nbi(ptr %2, ptr %1, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1236,14 +1154,8 @@ define void @test_i32_atomic_fetch_inc_nbi() {
 define void @test_i64_atomic_fetch_inc_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_fetch_inc_nbi(ptr %6, ptr %1, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_fetch_inc_nbi(ptr %2, ptr %1, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1255,15 +1167,9 @@ define void @test_ctx_i32_atomic_fetch_inc_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_fetch_inc_nbi(ptr %3, ptr %9, ptr %4, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_fetch_inc_nbi(ptr %3, ptr %5, ptr %4, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1275,15 +1181,9 @@ define void @test_ctx_i64_atomic_fetch_inc_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_fetch_inc_nbi(ptr %3, ptr %9, ptr %4, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_fetch_inc_nbi(ptr %3, ptr %5, ptr %4, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1292,14 +1192,8 @@ define void @test_ctx_i64_atomic_fetch_inc_nbi() {
 define void @test_i32_atomic_fetch_add_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_fetch_add_nbi(ptr %6, ptr %1, i32 5, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_fetch_add_nbi(ptr %2, ptr %1, i32 5, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1308,14 +1202,8 @@ define void @test_i32_atomic_fetch_add_nbi() {
 define void @test_i64_atomic_fetch_add_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_fetch_add_nbi(ptr %6, ptr %1, i64 5, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_fetch_add_nbi(ptr %2, ptr %1, i64 5, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1327,15 +1215,9 @@ define void @test_ctx_i32_atomic_fetch_add_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_fetch_add_nbi(ptr %3, ptr %9, ptr %4, i32 5, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_fetch_add_nbi(ptr %3, ptr %5, ptr %4, i32 5, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1347,15 +1229,9 @@ define void @test_ctx_i64_atomic_fetch_add_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_fetch_add_nbi(ptr %3, ptr %9, ptr %4, i64 5, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_fetch_add_nbi(ptr %3, ptr %5, ptr %4, i64 5, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1364,14 +1240,8 @@ define void @test_ctx_i64_atomic_fetch_add_nbi() {
 define void @test_i32_atomic_fetch_and_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_fetch_and_nbi(ptr %6, ptr %1, i32 255, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_fetch_and_nbi(ptr %2, ptr %1, i32 255, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1380,14 +1250,8 @@ define void @test_i32_atomic_fetch_and_nbi() {
 define void @test_i64_atomic_fetch_and_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_fetch_and_nbi(ptr %6, ptr %1, i64 255, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_fetch_and_nbi(ptr %2, ptr %1, i64 255, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1399,15 +1263,9 @@ define void @test_ctx_i32_atomic_fetch_and_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_fetch_and_nbi(ptr %3, ptr %9, ptr %4, i32 255, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_fetch_and_nbi(ptr %3, ptr %5, ptr %4, i32 255, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1419,15 +1277,9 @@ define void @test_ctx_i64_atomic_fetch_and_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_fetch_and_nbi(ptr %3, ptr %9, ptr %4, i64 255, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_fetch_and_nbi(ptr %3, ptr %5, ptr %4, i64 255, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1436,14 +1288,8 @@ define void @test_ctx_i64_atomic_fetch_and_nbi() {
 define void @test_i32_atomic_fetch_or_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_fetch_or_nbi(ptr %6, ptr %1, i32 128, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_fetch_or_nbi(ptr %2, ptr %1, i32 128, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1452,14 +1298,8 @@ define void @test_i32_atomic_fetch_or_nbi() {
 define void @test_i64_atomic_fetch_or_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_fetch_or_nbi(ptr %6, ptr %1, i64 128, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_fetch_or_nbi(ptr %2, ptr %1, i64 128, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1471,15 +1311,9 @@ define void @test_ctx_i32_atomic_fetch_or_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_fetch_or_nbi(ptr %3, ptr %9, ptr %4, i32 128, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_fetch_or_nbi(ptr %3, ptr %5, ptr %4, i32 128, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1491,15 +1325,9 @@ define void @test_ctx_i64_atomic_fetch_or_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_fetch_or_nbi(ptr %3, ptr %9, ptr %4, i64 128, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_fetch_or_nbi(ptr %3, ptr %5, ptr %4, i64 128, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1508,14 +1336,8 @@ define void @test_ctx_i64_atomic_fetch_or_nbi() {
 define void @test_i32_atomic_fetch_xor_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 4)
-  %2 = call ptr @malloc(i64 4)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_int_atomic_fetch_xor_nbi(ptr %6, ptr %1, i32 85, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_int_atomic_fetch_xor_nbi(ptr %2, ptr %1, i32 85, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1524,14 +1346,8 @@ define void @test_i32_atomic_fetch_xor_nbi() {
 define void @test_i64_atomic_fetch_xor_nbi() {
   call void @shmem_init()
   %1 = call ptr @shmem_malloc(i64 8)
-  %2 = call ptr @malloc(i64 8)
-  %3 = insertvalue { ptr, ptr, i64 } poison, ptr %2, 0
-  %4 = insertvalue { ptr, ptr, i64 } %3, ptr %2, 1
-  %5 = insertvalue { ptr, ptr, i64 } %4, i64 0, 2
-  %6 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @shmem_long_atomic_fetch_xor_nbi(ptr %6, ptr %1, i64 85, i32 1)
-  %7 = extractvalue { ptr, ptr, i64 } %5, 0
-  call void @free(ptr %7)
+  %2 = alloca ptr, i64 4, align 8
+  call void @shmem_long_atomic_fetch_xor_nbi(ptr %2, ptr %1, i64 85, i32 1)
   call void @shmem_free(ptr %1)
   call void @shmem_finalize()
   ret void
@@ -1543,15 +1359,9 @@ define void @test_ctx_i32_atomic_fetch_xor_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 4)
-  %5 = call ptr @malloc(i64 4)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_int_ctx_atomic_fetch_xor_nbi(ptr %3, ptr %9, ptr %4, i32 85, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_int_ctx_atomic_fetch_xor_nbi(ptr %3, ptr %5, ptr %4, i32 85, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void
@@ -1563,15 +1373,9 @@ define void @test_ctx_i64_atomic_fetch_xor_nbi() {
   %2 = call i32 @shmem_ctx_create(i64 0, ptr %1)
   %3 = load ptr, ptr %1, align 8
   %4 = call ptr @shmem_malloc(i64 8)
-  %5 = call ptr @malloc(i64 8)
-  %6 = insertvalue { ptr, ptr, i64 } poison, ptr %5, 0
-  %7 = insertvalue { ptr, ptr, i64 } %6, ptr %5, 1
-  %8 = insertvalue { ptr, ptr, i64 } %7, i64 0, 2
-  %9 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @shmem_long_ctx_atomic_fetch_xor_nbi(ptr %3, ptr %9, ptr %4, i64 85, i32 1)
+  %5 = alloca ptr, i64 4, align 8
+  call void @shmem_long_ctx_atomic_fetch_xor_nbi(ptr %3, ptr %5, ptr %4, i64 85, i32 1)
   call void @shmem_ctx_destroy(ptr %3)
-  %10 = extractvalue { ptr, ptr, i64 } %8, 0
-  call void @free(ptr %10)
   call void @shmem_free(ptr %4)
   call void @shmem_finalize()
   ret void

@@ -42,8 +42,8 @@ def OpenSHMEM_AlltoallmemOp : OpenSHMEM_Op<"alltoallmem", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems
   );
 
@@ -88,8 +88,8 @@ def OpenSHMEM_AlltoallOp : OpenSHMEM_Op<"alltoall", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems
   );
 
@@ -135,8 +135,8 @@ def OpenSHMEM_AlltoallsmemOp : OpenSHMEM_Op<"alltoallsmem", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$dst,
     Index:$sst,
     Index:$nelems
@@ -188,8 +188,8 @@ def OpenSHMEM_AlltoallsOp : OpenSHMEM_Op<"alltoalls", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$dst,
     Index:$sst,
     Index:$nelems
@@ -237,8 +237,8 @@ def OpenSHMEM_BroadcastmemOp : OpenSHMEM_Op<"broadcastmem", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$PE_root
   );
@@ -286,8 +286,8 @@ def OpenSHMEM_BroadcastOp : OpenSHMEM_Op<"broadcast", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems,
     I32:$PE_root
   );
@@ -334,8 +334,8 @@ def OpenSHMEM_CollectmemOp : OpenSHMEM_Op<"collectmem", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems
   );
 
@@ -381,8 +381,8 @@ def OpenSHMEM_CollectOp : OpenSHMEM_Op<"collect", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems
   );
 
@@ -427,8 +427,8 @@ def OpenSHMEM_FCollectmemOp : OpenSHMEM_Op<"fcollectmem", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems
   );
 
@@ -474,8 +474,8 @@ def OpenSHMEM_FCollectOp : OpenSHMEM_Op<"fcollect", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nelems
   );
 
@@ -519,8 +519,8 @@ def OpenSHMEM_AndReduceOp : OpenSHMEM_Op<"andreduce", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nreduce
   );
 
@@ -565,8 +565,8 @@ def OpenSHMEM_OrReduceOp : OpenSHMEM_Op<"orreduce", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nreduce
   );
 
@@ -610,8 +610,8 @@ def OpenSHMEM_XorReduceOp : OpenSHMEM_Op<"xorreduce", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nreduce
   );
 
@@ -655,8 +655,8 @@ def OpenSHMEM_MaxReduceOp : OpenSHMEM_Op<"maxreduce", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nreduce
   );
 
@@ -701,8 +701,8 @@ def OpenSHMEM_MinReduceOp : OpenSHMEM_Op<"minreduce", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nreduce
   );
 
@@ -746,8 +746,8 @@ def OpenSHMEM_SumReduceOp : OpenSHMEM_Op<"sumreduce", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nreduce
   );
 
@@ -791,8 +791,8 @@ def OpenSHMEM_ProdReduceOp : OpenSHMEM_Op<"prodreduce", []> {
 
   let arguments = (ins
     OpenSHMEM_Team:$team,
-    OpenSHMEM_SymmetricMemRef:$dest,
-    OpenSHMEM_SymmetricMemRef:$source,
+    SymmetricMemRef:$dest,
+    SymmetricMemRef:$source,
     Index:$nreduce
   );
 

@@ -89,11 +89,12 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         if (chain.size() < 2)
           return failure();
         // Replace first with atomic_add 1*count, erase rest
-        // Derive integer element type from symmetric memref element type.
-        auto symTy = dyn_cast<SymmetricMemRefType>(inc1.getDest().getType());
-        if (!symTy)
+        // Derive integer element type from memref with symmetric memory space.
+        auto memRefType = dyn_cast<MemRefType>(inc1.getDest().getType());
+        if (!memRefType || !memRefType.getMemorySpace() ||
+            !llvm::isa<openshmem::SymmetricMemorySpaceAttr>(memRefType.getMemorySpace()))
           return failure();
-        auto intElemTy = dyn_cast<IntegerType>(symTy.getElementType());
+        auto intElemTy = dyn_cast<IntegerType>(memRefType.getElementType());
         if (!intElemTy)
           return failure();
         auto loc = inc1.getLoc();
@@ -231,11 +232,12 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         if (!a)
           return failure();
         APInt sum = a.getValue() + 1;
-        // Derive element integer type from symmetric memref.
-        auto symTy = dyn_cast<SymmetricMemRefType>(inc.getDest().getType());
-        if (!symTy)
+        // Derive element integer type from memref with symmetric memory space.
+        auto memRefType = dyn_cast<MemRefType>(inc.getDest().getType());
+        if (!memRefType || !memRefType.getMemorySpace() ||
+            !llvm::isa<openshmem::SymmetricMemorySpaceAttr>(memRefType.getMemorySpace()))
           return failure();
-        auto intElemTy = dyn_cast<IntegerType>(symTy.getElementType());
+        auto intElemTy = dyn_cast<IntegerType>(memRefType.getElementType());
         if (!intElemTy || intElemTy != a.getType())
           return failure();
         auto newConst = rewriter.create<arith::ConstantOp>(

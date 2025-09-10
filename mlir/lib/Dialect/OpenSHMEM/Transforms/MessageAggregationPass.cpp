@@ -234,25 +234,29 @@ private:
           elemOff = intAttr.getInt();
       }
 
-      // Compute element size in bytes from symmetric memref element type
+      // Compute element size in bytes from memref with symmetric memory space
+      // element type
       int64_t elemSizeBytes = 1;
-      if (auto shmTy = dyn_cast<openshmem::SymmetricMemRefType>(
-              offOp.getBase().getType())) {
-        Type et = shmTy.getElementType();
-        if (et.isInteger(8))
-          elemSizeBytes = 1;
-        else if (et.isInteger(16))
-          elemSizeBytes = 2;
-        else if (et.isInteger(32))
-          elemSizeBytes = 4;
-        else if (et.isInteger(64))
-          elemSizeBytes = 8;
-        else if (et.isF32())
-          elemSizeBytes = 4;
-        else if (et.isF64())
-          elemSizeBytes = 8;
-        else if (et.isF128())
-          elemSizeBytes = 16;
+      if (auto memRefType = dyn_cast<MemRefType>(offOp.getBase().getType())) {
+        if (memRefType.getMemorySpace() &&
+            llvm::isa<openshmem::SymmetricMemorySpaceAttr>(
+                memRefType.getMemorySpace())) {
+          Type et = memRefType.getElementType();
+          if (et.isInteger(8))
+            elemSizeBytes = 1;
+          else if (et.isInteger(16))
+            elemSizeBytes = 2;
+          else if (et.isInteger(32))
+            elemSizeBytes = 4;
+          else if (et.isInteger(64))
+            elemSizeBytes = 8;
+          else if (et.isF32())
+            elemSizeBytes = 4;
+          else if (et.isF64())
+            elemSizeBytes = 8;
+          else if (et.isF128())
+            elemSizeBytes = 16;
+        }
       }
 
       if (elemOff >= 0) {
@@ -780,7 +784,7 @@ public:
       opToAccess[access.op] = &access;
     }
 
-    // Basic safety checks: require adjacency contiguity only
+    // Basic safety checks: require adjacency contiguity or identical operations
     MemoryLayoutAnalyzer layoutAnalyzer;
     for (size_t i = 1; i < group.operations.size(); ++i) {
       auto *prev = opToAccess.lookup(group.operations[i - 1]);
@@ -791,9 +795,16 @@ public:
         return false;
       }
       if (!layoutAnalyzer.areContiguous(*prev, *curr)) {
-        if (debugMode)
-          llvm::dbgs() << "Cannot coalesce: adjacent ops not contiguous\n";
-        return false;
+        // Allow identical operations as a fallback (duplicate
+        // removal/aggregation)
+        if (!(prev->srcMemRef == curr->srcMemRef &&
+              prev->destMemRef == curr->destMemRef && prev->pe == curr->pe &&
+              prev->opType == curr->opType &&
+              prev->isNonBlocking == curr->isNonBlocking)) {
+          if (debugMode)
+            llvm::dbgs() << "Cannot coalesce: adjacent ops not contiguous\n";
+          return false;
+        }
       }
     }
 
@@ -1266,23 +1277,175 @@ private:
     // source For non-contiguous identical operations, this is also correct
     if (group.isNonBlocking) {
       if (group.opType == MemoryAccess::PUT) {
-        return rewriter.create<PutmemNbiOp>(loc, firstAccess->destMemRef,
-                                            firstAccess->srcMemRef,
-                                            actualTotalSize, firstAccess->pe);
+        if (group.hasContext) {
+          return rewriter.create<CtxPutNbiOp>(
+              loc, firstAccess->ctx, firstAccess->destMemRef,
+              firstAccess->srcMemRef, actualTotalSize, firstAccess->pe);
+        } else {
+          switch (group.opVariant) {
+          case MemoryAccess::GENERIC:
+            return rewriter.create<PutNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::TYPED:
+            return rewriter.create<PutNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::SIZED:
+            // Non-blocking sized operations fall back to generic non-blocking
+            // operations since there are no Put8NbiOp, Put16NbiOp, etc.
+            // operations
+            return rewriter.create<PutNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::MEMORY:
+            return rewriter.create<PutmemNbiOp>(
+                loc, firstAccess->destMemRef, firstAccess->srcMemRef,
+                actualTotalSize, firstAccess->pe);
+          case MemoryAccess::POINT:
+            return rewriter.create<PutNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          }
+        }
       } else {
-        return rewriter.create<GetmemNbiOp>(loc, firstAccess->destMemRef,
-                                            firstAccess->srcMemRef,
-                                            actualTotalSize, firstAccess->pe);
+        if (group.hasContext) {
+          return rewriter.create<CtxGetNbiOp>(
+              loc, firstAccess->ctx, firstAccess->destMemRef,
+              firstAccess->srcMemRef, actualTotalSize, firstAccess->pe);
+        } else {
+          switch (group.opVariant) {
+          case MemoryAccess::GENERIC:
+            return rewriter.create<GetNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::TYPED:
+            return rewriter.create<GetNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::SIZED:
+            // Non-blocking sized operations fall back to generic non-blocking
+            // operations since there are no Get8NbiOp, Get16NbiOp, etc.
+            // operations
+            return rewriter.create<GetNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::MEMORY:
+            return rewriter.create<GetmemNbiOp>(
+                loc, firstAccess->destMemRef, firstAccess->srcMemRef,
+                actualTotalSize, firstAccess->pe);
+          case MemoryAccess::POINT:
+            return rewriter.create<GetNbiOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          }
+        }
       }
     } else {
       if (group.opType == MemoryAccess::PUT) {
-        return rewriter.create<PutmemOp>(loc, firstAccess->destMemRef,
-                                         firstAccess->srcMemRef,
-                                         actualTotalSize, firstAccess->pe);
+        if (group.hasContext) {
+          return rewriter.create<CtxPutOp>(
+              loc, firstAccess->ctx, firstAccess->destMemRef,
+              firstAccess->srcMemRef, actualTotalSize, firstAccess->pe);
+        } else {
+          switch (group.opVariant) {
+          case MemoryAccess::GENERIC:
+            return rewriter.create<PutOp>(loc, firstAccess->destMemRef,
+                                          firstAccess->srcMemRef,
+                                          actualTotalSize, firstAccess->pe);
+          case MemoryAccess::TYPED:
+            return rewriter.create<PutOp>(loc, firstAccess->destMemRef,
+                                          firstAccess->srcMemRef,
+                                          actualTotalSize, firstAccess->pe);
+          case MemoryAccess::SIZED:
+            switch (firstAccess->elementSize) {
+            case 8:
+              return rewriter.create<Put8Op>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+            case 16:
+              return rewriter.create<Put16Op>(loc, firstAccess->destMemRef,
+                                              firstAccess->srcMemRef,
+                                              actualTotalSize, firstAccess->pe);
+            case 32:
+              return rewriter.create<Put32Op>(loc, firstAccess->destMemRef,
+                                              firstAccess->srcMemRef,
+                                              actualTotalSize, firstAccess->pe);
+            case 64:
+              return rewriter.create<Put64Op>(loc, firstAccess->destMemRef,
+                                              firstAccess->srcMemRef,
+                                              actualTotalSize, firstAccess->pe);
+            case 128:
+              return rewriter.create<Put128Op>(
+                  loc, firstAccess->destMemRef, firstAccess->srcMemRef,
+                  actualTotalSize, firstAccess->pe);
+            default:
+              return rewriter.create<PutOp>(loc, firstAccess->destMemRef,
+                                            firstAccess->srcMemRef,
+                                            actualTotalSize, firstAccess->pe);
+            }
+          case MemoryAccess::MEMORY:
+            return rewriter.create<PutmemOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::POINT:
+            return rewriter.create<PutOp>(loc, firstAccess->destMemRef,
+                                          firstAccess->srcMemRef,
+                                          actualTotalSize, firstAccess->pe);
+          }
+        }
       } else {
-        return rewriter.create<GetmemOp>(loc, firstAccess->destMemRef,
-                                         firstAccess->srcMemRef,
-                                         actualTotalSize, firstAccess->pe);
+        if (group.hasContext) {
+          return rewriter.create<CtxGetOp>(
+              loc, firstAccess->ctx, firstAccess->destMemRef,
+              firstAccess->srcMemRef, actualTotalSize, firstAccess->pe);
+        } else {
+          switch (group.opVariant) {
+          case MemoryAccess::GENERIC:
+            return rewriter.create<GetOp>(loc, firstAccess->destMemRef,
+                                          firstAccess->srcMemRef,
+                                          actualTotalSize, firstAccess->pe);
+          case MemoryAccess::TYPED:
+            return rewriter.create<GetOp>(loc, firstAccess->destMemRef,
+                                          firstAccess->srcMemRef,
+                                          actualTotalSize, firstAccess->pe);
+          case MemoryAccess::SIZED:
+            switch (firstAccess->elementSize) {
+            case 8:
+              return rewriter.create<Get8Op>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+            case 16:
+              return rewriter.create<Get16Op>(loc, firstAccess->destMemRef,
+                                              firstAccess->srcMemRef,
+                                              actualTotalSize, firstAccess->pe);
+            case 32:
+              return rewriter.create<Get32Op>(loc, firstAccess->destMemRef,
+                                              firstAccess->srcMemRef,
+                                              actualTotalSize, firstAccess->pe);
+            case 64:
+              return rewriter.create<Get64Op>(loc, firstAccess->destMemRef,
+                                              firstAccess->srcMemRef,
+                                              actualTotalSize, firstAccess->pe);
+            case 128:
+              return rewriter.create<Get128Op>(
+                  loc, firstAccess->destMemRef, firstAccess->srcMemRef,
+                  actualTotalSize, firstAccess->pe);
+            default:
+              return rewriter.create<GetOp>(loc, firstAccess->destMemRef,
+                                            firstAccess->srcMemRef,
+                                            actualTotalSize, firstAccess->pe);
+            }
+          case MemoryAccess::MEMORY:
+            return rewriter.create<GetmemOp>(loc, firstAccess->destMemRef,
+                                             firstAccess->srcMemRef,
+                                             actualTotalSize, firstAccess->pe);
+          case MemoryAccess::POINT:
+            return rewriter.create<GetOp>(loc, firstAccess->destMemRef,
+                                          firstAccess->srcMemRef,
+                                          actualTotalSize, firstAccess->pe);
+          }
+        }
       }
     }
   }

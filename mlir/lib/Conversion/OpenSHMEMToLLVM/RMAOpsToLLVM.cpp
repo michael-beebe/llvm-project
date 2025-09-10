@@ -49,7 +49,7 @@ struct PutOpLowering : public ConvertOpToLLVMPattern<openshmem::PutOp> {
     }
 
     // Generate function name based on type
-    std::string funcName = getTypedFunctionName("put", elementType);
+    std::string funcName = getRMASizedFunctionName("put", elementType);
 
     // void shmem_put(TYPE *dest, const TYPE *source, size_t nelems, int pe)
     Type sizeType = getTypeConverter()->getIndexType();
@@ -59,7 +59,8 @@ struct PutOpLowering : public ConvertOpToLLVMPattern<openshmem::PutOp> {
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // source: memref (need to extract pointer)
     Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
@@ -93,7 +94,7 @@ struct CtxPutOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutOp> {
     }
 
     // Generate function name based on type
-    std::string funcName = getTypedFunctionName("ctx_put", elementType);
+    std::string funcName = getRMASizedFunctionName("ctx_put", elementType);
 
     // void shmem_put(shmem_ctx_t ctx, TYPE *dest, const TYPE *source, size_t
     // nelems, int pe)
@@ -106,7 +107,8 @@ struct CtxPutOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPutOp> {
 
     // ctx: context (already a pointer after type conversion)
     Value ctxPtr = adaptor.getCtx();
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // source: memref (need to extract pointer)
     Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
@@ -141,7 +143,7 @@ struct PutNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::PutNbiOp> {
     }
 
     // Generate function name based on type
-    std::string funcName = getTypedFunctionName("put_nbi", elementType);
+    std::string funcName = getRMASizedFunctionName("put_nbi", elementType);
 
     // void shmem_put_n(TYPE *dest, const TYPE *source, size_t nelems, int pe)
     Type sizeType = getTypeConverter()->getIndexType();
@@ -151,7 +153,8 @@ struct PutNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::PutNbiOp> {
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, funcName, funcType);
 
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // source: memref (need to extract pointer)
     Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
@@ -186,7 +189,7 @@ struct CtxPutNbiOpLowering
     }
 
     // Generate function name based on type
-    std::string funcName = getTypedFunctionName("put_nbi", elementType);
+    std::string funcName = getRMASizedFunctionName("put_nbi", elementType);
 
     // void shmem_put_nbi(shmem_ctx_t ctx, TYPE *dest, const TYPE *source,
     // size_t nelems, int pe)
@@ -199,7 +202,8 @@ struct CtxPutNbiOpLowering
 
     // ctx: context (already a pointer after type conversion)
     Value ctxPtr = adaptor.getCtx();
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // source: memref (need to extract pointer)
     Value sourcePtr = getMemRefDataPtr(loc, rewriter, adaptor.getSource());
@@ -301,7 +305,8 @@ struct PutmemOpLowering : public ConvertOpToLLVMPattern<openshmem::PutmemOp> {
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
 
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // src: memref (need to extract pointer)
     Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
@@ -339,7 +344,8 @@ struct PutmemNbiOpLowering
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
 
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // src: memref (need to extract pointer)
     Value srcPtr = getMemRefDataPtr(loc, rewriter, adaptor.getSrc());
@@ -375,7 +381,7 @@ struct GetOpLowering : public ConvertOpToLLVMPattern<openshmem::GetOp> {
     Type elementType = getSymmetricMemRefElementType(op.getSource());
     if (!elementType)
       return failure();
-    std::string funcName = getTypedFunctionName("get", elementType);
+    std::string funcName = getRMASizedFunctionName("get", elementType);
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
@@ -406,7 +412,7 @@ struct CtxGetOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxGetOp> {
     Type elementType = getSymmetricMemRefElementType(op.getSource());
     if (!elementType)
       return failure();
-    std::string funcName = getTypedFunctionName("ctx_get", elementType);
+    std::string funcName = getRMASizedFunctionName("ctx_get", elementType);
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
@@ -439,7 +445,7 @@ struct GetNbiOpLowering : public ConvertOpToLLVMPattern<openshmem::GetNbiOp> {
     Type elementType = getSymmetricMemRefElementType(op.getSource());
     if (!elementType)
       return failure();
-    std::string funcName = getTypedFunctionName("get_nbi", elementType);
+    std::string funcName = getRMASizedFunctionName("get_nbi", elementType);
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
@@ -471,7 +477,7 @@ struct CtxGetNbiOpLowering
     Type elementType = getSymmetricMemRefElementType(op.getSource());
     if (!elementType)
       return failure();
-    std::string funcName = getTypedFunctionName("ctx_get_nbi", elementType);
+    std::string funcName = getRMASizedFunctionName("ctx_get_nbi", elementType);
     Type sizeType = getTypeConverter()->getIndexType();
     auto funcType = LLVM::LLVMFunctionType::get(
         mlir::LLVM::LLVMVoidType::get(rewriter.getContext()),
@@ -579,7 +585,8 @@ struct GetmemOpLowering : public ConvertOpToLLVMPattern<openshmem::GetmemOp> {
 
     // dest: memref (need to extract pointer)
     Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
-    // src: symmetric_memref (already a pointer after type conversion)
+    // src: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value srcPtr = adaptor.getSrc();
 
     // void shmem_getmem(void *dest, const void *source, size_t nelems, int pe)
@@ -617,7 +624,8 @@ struct GetmemNbiOpLowering
 
     // dest: memref (need to extract pointer)
     Value destPtr = getMemRefDataPtr(loc, rewriter, adaptor.getDest());
-    // src: symmetric_memref (already a pointer after type conversion)
+    // src: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value srcPtr = adaptor.getSrc();
 
     // void shmem_getmem_nbi(void *dest, const void *source, size_t nelems, int
@@ -651,7 +659,8 @@ struct POpLowering : public ConvertOpToLLVMPattern<openshmem::POp> {
     auto moduleOp = op->getParentOfType<ModuleOp>();
     Type ptrType = LLVM::LLVMPointerType::get(rewriter.getContext());
 
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // value: any type
     Value value = adaptor.getValue();
@@ -686,7 +695,8 @@ struct CtxPOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxPOp> {
 
     // ctx: ctx (already a pointer after type conversion)
     Value ctxPtr = adaptor.getCtx();
-    // dest: symmetric_memref (already a pointer after type conversion)
+    // dest: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value destPtr = adaptor.getDest();
     // value: any type
     Value value = adaptor.getValue();
@@ -722,7 +732,8 @@ struct GOpLowering : public ConvertOpToLLVMPattern<openshmem::GOp> {
     // Get the return type from the operation result
     Type resultType = op.getValue().getType();
 
-    // source: symmetric_memref (already a pointer after type conversion)
+    // source: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value sourcePtr = adaptor.getSource();
 
     // TYPE shmem_g(const void *source, int pe)
@@ -758,7 +769,8 @@ struct CtxGOpLowering : public ConvertOpToLLVMPattern<openshmem::CtxGOp> {
 
     // ctx: ctx (already a pointer after type conversion)
     Value ctxPtr = adaptor.getCtx();
-    // source: symmetric_memref (already a pointer after type conversion)
+    // source: memref with symmetric memory space (already a pointer after type
+    // conversion)
     Value sourcePtr = adaptor.getSource();
 
     // TYPE shmem_ctx_g(shmem_ctx_t ctx, TYPE *source, int pe)

@@ -10,12 +10,12 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Perform atomic fetch operation
-    %result = openshmem.atomic_fetch(%src, %pe) : !openshmem.symmetric_memref<i32>, i32 -> i32
+    %result = openshmem.atomic_fetch(%src, %pe) : memref<i32, #openshmem.symmetric_memory>, i32 -> i32
     
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -28,12 +28,12 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %src = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     
     // Perform atomic fetch operation
-    %result = openshmem.atomic_fetch(%src, %pe) : !openshmem.symmetric_memref<i64>, i32 -> i64
+    %result = openshmem.atomic_fetch(%src, %pe) : memref<i64, #openshmem.symmetric_memory>, i32 -> i64
     
-    openshmem.free(%src) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -46,12 +46,12 @@ module {
     %size = arith.constant 4 : index // 4 bytes for f32
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %src = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     
     // Perform atomic fetch operation
-    %result = openshmem.atomic_fetch(%src, %pe) : !openshmem.symmetric_memref<f32>, i32 -> f32
+    %result = openshmem.atomic_fetch(%src, %pe) : memref<f32, #openshmem.symmetric_memory>, i32 -> f32
     
-    openshmem.free(%src) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%src) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -64,12 +64,12 @@ module {
     %size = arith.constant 8 : index // 8 bytes for f64
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %src = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
     
     // Perform atomic fetch operation
-    %result = openshmem.atomic_fetch(%src, %pe) : !openshmem.symmetric_memref<f64>, i32 -> f64
+    %result = openshmem.atomic_fetch(%src, %pe) : memref<f64, #openshmem.symmetric_memory>, i32 -> f64
     
-    openshmem.free(%src) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%src) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -85,13 +85,13 @@ module {
     %size = arith.constant 4 : index
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic fetch operation
-    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32 -> i32
+    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32 -> i32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -106,13 +106,13 @@ module {
     %size = arith.constant 8 : index
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %src = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic fetch operation
-    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i32 -> i64
+    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i32 -> i64
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%src) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -127,13 +127,13 @@ module {
     %size = arith.constant 4 : index
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %src = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic fetch operation
-    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f32>, i32 -> f32
+    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, memref<f32, #openshmem.symmetric_memory>, i32 -> f32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%src) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%src) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -148,13 +148,13 @@ module {
     %size = arith.constant 8 : index
     
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %src = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic fetch operation
-    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f64>, i32 -> f64
+    %result = openshmem.ctx_atomic_fetch(%ctx, %src, %pe) : !openshmem.ctx, memref<f64, #openshmem.symmetric_memory>, i32 -> f64
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%src) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%src) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -169,12 +169,12 @@ module {
     %value = arith.constant 42 : i32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Perform atomic set operation
-    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_set(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -188,12 +188,12 @@ module {
     %value = arith.constant 42 : i64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     
     // Perform atomic set operation
-    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_set(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -207,12 +207,12 @@ module {
     %value = arith.constant 42.0 : f32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     
     // Perform atomic set operation
-    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<f32>, f32, i32
+    openshmem.atomic_set(%dest, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -226,12 +226,12 @@ module {
     %value = arith.constant 42.0 : f64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %dest = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
     
     // Perform atomic set operation
-    openshmem.atomic_set(%dest, %value, %pe) : !openshmem.symmetric_memref<f64>, f64, i32
+    openshmem.atomic_set(%dest, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -248,13 +248,13 @@ module {
     %value = arith.constant 42 : i32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic set operation
-    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -270,13 +270,13 @@ module {
     %value = arith.constant 42 : i64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic set operation
-    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -292,13 +292,13 @@ module {
     %value = arith.constant 42.0 : f32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic set operation
-    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f32>, f32, i32
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<f32, #openshmem.symmetric_memory>, f32, i32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -314,13 +314,13 @@ module {
     %value = arith.constant 42.0 : f64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %dest = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic set operation
-    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f64>, f64, i32
+    openshmem.ctx_atomic_set(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<f64, #openshmem.symmetric_memory>, f64, i32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -336,12 +336,12 @@ module {
     %value = arith.constant 43 : i32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Perform atomic compare-and-swap operation
-    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32, i32 -> i32
+    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32, i32 -> i32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -356,12 +356,12 @@ module {
     %value = arith.constant 43 : i64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     
     // Perform atomic compare-and-swap operation
-    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i64, i32 -> i64
+    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i64, i32 -> i64
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -376,12 +376,12 @@ module {
     %value = arith.constant 43.0 : f32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     
     // Perform atomic compare-and-swap operation
-    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : !openshmem.symmetric_memref<f32>, f32, f32, i32 -> f32
+    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, f32, i32 -> f32
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -396,12 +396,12 @@ module {
     %value = arith.constant 43.0 : f64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %dest = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
     
     // Perform atomic compare-and-swap operation
-    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : !openshmem.symmetric_memref<f64>, f64, f64, i32 -> f64
+    %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, f64, i32 -> f64
     
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -420,13 +420,13 @@ module {
     %value = arith.constant 43 : i32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic compare-and-swap operation
-    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32, i32 -> i32
+    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32, i32 -> i32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -444,13 +444,13 @@ module {
     %value = arith.constant 43 : i64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic compare-and-swap operation
-    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i64, i32 -> i64
+    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i64, i32 -> i64
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -468,13 +468,13 @@ module {
     %value = arith.constant 43.0 : f32
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic compare-and-swap operation
-    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f32>, f32, f32, i32 -> f32
+    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<f32, #openshmem.symmetric_memory>, f32, f32, i32 -> f32
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -492,13 +492,13 @@ module {
     %value = arith.constant 43.0 : f64
     
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %dest = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
     
     // Perform context-aware atomic compare-and-swap operation
-    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f64>, f64, f64, i32 -> f64
+    %result = openshmem.ctx_atomic_compare_swap(%ctx, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<f64, #openshmem.symmetric_memory>, f64, f64, i32 -> f64
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -513,13 +513,13 @@ module {
     %value = arith.constant 42 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic swap operation
-    %result = openshmem.atomic_swap(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.atomic_swap(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -533,12 +533,12 @@ module {
     %value = arith.constant 42 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic swap operation
-    %result = openshmem.atomic_swap(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.atomic_swap(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -555,13 +555,13 @@ module {
     %value = arith.constant 42 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic swap operation
-    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -577,13 +577,13 @@ module {
     %value = arith.constant 42 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic swap operation
-    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -598,12 +598,12 @@ module {
     %value = arith.constant 42.0 : f32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
 
     // Perform atomic swap operation
-    %result = openshmem.atomic_swap(%dest, %value, %pe) : !openshmem.symmetric_memref<f32>, f32, i32 -> f32
+    %result = openshmem.atomic_swap(%dest, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, i32 -> f32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -617,12 +617,12 @@ module {
     %value = arith.constant 42.0 : f64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %dest = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
 
     // Perform atomic swap operation
-    %result = openshmem.atomic_swap(%dest, %value, %pe) : !openshmem.symmetric_memref<f64>, f64, i32 -> f64
+    %result = openshmem.atomic_swap(%dest, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, i32 -> f64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -639,13 +639,13 @@ module {
     %value = arith.constant 42.0 : f32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic swap operation
-    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f32>, f32, i32 -> f32
+    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<f32, #openshmem.symmetric_memory>, f32, i32 -> f32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -662,13 +662,13 @@ module {
     %value = arith.constant 42.0 : f64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %dest = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic swap operation
-    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<f64>, f64, i32 -> f64
+    %result = openshmem.ctx_atomic_swap(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<f64, #openshmem.symmetric_memory>, f64, i32 -> f64
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -683,12 +683,12 @@ module {
     %value = arith.constant 42 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and-increment operation
-    %result = openshmem.atomic_fetch_inc(%dest, %pe) : !openshmem.symmetric_memref<i32>, i32 -> i32
+    %result = openshmem.atomic_fetch_inc(%dest, %pe) : memref<i32, #openshmem.symmetric_memory>, i32 -> i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -701,12 +701,12 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and-increment operation
-    %result = openshmem.atomic_fetch_inc(%dest, %pe) : !openshmem.symmetric_memref<i64>, i32 -> i64
+    %result = openshmem.atomic_fetch_inc(%dest, %pe) : memref<i64, #openshmem.symmetric_memory>, i32 -> i64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -722,14 +722,14 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-and-increment operation
-    %result = openshmem.ctx_atomic_fetch_inc(%ctx, %dest, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32 -> i32
+    %result = openshmem.ctx_atomic_fetch_inc(%ctx, %dest, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32 -> i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -744,13 +744,13 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-and-increment operation
-    %result = openshmem.ctx_atomic_fetch_inc(%ctx, %dest, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i32 -> i64
+    %result = openshmem.ctx_atomic_fetch_inc(%ctx, %dest, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i32 -> i64
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -765,12 +765,12 @@ module {
     %value = arith.constant 42 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic increment operation
-    openshmem.atomic_inc(%dest, %pe) : !openshmem.symmetric_memref<i32>, i32
+    openshmem.atomic_inc(%dest, %pe) : memref<i32, #openshmem.symmetric_memory>, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -783,12 +783,12 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic increment operation
-    openshmem.atomic_inc(%dest, %pe) : !openshmem.symmetric_memref<i64>, i32
+    openshmem.atomic_inc(%dest, %pe) : memref<i64, #openshmem.symmetric_memory>, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -807,13 +807,13 @@ module {
     %value = arith.constant 42 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic increment operation
-    openshmem.ctx_atomic_inc(%ctx, %dest, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32
+    openshmem.ctx_atomic_inc(%ctx, %dest, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -828,13 +828,13 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic increment operation
-    openshmem.ctx_atomic_inc(%ctx, %dest, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i32
+    openshmem.ctx_atomic_inc(%ctx, %dest, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -849,12 +849,12 @@ module {
     %value = arith.constant 5 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and-add operation
-    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -868,12 +868,12 @@ module {
     %value = arith.constant 5 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and-add operation
-    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -887,12 +887,12 @@ module {
     %value = arith.constant 5.0 : f32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f32>
+    %dest = openshmem.malloc(%size) : index -> memref<f32, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and-add operation
-    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : !openshmem.symmetric_memref<f32>, f32, i32 -> f32
+    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, i32 -> f32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f32>
+    openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -906,12 +906,12 @@ module {
     %value = arith.constant 5.0 : f64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<f64>
+    %dest = openshmem.malloc(%size) : index -> memref<f64, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and-add operation
-    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : !openshmem.symmetric_memref<f64>, f64, i32 -> f64
+    %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, i32 -> f64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<f64>
+    openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -928,13 +928,13 @@ module {
     %value = arith.constant 5 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-and-add operation
-    %result = openshmem.ctx_atomic_fetch_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.ctx_atomic_fetch_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -950,13 +950,13 @@ module {
     %value = arith.constant 5 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-and-add operation
-    %result = openshmem.ctx_atomic_fetch_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.ctx_atomic_fetch_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -971,12 +971,12 @@ module {
     %value = arith.constant 5 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic add operation
-    openshmem.atomic_add(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_add(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -990,12 +990,12 @@ module {
     %value = arith.constant 5 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic add operation
-    openshmem.atomic_add(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_add(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1012,13 +1012,13 @@ module {
     %value = arith.constant 5 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic add operation
-    openshmem.ctx_atomic_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1034,13 +1034,13 @@ module {
     %value = arith.constant 5 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic add operation
-    openshmem.ctx_atomic_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_add(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1055,12 +1055,12 @@ module {
     %value = arith.constant 255 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and operation
-    %result = openshmem.atomic_fetch_and(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.atomic_fetch_and(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1074,12 +1074,12 @@ module {
     %value = arith.constant 255 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-and operation
-    %result = openshmem.atomic_fetch_and(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.atomic_fetch_and(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1096,13 +1096,13 @@ module {
     %value = arith.constant 255 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-and operation
-    %result = openshmem.ctx_atomic_fetch_and(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.ctx_atomic_fetch_and(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1118,13 +1118,13 @@ module {
     %value = arith.constant 255 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-and operation
-    %result = openshmem.ctx_atomic_fetch_and(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.ctx_atomic_fetch_and(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1139,12 +1139,12 @@ module {
     %value = arith.constant 128 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-or operation
-    %result = openshmem.atomic_fetch_or(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.atomic_fetch_or(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1158,12 +1158,12 @@ module {
     %value = arith.constant 128 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-or operation
-    %result = openshmem.atomic_fetch_or(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.atomic_fetch_or(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1180,13 +1180,13 @@ module {
     %value = arith.constant 128 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-or operation
-    %result = openshmem.ctx_atomic_fetch_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.ctx_atomic_fetch_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1202,13 +1202,13 @@ module {
     %value = arith.constant 128 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-or operation
-    %result = openshmem.ctx_atomic_fetch_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.ctx_atomic_fetch_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1223,12 +1223,12 @@ module {
     %value = arith.constant 128 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic or operation
-    openshmem.atomic_or(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_or(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1242,12 +1242,12 @@ module {
     %value = arith.constant 128 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic or operation
-    openshmem.atomic_or(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_or(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1264,13 +1264,13 @@ module {
     %value = arith.constant 128 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic or operation
-    openshmem.ctx_atomic_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1286,13 +1286,13 @@ module {
     %value = arith.constant 128 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic or operation
-    openshmem.ctx_atomic_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_or(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1307,12 +1307,12 @@ module {
     %value = arith.constant 85 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-xor operation
-    %result = openshmem.atomic_fetch_xor(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.atomic_fetch_xor(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1326,12 +1326,12 @@ module {
     %value = arith.constant 85 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic fetch-xor operation
-    %result = openshmem.atomic_fetch_xor(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.atomic_fetch_xor(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1348,13 +1348,13 @@ module {
     %value = arith.constant 85 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-xor operation
-    %result = openshmem.ctx_atomic_fetch_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32 -> i32
+    %result = openshmem.ctx_atomic_fetch_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1370,13 +1370,13 @@ module {
     %value = arith.constant 85 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic fetch-xor operation
-    %result = openshmem.ctx_atomic_fetch_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32 -> i64
+    %result = openshmem.ctx_atomic_fetch_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1391,12 +1391,12 @@ module {
     %value = arith.constant 85 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform atomic xor operation
-    openshmem.atomic_xor(%dest, %value, %pe) : !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_xor(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1410,12 +1410,12 @@ module {
     %value = arith.constant 85 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform atomic xor operation
-    openshmem.atomic_xor(%dest, %value, %pe) : !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_xor(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
 
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1432,13 +1432,13 @@ module {
     %value = arith.constant 85 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic xor operation
-    openshmem.ctx_atomic_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1454,13 +1454,13 @@ module {
     %value = arith.constant 85 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
 
     // Perform context-aware atomic xor operation
-    openshmem.ctx_atomic_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_xor(%ctx, %dest, %value, %pe) : !openshmem.ctx, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1474,15 +1474,15 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
 
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic fetch nbi operation
-    openshmem.atomic_fetch_nbi(%fetch, %src, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32
+    openshmem.atomic_fetch_nbi(%fetch, %src, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1495,15 +1495,15 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %src = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic fetch nbi operation
-    openshmem.atomic_fetch_nbi(%fetch, %src, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i32
+    openshmem.atomic_fetch_nbi(%fetch, %src, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%src) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1519,16 +1519,16 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
 
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic fetch nbi operation
-    openshmem.ctx_atomic_fetch_nbi(%ctx, %fetch, %src, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32
+    openshmem.ctx_atomic_fetch_nbi(%ctx, %fetch, %src, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%src) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1543,16 +1543,16 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for source
-    %src = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %src = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic fetch nbi operation
-    openshmem.ctx_atomic_fetch_nbi(%ctx, %fetch, %src, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i32
+    openshmem.ctx_atomic_fetch_nbi(%ctx, %fetch, %src, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%src) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1568,15 +1568,15 @@ module {
     %value = arith.constant 43 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic compare-and-swap nbi operation
-    openshmem.atomic_compare_swap_nbi(%fetch, %dest, %cond, %value, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32, i32
+    openshmem.atomic_compare_swap_nbi(%fetch, %dest, %cond, %value, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1591,15 +1591,15 @@ module {
     %value = arith.constant 43 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic compare-and-swap nbi operation
-    openshmem.atomic_compare_swap_nbi(%fetch, %dest, %cond, %value, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i64, i64, i32
+    openshmem.atomic_compare_swap_nbi(%fetch, %dest, %cond, %value, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i64, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1617,16 +1617,16 @@ module {
     %value = arith.constant 43 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic compare-and-swap nbi operation
-    openshmem.ctx_atomic_compare_swap_nbi(%ctx, %fetch, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32, i32
+    openshmem.ctx_atomic_compare_swap_nbi(%ctx, %fetch, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1643,16 +1643,16 @@ module {
     %value = arith.constant 43 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic compare-and-swap nbi operation
-    openshmem.ctx_atomic_compare_swap_nbi(%ctx, %fetch, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i64, i64, i32
+    openshmem.ctx_atomic_compare_swap_nbi(%ctx, %fetch, %dest, %cond, %value, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1667,15 +1667,15 @@ module {
     %value = arith.constant 42 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic swap nbi operation
-    openshmem.atomic_swap_nbi(%fetch, %dest, %value, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_swap_nbi(%fetch, %dest, %value, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1689,15 +1689,15 @@ module {
     %value = arith.constant 42 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic swap nbi operation
-    openshmem.atomic_swap_nbi(%fetch, %dest, %value, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_swap_nbi(%fetch, %dest, %value, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1714,16 +1714,16 @@ module {
     %value = arith.constant 42 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic swap nbi operation
-    openshmem.ctx_atomic_swap_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_swap_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1739,16 +1739,16 @@ module {
     %value = arith.constant 42 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic swap nbi operation
-    openshmem.ctx_atomic_swap_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_swap_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1762,15 +1762,15 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic fetch-and-increment nbi operation
-    openshmem.atomic_fetch_inc_nbi(%fetch, %dest, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32
+    openshmem.atomic_fetch_inc_nbi(%fetch, %dest, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1783,15 +1783,15 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic fetch-and-increment nbi operation
-    openshmem.atomic_fetch_inc_nbi(%fetch, %dest, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i32
+    openshmem.atomic_fetch_inc_nbi(%fetch, %dest, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1807,16 +1807,16 @@ module {
     %size = arith.constant 4 : index // 4 bytes for i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic fetch-and-increment nbi operation
-    openshmem.ctx_atomic_fetch_inc_nbi(%ctx, %fetch, %dest, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32
+    openshmem.ctx_atomic_fetch_inc_nbi(%ctx, %fetch, %dest, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1831,16 +1831,16 @@ module {
     %size = arith.constant 8 : index // 8 bytes for i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic fetch-and-increment nbi operation
-    openshmem.ctx_atomic_fetch_inc_nbi(%ctx, %fetch, %dest, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i32
+    openshmem.ctx_atomic_fetch_inc_nbi(%ctx, %fetch, %dest, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1855,15 +1855,15 @@ module {
     %value = arith.constant 5 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic fetch-and-add nbi operation
-    openshmem.atomic_fetch_add_nbi(%fetch, %dest, %value, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_fetch_add_nbi(%fetch, %dest, %value, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1877,15 +1877,15 @@ module {
     %value = arith.constant 5 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic fetch-and-add nbi operation
-    openshmem.atomic_fetch_add_nbi(%fetch, %dest, %value, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_fetch_add_nbi(%fetch, %dest, %value, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1902,16 +1902,16 @@ module {
     %value = arith.constant 5 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic fetch-and-add nbi operation
-    openshmem.ctx_atomic_fetch_add_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_fetch_add_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1927,16 +1927,16 @@ module {
     %value = arith.constant 5 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic fetch-and-add nbi operation
-    openshmem.ctx_atomic_fetch_add_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_fetch_add_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1951,15 +1951,15 @@ module {
     %value = arith.constant 255 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic fetch-and nbi operation
-    openshmem.atomic_fetch_and_nbi(%fetch, %dest, %value, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_fetch_and_nbi(%fetch, %dest, %value, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1973,15 +1973,15 @@ module {
     %value = arith.constant 255 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic fetch-and nbi operation
-    openshmem.atomic_fetch_and_nbi(%fetch, %dest, %value, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_fetch_and_nbi(%fetch, %dest, %value, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -1998,16 +1998,16 @@ module {
     %value = arith.constant 255 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic fetch-and nbi operation
-    openshmem.ctx_atomic_fetch_and_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_fetch_and_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2023,16 +2023,16 @@ module {
     %value = arith.constant 255 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic fetch-and nbi operation
-    openshmem.ctx_atomic_fetch_and_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_fetch_and_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2047,15 +2047,15 @@ module {
     %value = arith.constant 128 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic fetch-or nbi operation
-    openshmem.atomic_fetch_or_nbi(%fetch, %dest, %value, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_fetch_or_nbi(%fetch, %dest, %value, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2069,15 +2069,15 @@ module {
     %value = arith.constant 128 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic fetch-or nbi operation
-    openshmem.atomic_fetch_or_nbi(%fetch, %dest, %value, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_fetch_or_nbi(%fetch, %dest, %value, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2094,16 +2094,16 @@ module {
     %value = arith.constant 128 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic fetch-or nbi operation
-    openshmem.ctx_atomic_fetch_or_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_fetch_or_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2119,16 +2119,16 @@ module {
     %value = arith.constant 128 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic fetch-or nbi operation
-    openshmem.ctx_atomic_fetch_or_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_fetch_or_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2143,15 +2143,15 @@ module {
     %value = arith.constant 85 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform atomic fetch-xor nbi operation
-    openshmem.atomic_fetch_xor_nbi(%fetch, %dest, %value, %pe) : memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.atomic_fetch_xor_nbi(%fetch, %dest, %value, %pe) : memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2165,15 +2165,15 @@ module {
     %value = arith.constant 85 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform atomic fetch-xor nbi operation
-    openshmem.atomic_fetch_xor_nbi(%fetch, %dest, %value, %pe) : memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.atomic_fetch_xor_nbi(%fetch, %dest, %value, %pe) : memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2190,16 +2190,16 @@ module {
     %value = arith.constant 85 : i32
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i32>
 
     // Perform context-aware atomic fetch-xor nbi operation
-    openshmem.ctx_atomic_fetch_xor_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, !openshmem.symmetric_memref<i32>, i32, i32
+    openshmem.ctx_atomic_fetch_xor_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i32>, memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }
@@ -2215,16 +2215,16 @@ module {
     %value = arith.constant 85 : i64
 
     // Allocate symmetric memory for destination
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i64>
+    %dest = openshmem.malloc(%size) : index -> memref<i64, #openshmem.symmetric_memory>
     // Allocate local memory for fetch buffer
     %fetch = memref.alloc() : memref<i64>
 
     // Perform context-aware atomic fetch-xor nbi operation
-    openshmem.ctx_atomic_fetch_xor_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, !openshmem.symmetric_memref<i64>, i64, i32
+    openshmem.ctx_atomic_fetch_xor_nbi(%ctx, %fetch, %dest, %value, %pe) : !openshmem.ctx, memref<i64>, memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i64>
+    openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
     openshmem.finalize
     return
   }

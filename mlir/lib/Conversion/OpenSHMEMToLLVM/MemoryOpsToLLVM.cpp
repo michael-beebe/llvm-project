@@ -49,7 +49,7 @@ struct MallocOpLowering : public ConvertOpToLLVMPattern<openshmem::MallocOp> {
     auto callOp = rewriter.create<LLVM::CallOp>(loc, funcDecl,
                                                 ValueRange{adaptor.getSize()});
 
-    // Return the pointer as the symmetric_memref
+    // Return the pointer as the memref with symmetric memory space
     rewriter.replaceOp(op, callOp.getResult());
     return success();
   }
@@ -75,7 +75,7 @@ struct FreeOpLowering : public ConvertOpToLLVMPattern<openshmem::FreeOp> {
     LLVM::LLVMFuncOp funcDecl =
         getOrDefineFunction(moduleOp, loc, rewriter, "shmem_free", funcType);
 
-    // The symmetric_memref is just a pointer
+    // The memref with symmetric memory space is just a pointer
     Value dataPtr = adaptor.getPtr();
 
     // Replace with function call
@@ -203,7 +203,7 @@ struct OffsetOpLowering : public ConvertOpToLLVMPattern<openshmem::OffsetOp> {
     Value basePtr = adaptor.getBase();
     Value offElems = adaptor.getOffsetElems();
 
-    auto shmType = cast<openshmem::SymmetricMemRefType>(op.getBase().getType());
+    auto shmType = cast<MemRefType>(op.getBase().getType());
     unsigned elemSizeBytes = getScalarTypeSizeInBytes(shmType.getElementType());
 
     Type idxTy = getTypeConverter()->getIndexType();

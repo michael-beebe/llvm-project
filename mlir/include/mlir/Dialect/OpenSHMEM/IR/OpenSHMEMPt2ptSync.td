@@ -33,7 +33,7 @@ def OpenSHMEM_WaitUntilOp : OpenSHMEM_Op<"wait_until", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivar,
+    SymmetricMemRef:$ivar,
     I32:$cmp,
     AnyType:$cmp_value
   );
@@ -67,7 +67,7 @@ def OpenSHMEM_WaitUntilAllOp : OpenSHMEM_Op<"wait_until_all", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -105,7 +105,7 @@ def OpenSHMEM_WaitUntilAnyOp : OpenSHMEM_Op<"wait_until_any", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -147,7 +147,7 @@ def OpenSHMEM_WaitUntilSomeOp : OpenSHMEM_Op<"wait_until_some", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$indices,
     AnyMemRef:$status,
@@ -190,7 +190,7 @@ def OpenSHMEM_WaitUntilAllVectorOp : OpenSHMEM_Op<"wait_until_all_vector", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -229,7 +229,7 @@ def OpenSHMEM_WaitUntilAnyVectorOp : OpenSHMEM_Op<"wait_until_any_vector", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -271,7 +271,7 @@ def OpenSHMEM_WaitUntilSomeVectorOp : OpenSHMEM_Op<"wait_until_some_vector", []>
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$indices,
     AnyMemRef:$status,
@@ -313,7 +313,7 @@ def OpenSHMEM_TestOp : OpenSHMEM_Op<"test", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivar,
+    SymmetricMemRef:$ivar,
     I32:$cmp,
     AnyType:$cmp_value
   );
@@ -353,7 +353,7 @@ def OpenSHMEM_TestAllOp : OpenSHMEM_Op<"test_all", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -396,7 +396,7 @@ def OpenSHMEM_TestAnyOp : OpenSHMEM_Op<"test_any", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -441,7 +441,7 @@ def OpenSHMEM_TestSomeOp : OpenSHMEM_Op<"test_some", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$indices,
     AnyMemRef:$status,
@@ -486,7 +486,7 @@ def OpenSHMEM_TestAllVectorOp : OpenSHMEM_Op<"test_all_vector", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -530,7 +530,7 @@ def OpenSHMEM_TestAnyVectorOp : OpenSHMEM_Op<"test_any_vector", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$status,
     I32:$cmp,
@@ -576,7 +576,7 @@ def OpenSHMEM_TestSomeVectorOp : OpenSHMEM_Op<"test_some_vector", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$ivars,
+    SymmetricMemRef:$ivars,
     Index:$nelems,
     AnyMemRef:$indices,
     AnyMemRef:$status,
@@ -619,7 +619,7 @@ def OpenSHMEM_SignalWaitUntilOp : OpenSHMEM_Op<"signal_wait_until", []> {
   }];
 
   let arguments = (ins 
-    OpenSHMEM_SymmetricMemRef:$sig_addr,
+    SymmetricMemRef:$sig_addr,
     I32:$cmp,
     I64:$cmp_value
   );

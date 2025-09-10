@@ -15,15 +15,15 @@ module {
     %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
     // Allocate symmetric memory for dest and source
-    %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-    %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+    %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
     
     // Perform alltoallmem operations
-    %retval = openshmem.alltoallmem(%team, %dest, %source, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+    %retval = openshmem.alltoallmem(%team, %dest, %source, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
     // Free symmetric memory
-    openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-    openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+    openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
     // Finalize OpenSHMEM
     openshmem.finalize
@@ -53,19 +53,19 @@ func.func @test_alltoallsmem() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Stride for destination and source
   %dst = arith.constant 2 : index // 2 elements
   %sst = arith.constant 2 : index // 2 elements
 
   // Perform alltoallsmem operations
-  %retval = openshmem.alltoallsmem(%team, %dest, %source, %dst, %sst, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index, index, index -> i32
+  %retval = openshmem.alltoallsmem(%team, %dest, %source, %dst, %sst, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index, index, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -96,15 +96,15 @@ func.func @test_broadcastmem() {
   %pe_root = arith.constant 0 : i32 // Root PE number
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform broadcastmem operations
-  %retval = openshmem.broadcastmem(%team, %dest, %source, %nelems, %pe_root) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index, i32 -> i32
+  %retval = openshmem.broadcastmem(%team, %dest, %source, %nelems, %pe_root) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index, i32 -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -134,15 +134,15 @@ func.func @test_collectmem() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform collectmem operations
-  %retval = openshmem.collectmem(%team, %dest, %source, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.collectmem(%team, %dest, %source, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -172,15 +172,15 @@ func.func @test_fcollectmem() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform fcollectmem operations
-  %retval = openshmem.fcollectmem(%team, %dest, %source, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.fcollectmem(%team, %dest, %source, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -209,15 +209,15 @@ func.func @test_andreduce() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform andreduce operations
-  %retval = openshmem.andreduce(%team, %dest, %source, %nreduce) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.andreduce(%team, %dest, %source, %nreduce) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -247,15 +247,15 @@ func.func @test_orreduce() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform orreduce operations
-  %retval = openshmem.orreduce(%team, %dest, %source, %nreduce) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.orreduce(%team, %dest, %source, %nreduce) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -285,15 +285,15 @@ func.func @test_xorreduce() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform xorreduce operations
-  %retval = openshmem.xorreduce(%team, %dest, %source, %nreduce) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.xorreduce(%team, %dest, %source, %nreduce) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -323,15 +323,15 @@ func.func @test_maxreduce() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform maxreduce operations
-  %retval = openshmem.maxreduce(%team, %dest, %source, %nreduce) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.maxreduce(%team, %dest, %source, %nreduce) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -361,15 +361,15 @@ func.func @test_minreduce() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform minreduce operations
-  %retval = openshmem.minreduce(%team, %dest, %source, %nreduce) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.minreduce(%team, %dest, %source, %nreduce) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -399,15 +399,15 @@ func.func @test_sumreduce() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform sumreduce operations
-  %retval = openshmem.sumreduce(%team, %dest, %source, %nreduce) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.sumreduce(%team, %dest, %source, %nreduce) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -437,15 +437,15 @@ func.func @test_prodreduce() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform prodreduce operations
-  %retval = openshmem.prodreduce(%team, %dest, %source, %nreduce) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.prodreduce(%team, %dest, %source, %nreduce) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -475,15 +475,15 @@ func.func @test_alltoall_typed() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
   
   // Perform typed alltoall operations
-  %retval = openshmem.alltoall(%team, %dest, %source, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.alltoall(%team, %dest, %source, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -513,19 +513,19 @@ func.func @test_alltoalls_typed() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Stride for destination and source
   %dst = arith.constant 2 : index // 2 elements
   %sst = arith.constant 2 : index // 2 elements
 
   // Perform typed strided alltoall operations
-  %retval = openshmem.alltoalls(%team, %dest, %source, %dst, %sst, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index, index, index -> i32
+  %retval = openshmem.alltoalls(%team, %dest, %source, %dst, %sst, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index, index, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -556,15 +556,15 @@ func.func @test_broadcast_typed() {
   %pe_root = arith.constant 0 : i32 // Root PE number
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform typed broadcast operations
-  %retval = openshmem.broadcast(%team, %dest, %source, %nelems, %pe_root) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index, i32 -> i32
+  %retval = openshmem.broadcast(%team, %dest, %source, %nelems, %pe_root) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index, i32 -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -594,15 +594,15 @@ func.func @test_collect_typed() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform typed collect operations
-  %retval = openshmem.collect(%team, %dest, %source, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.collect(%team, %dest, %source, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
@@ -632,15 +632,15 @@ func.func @test_fcollect_typed() {
   %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
 
   // Allocate symmetric memory for dest and source
-  %dest = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
-  %source = openshmem.malloc(%size) : index -> !openshmem.symmetric_memref<i32>
+  %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+  %source = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
 
   // Perform typed fcollect operations
-  %retval = openshmem.fcollect(%team, %dest, %source, %nelems) : !openshmem.team, !openshmem.symmetric_memref<i32>, !openshmem.symmetric_memref<i32>, index -> i32
+  %retval = openshmem.fcollect(%team, %dest, %source, %nelems) : !openshmem.team, memref<i32, #openshmem.symmetric_memory>, memref<i32, #openshmem.symmetric_memory>, index -> i32
 
   // Free symmetric memory
-  openshmem.free(%dest) : !openshmem.symmetric_memref<i32>
-  openshmem.free(%source) : !openshmem.symmetric_memref<i32>
+  openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
+  openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
   openshmem.finalize
