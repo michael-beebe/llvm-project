@@ -5,7 +5,7 @@
 module {
   func.func @test_context_ops() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Options for context creation
     %opts = arith.constant 0 : i64
@@ -27,7 +27,7 @@ module {
     openshmem.ctx_destroy(%team_ctx) : !openshmem.ctx
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 

@@ -3,8 +3,6 @@ source_filename = "LLVMDialectModule"
 
 @SHMEM_TEAM_WORLD = external constant ptr
 
-declare void @shmem_finalize()
-
 declare void @shmem_ctx_destroy(ptr)
 
 declare i32 @shmem_ctx_get_team(ptr, ptr)
@@ -12,6 +10,8 @@ declare i32 @shmem_ctx_get_team(ptr, ptr)
 declare i32 @shmem_team_create_ctx(ptr, i64, ptr)
 
 declare i32 @shmem_ctx_create(i64, ptr)
+
+declare void @shmem_finalize()
 
 declare void @shmem_init()
 

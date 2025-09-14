@@ -5,7 +5,7 @@
 module {
   func.func @test_alltoallmem() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Set SHMEM_TEAM_WORLD to a team handle
     %team = openshmem.team_world -> !openshmem.team
@@ -26,7 +26,7 @@ module {
     openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -43,7 +43,7 @@ module {
 
 func.func @test_alltoallsmem() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -68,7 +68,7 @@ func.func @test_alltoallsmem() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -85,7 +85,7 @@ func.func @test_alltoallsmem() {
 
 func.func @test_broadcastmem() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -107,7 +107,7 @@ func.func @test_broadcastmem() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -124,7 +124,7 @@ func.func @test_broadcastmem() {
 
 func.func @test_collectmem() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -145,7 +145,7 @@ func.func @test_collectmem() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -162,7 +162,7 @@ func.func @test_collectmem() {
 
 func.func @test_fcollectmem() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -183,7 +183,7 @@ func.func @test_fcollectmem() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -199,7 +199,7 @@ func.func @test_fcollectmem() {
 
 func.func @test_andreduce() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -220,7 +220,7 @@ func.func @test_andreduce() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -237,7 +237,7 @@ func.func @test_andreduce() {
 
 func.func @test_orreduce() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -258,7 +258,7 @@ func.func @test_orreduce() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -275,7 +275,7 @@ func.func @test_orreduce() {
 
 func.func @test_xorreduce() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -296,7 +296,7 @@ func.func @test_xorreduce() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -313,7 +313,7 @@ func.func @test_xorreduce() {
 
 func.func @test_maxreduce() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -334,7 +334,7 @@ func.func @test_maxreduce() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -351,7 +351,7 @@ func.func @test_maxreduce() {
 
 func.func @test_minreduce() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -372,7 +372,7 @@ func.func @test_minreduce() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -389,7 +389,7 @@ func.func @test_minreduce() {
 
 func.func @test_sumreduce() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -410,7 +410,7 @@ func.func @test_sumreduce() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -427,7 +427,7 @@ func.func @test_sumreduce() {
 
 func.func @test_prodreduce() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -448,7 +448,7 @@ func.func @test_prodreduce() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -465,7 +465,7 @@ func.func @test_prodreduce() {
 
 func.func @test_alltoall_typed() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -486,7 +486,7 @@ func.func @test_alltoall_typed() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -503,7 +503,7 @@ func.func @test_alltoall_typed() {
 
 func.func @test_alltoalls_typed() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -528,7 +528,7 @@ func.func @test_alltoalls_typed() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -545,7 +545,7 @@ func.func @test_alltoalls_typed() {
 
 func.func @test_broadcast_typed() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -567,7 +567,7 @@ func.func @test_broadcast_typed() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 
@@ -622,7 +622,7 @@ func.func @test_collect_typed() {
 
 func.func @test_fcollect_typed() {
   // Initialize OpenSHMEM
-  openshmem.init
+  openshmem.region {
 
   // Set SHMEM_TEAM_WORLD to a team handle
   %team = openshmem.team_world -> !openshmem.team
@@ -643,7 +643,7 @@ func.func @test_fcollect_typed() {
   openshmem.free(%source) : memref<i32, #openshmem.symmetric_memory>
 
   // Finalize OpenSHMEM
-  openshmem.finalize
+  }
   return
 }
 

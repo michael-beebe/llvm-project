@@ -47,7 +47,15 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         APInt sum = attrHead.getValue();
         SmallVector<Operation *> toErase;
         Operation *cursor = head->getNextNode();
+
+        // Check if we're inside a region - if so, only look within the region
+        auto region = head->getParentOfType<openshmem::Region>();
+
         while (auto addN = dyn_cast_or_null<AtomicAddOp>(cursor)) {
+          // If we're in a region, stop if we go outside the region
+          if (region && !region->isAncestor(cursor))
+            break;
+
           if (addN.getDest() != head.getDest() || addN.getPe() != head.getPe())
             break;
           auto cN = addN.getValue().getDefiningOp<arith::ConstantOp>();
@@ -80,7 +88,15 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         SmallVector<AtomicIncOp, 4> chain;
         chain.push_back(inc1);
         Operation *cursor = inc1->getNextNode();
+
+        // Check if we're inside a region - if so, only look within the region
+        auto region = inc1->getParentOfType<openshmem::Region>();
+
         while (auto incN = dyn_cast_or_null<AtomicIncOp>(cursor)) {
+          // If we're in a region, stop if we go outside the region
+          if (region && !region->isAncestor(cursor))
+            break;
+
           if (incN.getDest() != inc1.getDest() || incN.getPe() != inc1.getPe())
             break;
           chain.push_back(incN);
@@ -92,7 +108,8 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         // Derive integer element type from memref with symmetric memory space.
         auto memRefType = dyn_cast<MemRefType>(inc1.getDest().getType());
         if (!memRefType || !memRefType.getMemorySpace() ||
-            !llvm::isa<openshmem::SymmetricMemorySpaceAttr>(memRefType.getMemorySpace()))
+            !llvm::isa<openshmem::SymmetricMemorySpaceAttr>(
+                memRefType.getMemorySpace()))
           return failure();
         auto intElemTy = dyn_cast<IntegerType>(memRefType.getElementType());
         if (!intElemTy)
@@ -122,7 +139,15 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         APInt combined = a1.getValue();
         SmallVector<Operation *> toErase;
         Operation *cursor = or1->getNextNode();
+
+        // Check if we're inside a region - if so, only look within the region
+        auto region = or1->getParentOfType<openshmem::Region>();
+
         while (auto orN = dyn_cast_or_null<AtomicOrOp>(cursor)) {
+          // If we're in a region, stop if we go outside the region
+          if (region && !region->isAncestor(cursor))
+            break;
+
           if (orN.getDest() != or1.getDest() || orN.getPe() != or1.getPe())
             break;
           auto cN = orN.getValue().getDefiningOp<arith::ConstantOp>();
@@ -161,7 +186,15 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         APInt combined = a1.getValue();
         SmallVector<Operation *> toErase;
         Operation *cursor = x1->getNextNode();
+
+        // Check if we're inside a region - if so, only look within the region
+        auto region = x1->getParentOfType<openshmem::Region>();
+
         while (auto xN = dyn_cast_or_null<AtomicXorOp>(cursor)) {
+          // If we're in a region, stop if we go outside the region
+          if (region && !region->isAncestor(cursor))
+            break;
+
           if (xN.getDest() != x1.getDest() || xN.getPe() != x1.getPe())
             break;
           auto cN = xN.getValue().getDefiningOp<arith::ConstantOp>();
@@ -200,6 +233,13 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         auto inc = dyn_cast_or_null<AtomicIncOp>(add->getNextNode());
         if (!inc)
           return failure();
+
+        // Check if we're inside a region - if so, ensure inc is also in the
+        // same region
+        auto region = add->getParentOfType<openshmem::Region>();
+        if (region && !region->isAncestor(inc))
+          return failure();
+
         if (add.getDest() != inc.getDest() || add.getPe() != inc.getPe())
           return failure();
         auto c = add.getValue().getDefiningOp<arith::ConstantOp>();
@@ -225,6 +265,13 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         auto add = dyn_cast_or_null<AtomicAddOp>(inc->getNextNode());
         if (!add)
           return failure();
+
+        // Check if we're inside a region - if so, ensure add is also in the
+        // same region
+        auto region = inc->getParentOfType<openshmem::Region>();
+        if (region && !region->isAncestor(add))
+          return failure();
+
         if (inc.getDest() != add.getDest() || inc.getPe() != add.getPe())
           return failure();
         auto c = add.getValue().getDefiningOp<arith::ConstantOp>();
@@ -235,7 +282,8 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
         // Derive element integer type from memref with symmetric memory space.
         auto memRefType = dyn_cast<MemRefType>(inc.getDest().getType());
         if (!memRefType || !memRefType.getMemorySpace() ||
-            !llvm::isa<openshmem::SymmetricMemorySpaceAttr>(memRefType.getMemorySpace()))
+            !llvm::isa<openshmem::SymmetricMemorySpaceAttr>(
+                memRefType.getMemorySpace()))
           return failure();
         auto intElemTy = dyn_cast<IntegerType>(memRefType.getElementType());
         if (!intElemTy || intElemTy != a.getType())

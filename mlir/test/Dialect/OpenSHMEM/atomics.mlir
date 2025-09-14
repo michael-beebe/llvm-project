@@ -5,7 +5,7 @@
 module {
   // Test generic typed atomic fetch operations
   func.func @test_i32_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     
@@ -16,14 +16,14 @@ module {
     %result = openshmem.atomic_fetch(%src, %pe) : memref<i32, #openshmem.symmetric_memory>, i32 -> i32
     
     openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch{{.*}}(
 
   func.func @test_i64_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     
@@ -34,14 +34,14 @@ module {
     %result = openshmem.atomic_fetch(%src, %pe) : memref<i64, #openshmem.symmetric_memory>, i32 -> i64
     
     openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch{{.*}}(
 
   func.func @test_f32_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for f32
     
@@ -52,14 +52,14 @@ module {
     %result = openshmem.atomic_fetch(%src, %pe) : memref<f32, #openshmem.symmetric_memory>, i32 -> f32
     
     openshmem.free(%src) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_fetch()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch{{.*}}(
 
   func.func @test_f64_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for f64
     
@@ -70,7 +70,7 @@ module {
     %result = openshmem.atomic_fetch(%src, %pe) : memref<f64, #openshmem.symmetric_memory>, i32 -> f64
     
     openshmem.free(%src) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_fetch()
@@ -78,7 +78,7 @@ module {
 
   // Test context-aware typed atomic fetch operations
   func.func @test_ctx_i32_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -92,14 +92,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -113,14 +113,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch{{.*}}(
 
   func.func @test_ctx_f32_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -134,14 +134,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%src) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f32_atomic_fetch()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch{{.*}}(
 
   func.func @test_ctx_f64_atomic_fetch() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -155,7 +155,7 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%src) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_fetch()
@@ -163,7 +163,7 @@ module {
 
   // Test generic typed atomic set operations
   func.func @test_i32_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 42 : i32
@@ -175,14 +175,14 @@ module {
     openshmem.atomic_set(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
     
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_set()
 // CHECK: llvm.call @shmem_{{.*}}atomic_set{{.*}}(
 
   func.func @test_i64_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 42 : i64
@@ -194,14 +194,14 @@ module {
     openshmem.atomic_set(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
     
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_set()
 // CHECK: llvm.call @shmem_{{.*}}atomic_set{{.*}}(
 
   func.func @test_f32_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for f32
     %value = arith.constant 42.0 : f32
@@ -213,14 +213,14 @@ module {
     openshmem.atomic_set(%dest, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, i32
     
     openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_set()
 // CHECK: llvm.call @shmem_{{.*}}atomic_set{{.*}}(
 
   func.func @test_f64_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for f64
     %value = arith.constant 42.0 : f64
@@ -232,7 +232,7 @@ module {
     openshmem.atomic_set(%dest, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, i32
     
     openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_set()
@@ -240,7 +240,7 @@ module {
 
   // Test context-aware typed atomic set operations
   func.func @test_ctx_i32_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -255,14 +255,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_set()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_set{{.*}}(
 
   func.func @test_ctx_i64_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -277,14 +277,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_set()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_set{{.*}}(
 
   func.func @test_ctx_f32_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -299,14 +299,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f32_atomic_set()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_set{{.*}}(
 
   func.func @test_ctx_f64_atomic_set() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -321,7 +321,7 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_set()
@@ -329,7 +329,7 @@ module {
 
   // Test generic typed atomic compare-and-swap operations
   func.func @test_i32_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %cond = arith.constant 42 : i32
@@ -342,14 +342,14 @@ module {
     %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32, i32 -> i32
     
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_compare_swap()
 // CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap{{.*}}(
 
   func.func @test_i64_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %cond = arith.constant 42 : i64
@@ -362,14 +362,14 @@ module {
     %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i64, i32 -> i64
     
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_compare_swap()
 // CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap{{.*}}(
 
   func.func @test_f32_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for f32
     %cond = arith.constant 42.0 : f32
@@ -382,14 +382,14 @@ module {
     %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, f32, i32 -> f32
     
     openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_compare_swap()
 // CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap{{.*}}(
 
   func.func @test_f64_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for f64
     %cond = arith.constant 42.0 : f64
@@ -402,7 +402,7 @@ module {
     %result = openshmem.atomic_compare_swap(%dest, %cond, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, f64, i32 -> f64
     
     openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_compare_swap()
@@ -410,7 +410,7 @@ module {
 
   // Test context-aware typed atomic compare-and-swap operations
   func.func @test_ctx_i32_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -427,14 +427,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_compare_swap()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap{{.*}}(
 
   func.func @test_ctx_i64_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -451,14 +451,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_compare_swap()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap{{.*}}(
 
   func.func @test_ctx_f32_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -475,14 +475,14 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f32_atomic_compare_swap()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap{{.*}}(
 
   func.func @test_ctx_f64_atomic_compare_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -499,7 +499,7 @@ module {
     
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_compare_swap()
@@ -507,7 +507,7 @@ module {
 
   // Test generic typed atomic swap operations
   func.func @test_i32_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 42 : i32
@@ -520,14 +520,14 @@ module {
 
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_swap()
 // CHECK: llvm.call @shmem_{{.*}}atomic_swap{{.*}}(
 
   func.func @test_i64_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 42 : i64
@@ -539,7 +539,7 @@ module {
     %result = openshmem.atomic_swap(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_swap()
@@ -547,7 +547,7 @@ module {
 
   // Test context-aware typed atomic swap operations
   func.func @test_ctx_i32_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -562,14 +562,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_swap()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap{{.*}}( 
 
   func.func @test_ctx_i64_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -584,7 +584,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_swap()
@@ -592,7 +592,7 @@ module {
 
   // Test generic typed atomic swap operations
   func.func @test_f32_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for f32
     %value = arith.constant 42.0 : f32
@@ -604,14 +604,14 @@ module {
     %result = openshmem.atomic_swap(%dest, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, i32 -> f32
 
     openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_swap()
 // CHECK: llvm.call @shmem_{{.*}}atomic_swap{{.*}}(
 
   func.func @test_f64_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for f64
     %value = arith.constant 42.0 : f64
@@ -623,7 +623,7 @@ module {
     %result = openshmem.atomic_swap(%dest, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, i32 -> f64
 
     openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_swap()
@@ -631,7 +631,7 @@ module {
 
   // Test context-aware typed atomic swap operations
   func.func @test_ctx_f32_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -646,7 +646,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 
@@ -654,7 +654,7 @@ module {
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap{{.*}}(
 
   func.func @test_ctx_f64_atomic_swap() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -669,7 +669,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_f64_atomic_swap()
@@ -677,7 +677,7 @@ module {
 
   // Test generic typed atomic fetch-and-increment operations
   func.func @test_i32_atomic_fetch_inc() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 42 : i32
@@ -689,14 +689,14 @@ module {
     %result = openshmem.atomic_fetch_inc(%dest, %pe) : memref<i32, #openshmem.symmetric_memory>, i32 -> i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_inc()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_inc{{.*}}(
 
   func.func @test_i64_atomic_fetch_inc() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
 
@@ -707,7 +707,7 @@ module {
     %result = openshmem.atomic_fetch_inc(%dest, %pe) : memref<i64, #openshmem.symmetric_memory>, i32 -> i64
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_inc()
@@ -715,7 +715,7 @@ module {
 
   // Test context-aware typed atomic fetch-and-increment operations
   func.func @test_ctx_i32_atomic_fetch_inc() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -730,14 +730,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_inc()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_inc{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_inc() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -751,7 +751,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_inc()
@@ -759,7 +759,7 @@ module {
 
   // Test generic typed atomic increment operations
   func.func @test_i32_atomic_inc() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 42 : i32
@@ -771,14 +771,14 @@ module {
     openshmem.atomic_inc(%dest, %pe) : memref<i32, #openshmem.symmetric_memory>, i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_inc()
 // CHECK: llvm.call @shmem_{{.*}}atomic_inc{{.*}}(
 
   func.func @test_i64_atomic_inc() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
 
@@ -789,7 +789,7 @@ module {
     openshmem.atomic_inc(%dest, %pe) : memref<i64, #openshmem.symmetric_memory>, i32
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 
@@ -799,7 +799,7 @@ module {
   // Test context-aware typed atomic increment operations
 
   func.func @test_ctx_i32_atomic_inc() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -814,14 +814,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_inc()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_inc{{.*}}(
 
   func.func @test_ctx_i64_atomic_inc() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -835,7 +835,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_inc()
@@ -843,7 +843,7 @@ module {
 
   // Test generic typed atomic fetch-and-add operations
   func.func @test_i32_atomic_fetch_add() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 5 : i32
@@ -855,14 +855,14 @@ module {
     %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_add()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add{{.*}}(
 
   func.func @test_i64_atomic_fetch_add() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 5 : i64
@@ -874,14 +874,14 @@ module {
     %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_add()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add{{.*}}(
 
   func.func @test_f32_atomic_fetch_add() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for f32
     %value = arith.constant 5.0 : f32
@@ -893,14 +893,14 @@ module {
     %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<f32, #openshmem.symmetric_memory>, f32, i32 -> f32
 
     openshmem.free(%dest) : memref<f32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f32_atomic_fetch_add()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add{{.*}}(
 
   func.func @test_f64_atomic_fetch_add() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for f64
     %value = arith.constant 5.0 : f64
@@ -912,7 +912,7 @@ module {
     %result = openshmem.atomic_fetch_add(%dest, %value, %pe) : memref<f64, #openshmem.symmetric_memory>, f64, i32 -> f64
 
     openshmem.free(%dest) : memref<f64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_f64_atomic_fetch_add()
@@ -920,7 +920,7 @@ module {
 
   // Test context-aware typed atomic fetch-and-add operations
   func.func @test_ctx_i32_atomic_fetch_add() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -935,14 +935,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_add()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_add{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_add() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -957,7 +957,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_add()
@@ -965,7 +965,7 @@ module {
 
   // Test generic typed atomic add operations
   func.func @test_i32_atomic_add() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 5 : i32
@@ -977,14 +977,14 @@ module {
     openshmem.atomic_add(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_add()
 // CHECK: llvm.call @shmem_{{.*}}atomic_add{{.*}}(
 
   func.func @test_i64_atomic_add() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 5 : i64
@@ -996,7 +996,7 @@ module {
     openshmem.atomic_add(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_add()
@@ -1004,7 +1004,7 @@ module {
 
   // Test context-aware typed atomic add operations
   func.func @test_ctx_i32_atomic_add() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1019,14 +1019,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_add()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_add{{.*}}(
 
   func.func @test_ctx_i64_atomic_add() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1041,7 +1041,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_add()
@@ -1049,7 +1049,7 @@ module {
 
   // Test generic typed atomic fetch-and operations
   func.func @test_i32_atomic_fetch_and() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 255 : i32
@@ -1061,14 +1061,14 @@ module {
     %result = openshmem.atomic_fetch_and(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_and()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_and{{.*}}(
 
   func.func @test_i64_atomic_fetch_and() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 255 : i64
@@ -1080,7 +1080,7 @@ module {
     %result = openshmem.atomic_fetch_and(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_and()
@@ -1088,7 +1088,7 @@ module {
 
   // Test context-aware typed atomic fetch-and operations
   func.func @test_ctx_i32_atomic_fetch_and() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1103,14 +1103,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_and()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_and{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_and() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1125,7 +1125,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_and()
@@ -1133,7 +1133,7 @@ module {
 
   // Test generic typed atomic fetch-or operations
   func.func @test_i32_atomic_fetch_or() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 128 : i32
@@ -1145,14 +1145,14 @@ module {
     %result = openshmem.atomic_fetch_or(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_or()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_or{{.*}}(
 
   func.func @test_i64_atomic_fetch_or() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 128 : i64
@@ -1164,7 +1164,7 @@ module {
     %result = openshmem.atomic_fetch_or(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_or()
@@ -1172,7 +1172,7 @@ module {
 
   // Test context-aware typed atomic fetch-or operations
   func.func @test_ctx_i32_atomic_fetch_or() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1187,14 +1187,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_or()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_or{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_or() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1209,7 +1209,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_or()
@@ -1217,7 +1217,7 @@ module {
 
   // Test generic typed atomic or operations
   func.func @test_i32_atomic_or() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 128 : i32
@@ -1229,14 +1229,14 @@ module {
     openshmem.atomic_or(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_or()
 // CHECK: llvm.call @shmem_{{.*}}atomic_or{{.*}}(
 
   func.func @test_i64_atomic_or() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 128 : i64
@@ -1248,7 +1248,7 @@ module {
     openshmem.atomic_or(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_or()
@@ -1256,7 +1256,7 @@ module {
 
   // Test context-aware typed atomic or operations
   func.func @test_ctx_i32_atomic_or() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1271,14 +1271,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_or()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_or{{.*}}(
 
   func.func @test_ctx_i64_atomic_or() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1293,7 +1293,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_or()
@@ -1301,7 +1301,7 @@ module {
 
   // Test generic typed atomic fetch-xor operations
   func.func @test_i32_atomic_fetch_xor() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 85 : i32
@@ -1313,14 +1313,14 @@ module {
     %result = openshmem.atomic_fetch_xor(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32 -> i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_xor()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_xor{{.*}}(
 
   func.func @test_i64_atomic_fetch_xor() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 85 : i64
@@ -1332,7 +1332,7 @@ module {
     %result = openshmem.atomic_fetch_xor(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32 -> i64
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_xor()
@@ -1340,7 +1340,7 @@ module {
 
   // Test context-aware typed atomic fetch-xor operations
   func.func @test_ctx_i32_atomic_fetch_xor() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1355,14 +1355,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_xor()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_xor{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_xor() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1377,7 +1377,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_xor()
@@ -1385,7 +1385,7 @@ module {
 
   // Test generic typed atomic xor operations
   func.func @test_i32_atomic_xor() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 85 : i32
@@ -1397,14 +1397,14 @@ module {
     openshmem.atomic_xor(%dest, %value, %pe) : memref<i32, #openshmem.symmetric_memory>, i32, i32
 
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_xor()
 // CHECK: llvm.call @shmem_{{.*}}atomic_xor{{.*}}(
 
   func.func @test_i64_atomic_xor() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 85 : i64
@@ -1416,7 +1416,7 @@ module {
     openshmem.atomic_xor(%dest, %value, %pe) : memref<i64, #openshmem.symmetric_memory>, i64, i32
 
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_xor()
@@ -1424,7 +1424,7 @@ module {
 
   // Test context-aware typed atomic xor operations
   func.func @test_ctx_i32_atomic_xor() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1439,14 +1439,14 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_xor()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_xor{{.*}}(
 
   func.func @test_ctx_i64_atomic_xor() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1461,7 +1461,7 @@ module {
 
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_xor()
@@ -1469,7 +1469,7 @@ module {
 
   // Test non-blocking atomic fetch operations
   func.func @test_i32_atomic_fetch_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
 
@@ -1483,14 +1483,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
 
@@ -1504,7 +1504,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_nbi()
@@ -1512,7 +1512,7 @@ module {
 
   // Test context-aware non-blocking atomic fetch operations
   func.func @test_ctx_i32_atomic_fetch_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1529,14 +1529,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%src) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1553,7 +1553,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%src) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_nbi()
@@ -1561,7 +1561,7 @@ module {
 
   // Test non-blocking atomic compare-and-swap operations
   func.func @test_i32_atomic_compare_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %cond = arith.constant 42 : i32
@@ -1577,14 +1577,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_compare_swap_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_compare_swap_nbi{{.*}}(
 
   func.func @test_i64_atomic_compare_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %cond = arith.constant 42 : i64
@@ -1600,7 +1600,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_compare_swap_nbi()
@@ -1608,7 +1608,7 @@ module {
 
   // Test context-aware non-blocking atomic compare-and-swap operations
   func.func @test_ctx_i32_atomic_compare_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1627,14 +1627,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_compare_swap_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_compare_swap_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_compare_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1653,7 +1653,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_compare_swap_nbi()
@@ -1661,7 +1661,7 @@ module {
 
   // Test non-blocking atomic swap operations
   func.func @test_i32_atomic_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 42 : i32
@@ -1676,14 +1676,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_swap_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_swap_nbi{{.*}}(
 
   func.func @test_i64_atomic_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 42 : i64
@@ -1698,7 +1698,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_swap_nbi()
@@ -1706,7 +1706,7 @@ module {
 
   // Test context-aware non-blocking atomic swap operations
   func.func @test_ctx_i32_atomic_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1724,14 +1724,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_swap_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_swap_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_swap_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1749,7 +1749,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_swap_nbi()
@@ -1757,7 +1757,7 @@ module {
 
   // Test non-blocking atomic fetch-and-increment operations
   func.func @test_i32_atomic_fetch_inc_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
 
@@ -1771,14 +1771,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_inc_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_inc_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_inc_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
 
@@ -1792,7 +1792,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_inc_nbi()
@@ -1800,7 +1800,7 @@ module {
 
   // Test context-aware non-blocking atomic fetch-and-increment operations
   func.func @test_ctx_i32_atomic_fetch_inc_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1817,14 +1817,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_inc_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_inc_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_inc_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1841,7 +1841,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_inc_nbi()
@@ -1849,7 +1849,7 @@ module {
 
   // Test non-blocking atomic fetch-and-add operations
   func.func @test_i32_atomic_fetch_add_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 5 : i32
@@ -1864,14 +1864,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_add_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_add_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_add_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 5 : i64
@@ -1886,7 +1886,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_add_nbi()
@@ -1894,7 +1894,7 @@ module {
 
   // Test context-aware non-blocking atomic fetch-and-add operations
   func.func @test_ctx_i32_atomic_fetch_add_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1912,14 +1912,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_add_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_add_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_add_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -1937,7 +1937,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_add_nbi()
@@ -1945,7 +1945,7 @@ module {
 
   // Test non-blocking atomic fetch-and operations
   func.func @test_i32_atomic_fetch_and_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 255 : i32
@@ -1960,14 +1960,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_and_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_and_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_and_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 255 : i64
@@ -1982,7 +1982,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_and_nbi()
@@ -1990,7 +1990,7 @@ module {
 
   // Test context-aware non-blocking atomic fetch-and operations
   func.func @test_ctx_i32_atomic_fetch_and_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -2008,14 +2008,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_and_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_and_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_and_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -2033,7 +2033,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_and_nbi()
@@ -2041,7 +2041,7 @@ module {
 
   // Test non-blocking atomic fetch-or operations
   func.func @test_i32_atomic_fetch_or_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 128 : i32
@@ -2056,14 +2056,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_or_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_or_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_or_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 128 : i64
@@ -2078,7 +2078,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_or_nbi()
@@ -2086,7 +2086,7 @@ module {
 
   // Test context-aware non-blocking atomic fetch-or operations
   func.func @test_ctx_i32_atomic_fetch_or_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -2104,14 +2104,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_or_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_or_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_or_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -2129,7 +2129,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_or_nbi()
@@ -2137,7 +2137,7 @@ module {
 
   // Test non-blocking atomic fetch-xor operations
   func.func @test_i32_atomic_fetch_xor_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 4 : index // 4 bytes for i32
     %value = arith.constant 85 : i32
@@ -2152,14 +2152,14 @@ module {
 
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i32_atomic_fetch_xor_nbi()
 // CHECK: llvm.call @shmem_{{.*}}atomic_fetch_xor_nbi{{.*}}(
 
   func.func @test_i64_atomic_fetch_xor_nbi() {
-    openshmem.init
+    openshmem.region {
     %pe = arith.constant 1 : i32
     %size = arith.constant 8 : index // 8 bytes for i64
     %value = arith.constant 85 : i64
@@ -2174,7 +2174,7 @@ module {
 
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_i64_atomic_fetch_xor_nbi()
@@ -2182,7 +2182,7 @@ module {
 
   // Test context-aware non-blocking atomic fetch-xor operations
   func.func @test_ctx_i32_atomic_fetch_xor_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -2200,14 +2200,14 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i32>
     openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i32_atomic_fetch_xor_nbi()
 // CHECK: llvm.call @shmem_{{.*}}ctx_atomic_fetch_xor_nbi{{.*}}(
 
   func.func @test_ctx_i64_atomic_fetch_xor_nbi() {
-    openshmem.init
+    openshmem.region {
     %opts = arith.constant 0 : i64
     %ctx, %status = openshmem.ctx_create(%opts) : i64 -> !openshmem.ctx, i32
     %pe = arith.constant 1 : i32
@@ -2225,7 +2225,7 @@ module {
     openshmem.ctx_destroy(%ctx) : !openshmem.ctx
     memref.dealloc %fetch : memref<i64>
     openshmem.free(%dest) : memref<i64, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 // CHECK-LABEL: llvm.func @test_ctx_i64_atomic_fetch_xor_nbi()

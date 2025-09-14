@@ -59,5 +59,3 @@ void OpenSHMEMDialect::initialize() {
 #define GET_ATTRDEF_CLASSES
 #include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMAttrDefs.cpp.inc"
 
-#define GET_OP_CLASSES
-#include "mlir/Dialect/OpenSHMEM/IR/OpenSHMEMOps.cpp.inc"

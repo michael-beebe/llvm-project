@@ -5,7 +5,7 @@
 module {
   func.func @test_wait_until() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivar
     %size = arith.constant 4 : index // size of i32
@@ -20,7 +20,7 @@ module {
     openshmem.free(%ivar) : memref<i32, #openshmem.symmetric_memory>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -34,7 +34,7 @@ module {
 
   func.func @test_wait_until_all() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -54,7 +54,7 @@ module {
     memref.dealloc %status : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -68,7 +68,7 @@ module {
 
   func.func @test_wait_until_any() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -88,7 +88,7 @@ module {
     memref.dealloc %status : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -102,7 +102,7 @@ module {
 
   func.func @test_wait_until_some() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -124,7 +124,7 @@ module {
     memref.dealloc %status : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -138,7 +138,7 @@ module {
 
   func.func @test_wait_until_all_vector() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -159,7 +159,7 @@ module {
     memref.dealloc %cmp_values : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -173,7 +173,7 @@ module {
 
   func.func @test_wait_until_any_vector() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -194,7 +194,7 @@ module {
     memref.dealloc %cmp_values : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -208,7 +208,7 @@ module {
 
   func.func @test_wait_until_some_vector() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -231,7 +231,7 @@ module {
     memref.dealloc %cmp_values : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -274,7 +274,7 @@ module {
 
   func.func @test_test_all() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -294,7 +294,7 @@ module {
     memref.dealloc %status : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -308,7 +308,7 @@ module {
 
   func.func @test_test_any() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -328,7 +328,7 @@ module {
     memref.dealloc %status : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -340,7 +340,7 @@ module {
 
   func.func @test_test_some() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -362,7 +362,7 @@ module {
     memref.dealloc %status : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -374,7 +374,7 @@ module {
 
   func.func @test_test_all_vector() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -395,7 +395,7 @@ module {
     memref.dealloc %cmp_values : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -407,7 +407,7 @@ module {
 
   func.func @test_test_any_vector() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -428,7 +428,7 @@ module {
     memref.dealloc %cmp_values : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -440,7 +440,7 @@ module {
 
   func.func @test_test_some_vector() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for ivars (needs to be accessible by remote PEs)
     %ivars_size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
@@ -463,7 +463,7 @@ module {
     memref.dealloc %cmp_values : memref<10xi32>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
@@ -475,7 +475,7 @@ module {
 
   func.func @test_signal_wait_until() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
 
     // Allocate symmetric memory for signal address (must be accessible by remote PEs)
     %sig_size = arith.constant 8 : index // 1 element * 8 bytes = 8 bytes
@@ -490,7 +490,7 @@ module {
     openshmem.free(%sig_addr) : memref<i64, #openshmem.symmetric_memory>
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 

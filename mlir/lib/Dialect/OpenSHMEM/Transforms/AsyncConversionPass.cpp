@@ -16,7 +16,8 @@ using namespace mlir::openshmem;
 
 namespace {
 
-// Find a following sync (quiet or barrier_all) in the same block.
+// Find a following sync (quiet or barrier_all) in the same block or region.
+// With regions, we need to look within the region that contains the operation.
 static Operation *findFollowingSyncInBlock(Operation *op,
                                            bool treatBarriersAsSync) {
   Operation *cursor = op->getNextNode();
@@ -28,6 +29,27 @@ static Operation *findFollowingSyncInBlock(Operation *op,
     cursor = cursor->getNextNode();
   }
   return nullptr;
+}
+
+// Find a following sync within a region. This handles the case where
+// operations are contained within openshmem.region blocks.
+static Operation *findFollowingSyncInRegion(Operation *op,
+                                            bool treatBarriersAsSync) {
+  // First check if we're inside a region
+  if (auto region = op->getParentOfType<openshmem::Region>()) {
+    // Look for sync operations within the same region
+    Operation *cursor = op->getNextNode();
+    while (cursor && region->isAncestor(cursor)) {
+      if (isa<QuietOp>(cursor))
+        return cursor;
+      if (treatBarriersAsSync && isa<BarrierAllOp>(cursor))
+        return cursor;
+      cursor = cursor->getNextNode();
+    }
+  }
+
+  // Fall back to block-level search for backward compatibility
+  return findFollowingSyncInBlock(op, treatBarriersAsSync);
 }
 
 // Returns true if 'val' has any use by an operation placed strictly between
@@ -52,12 +74,18 @@ struct ConvertPut final : OpRewritePattern<PutOp> {
   bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(PutOp op,
                                 PatternRewriter &rewriter) const override {
-    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    Operation *sync = findFollowingSyncInRegion(op, treatBarriersAsSync);
     if (!sync) {
       if (!aggressiveInsertQuiet)
         return failure();
       OpBuilder::InsertionGuard g(rewriter);
-      rewriter.setInsertionPointToEnd(op->getBlock());
+      // Insert quiet at the end of the region if we're in one, otherwise at end
+      // of block
+      if (auto region = op->getParentOfType<openshmem::Region>()) {
+        rewriter.setInsertionPointToEnd(&region.getBody().front());
+      } else {
+        rewriter.setInsertionPointToEnd(op->getBlock());
+      }
       sync = rewriter.create<QuietOp>(op.getLoc());
     }
     rewriter.replaceOpWithNewOp<PutNbiOp>(op, op.getDest(), op.getSource(),
@@ -74,12 +102,18 @@ struct ConvertCtxPut final : OpRewritePattern<CtxPutOp> {
   bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(CtxPutOp op,
                                 PatternRewriter &rewriter) const override {
-    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    Operation *sync = findFollowingSyncInRegion(op, treatBarriersAsSync);
     if (!sync) {
       if (!aggressiveInsertQuiet)
         return failure();
       OpBuilder::InsertionGuard g(rewriter);
-      rewriter.setInsertionPointToEnd(op->getBlock());
+      // Insert quiet at the end of the region if we're in one, otherwise at end
+      // of block
+      if (auto region = op->getParentOfType<openshmem::Region>()) {
+        rewriter.setInsertionPointToEnd(&region.getBody().front());
+      } else {
+        rewriter.setInsertionPointToEnd(op->getBlock());
+      }
       sync = rewriter.create<QuietOp>(op.getLoc());
     }
     rewriter.replaceOpWithNewOp<CtxPutNbiOp>(op, op.getCtx(), op.getDest(),
@@ -97,12 +131,18 @@ struct ConvertPutmem final : OpRewritePattern<PutmemOp> {
   bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(PutmemOp op,
                                 PatternRewriter &rewriter) const override {
-    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    Operation *sync = findFollowingSyncInRegion(op, treatBarriersAsSync);
     if (!sync) {
       if (!aggressiveInsertQuiet)
         return failure();
       OpBuilder::InsertionGuard g(rewriter);
-      rewriter.setInsertionPointToEnd(op->getBlock());
+      // Insert quiet at the end of the region if we're in one, otherwise at end
+      // of block
+      if (auto region = op->getParentOfType<openshmem::Region>()) {
+        rewriter.setInsertionPointToEnd(&region.getBody().front());
+      } else {
+        rewriter.setInsertionPointToEnd(op->getBlock());
+      }
       sync = rewriter.create<QuietOp>(op.getLoc());
     }
     rewriter.replaceOpWithNewOp<PutmemNbiOp>(op, op.getDest(), op.getSrc(),
@@ -120,12 +160,18 @@ struct ConvertGet final : OpRewritePattern<GetOp> {
   bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(GetOp op,
                                 PatternRewriter &rewriter) const override {
-    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    Operation *sync = findFollowingSyncInRegion(op, treatBarriersAsSync);
     if (!sync) {
       if (!aggressiveInsertQuiet)
         return failure();
       OpBuilder::InsertionGuard g(rewriter);
-      rewriter.setInsertionPointToEnd(op->getBlock());
+      // Insert quiet at the end of the region if we're in one, otherwise at end
+      // of block
+      if (auto region = op->getParentOfType<openshmem::Region>()) {
+        rewriter.setInsertionPointToEnd(&region.getBody().front());
+      } else {
+        rewriter.setInsertionPointToEnd(op->getBlock());
+      }
       sync = rewriter.create<QuietOp>(op.getLoc());
     }
     if (valueHasInterveningUse(op.getDest(), op.getOperation(), sync))
@@ -144,12 +190,18 @@ struct ConvertCtxGet final : OpRewritePattern<CtxGetOp> {
   bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(CtxGetOp op,
                                 PatternRewriter &rewriter) const override {
-    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    Operation *sync = findFollowingSyncInRegion(op, treatBarriersAsSync);
     if (!sync) {
       if (!aggressiveInsertQuiet)
         return failure();
       OpBuilder::InsertionGuard g(rewriter);
-      rewriter.setInsertionPointToEnd(op->getBlock());
+      // Insert quiet at the end of the region if we're in one, otherwise at end
+      // of block
+      if (auto region = op->getParentOfType<openshmem::Region>()) {
+        rewriter.setInsertionPointToEnd(&region.getBody().front());
+      } else {
+        rewriter.setInsertionPointToEnd(op->getBlock());
+      }
       sync = rewriter.create<QuietOp>(op.getLoc());
     }
     if (valueHasInterveningUse(op.getDest(), op.getOperation(), sync))
@@ -169,12 +221,18 @@ struct ConvertGetmem final : OpRewritePattern<GetmemOp> {
   bool aggressiveInsertQuiet;
   LogicalResult matchAndRewrite(GetmemOp op,
                                 PatternRewriter &rewriter) const override {
-    Operation *sync = findFollowingSyncInBlock(op, treatBarriersAsSync);
+    Operation *sync = findFollowingSyncInRegion(op, treatBarriersAsSync);
     if (!sync) {
       if (!aggressiveInsertQuiet)
         return failure();
       OpBuilder::InsertionGuard g(rewriter);
-      rewriter.setInsertionPointToEnd(op->getBlock());
+      // Insert quiet at the end of the region if we're in one, otherwise at end
+      // of block
+      if (auto region = op->getParentOfType<openshmem::Region>()) {
+        rewriter.setInsertionPointToEnd(&region.getBody().front());
+      } else {
+        rewriter.setInsertionPointToEnd(op->getBlock());
+      }
       sync = rewriter.create<QuietOp>(op.getLoc());
     }
     if (valueHasInterveningUse(op.getDest(), op.getOperation(), sync))

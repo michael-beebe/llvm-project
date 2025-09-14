@@ -6,7 +6,7 @@ module {
   // Test basic team functionality
   func.func @test_teams() {
     // Initialize OpenSHMEM
-    openshmem.init
+    openshmem.region {
     
     // Get PE information
     %pe = openshmem.my_pe : i32
@@ -51,24 +51,26 @@ module {
     openshmem.barrier_all
 
     // Finalize OpenSHMEM
-    openshmem.finalize
+    }
     return
   }
 
   // Test predefined teams
   func.func @test_predefined_teams() {
+    openshmem.region {
     %world_team = openshmem.team_world -> !openshmem.team
     %shared_team = openshmem.team_shared -> !openshmem.team
     
     // Actually use the teams so they appear in the IR
     %pe1 = openshmem.team_my_pe(%world_team) : !openshmem.team -> i32
     %pe2 = openshmem.team_my_pe(%shared_team) : !openshmem.team -> i32
+    }
     return
   }
 
   // Test team split operations
   func.func @test_team_splits() {
-    openshmem.init
+    openshmem.region {
     %world_team = openshmem.team_world -> !openshmem.team
     
     // Test strided split
@@ -86,34 +88,34 @@ module {
     openshmem.team_destroy(%strided_team) : !openshmem.team
     openshmem.team_destroy(%xaxis_team) : !openshmem.team
     openshmem.team_destroy(%yaxis_team) : !openshmem.team
-    openshmem.finalize
+    }
     return
   }
 
   // Test team query operations
   func.func @test_team_queries() {
-    openshmem.init
+    openshmem.region {
     %world_team = openshmem.team_world -> !openshmem.team
     
     %team_pe = openshmem.team_my_pe(%world_team) : !openshmem.team -> i32
     %team_npes = openshmem.team_n_pes(%world_team) : !openshmem.team -> i32
     
-    openshmem.finalize
+    }
     return
   }
 
   // Test team synchronization
   func.func @test_team_sync() {
-    openshmem.init
+    openshmem.region {
     %world_team = openshmem.team_world -> !openshmem.team
     openshmem.team_sync(%world_team) : !openshmem.team
-    openshmem.finalize
+    }
     return
   }
 
   // Test team communication with proper PE translation
   func.func @test_team_communication() {
-    openshmem.init
+    openshmem.region {
     
     %world_team = openshmem.team_world -> !openshmem.team
     
@@ -161,13 +163,13 @@ module {
     openshmem.free(%sym_mem) : memref<i32, #openshmem.symmetric_memory>
     openshmem.team_destroy(%pair_team) : !openshmem.team
     
-    openshmem.finalize
+    }
     return
   }
 
   // Test team with RMA operations
   func.func @test_team_with_typed_rma() {
-    openshmem.init
+    openshmem.region {
     %world_team = openshmem.team_world -> !openshmem.team
     
     // Create a strided team
@@ -197,13 +199,13 @@ module {
     memref.dealloc %local_mem : memref<10xi32>
     openshmem.free(%sym_mem) : memref<i32, #openshmem.symmetric_memory>
     openshmem.team_destroy(%strided_team) : !openshmem.team
-    openshmem.finalize
+    }
     return
   }
 
   // Test multiple team splits
   func.func @test_multiple_team_splits() {
-    openshmem.init
+    openshmem.region {
     %world_team = openshmem.team_world -> !openshmem.team
     
     // First split: divide into groups of 4
@@ -240,13 +242,13 @@ module {
     openshmem.team_destroy(%group4_team) : !openshmem.team
     openshmem.team_destroy(%xaxis_team) : !openshmem.team
     openshmem.team_destroy(%yaxis_team) : !openshmem.team
-    openshmem.finalize
+    }
     return
   }
 
   // Test teams with point-to-point operations
   func.func @test_teams_with_p2p() {
-    openshmem.init
+    openshmem.region {
     %world_team = openshmem.team_world -> !openshmem.team
     
     // Allocate symmetric memory
@@ -268,7 +270,7 @@ module {
     openshmem.team_sync(%world_team) : !openshmem.team
     
     openshmem.free(%sym_mem) : memref<i32, #openshmem.symmetric_memory>
-    openshmem.finalize
+    }
     return
   }
 }

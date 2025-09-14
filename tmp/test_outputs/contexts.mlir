@@ -1,10 +1,10 @@
 module {
-  llvm.func @shmem_finalize()
   llvm.func @shmem_ctx_destroy(!llvm.ptr)
   llvm.func @shmem_ctx_get_team(!llvm.ptr, !llvm.ptr) -> i32
   llvm.func @shmem_team_create_ctx(!llvm.ptr, i64, !llvm.ptr) -> i32
   llvm.mlir.global external constant @SHMEM_TEAM_WORLD() {addr_space = 0 : i32} : !llvm.ptr
   llvm.func @shmem_ctx_create(i64, !llvm.ptr) -> i32
+  llvm.func @shmem_finalize()
   llvm.func @shmem_init()
   llvm.func @test_context_ops() {
     llvm.call @shmem_init() : () -> ()

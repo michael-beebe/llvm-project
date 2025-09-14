@@ -52,6 +52,55 @@ def OpenSHMEM_FinalizeOp : OpenSHMEM_Op<"finalize", []> {
 }
 
 //===----------------------------------------------------------------------===//
+// RegionOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_Region : OpenSHMEM_Op<"region", [
+  SingleBlockImplicitTerminator<"openshmem::YieldOp">
+]> {
+  let summary = "OpenSHMEM program region";
+  let description = [{
+    Defines a region containing OpenSHMEM operations. This operation implicitly
+    handles initialization at the beginning and finalization at the end of the
+    region. All OpenSHMEM operations must be contained within this region.
+
+    The region ensures that:
+    - OpenSHMEM runtime is properly initialized before any operations
+    - OpenSHMEM runtime is properly finalized after all operations
+    - OpenSHMEM operations cannot be moved outside this region
+    - The lifecycle of the OpenSHMEM program is clearly defined
+
+    ```mlir
+    openshmem.region {
+      // All OpenSHMEM operations go here
+      %pe = openshmem.my_pe : i32
+      %src = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
+      // ... more OpenSHMEM operations
+      // openshmem.yield is automatically inserted if not present
+    }
+    ```
+  }];
+  
+  let regions = (region AnyRegion:$body);
+  let assemblyFormat = "attr-dict-with-keyword $body";
+  
+  let hasVerifier = 1;
+}
+
+//===----------------------------------------------------------------------===//
+// YieldOp
+//===----------------------------------------------------------------------===//
+
+def OpenSHMEM_YieldOp : OpenSHMEM_Op<"yield", [Terminator]> {
+  let summary = "Terminator for OpenSHMEM region";
+  let description = [{
+    Terminator operation for OpenSHMEM region. This operation must be present
+    at the end of every OpenSHMEM region.
+  }];
+  let assemblyFormat = "attr-dict";
+}
+
+//===----------------------------------------------------------------------===//
 // MyPeOp
 //===----------------------------------------------------------------------===//
 

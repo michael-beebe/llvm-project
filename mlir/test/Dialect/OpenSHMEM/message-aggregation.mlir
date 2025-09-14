@@ -3,7 +3,7 @@
 // Test operations that CAN be coalesced - same memory region, multiple transfers
 func.func @test_putmem_coalescing_same_region() {
   // CHECK-LABEL: func.func @test_putmem_coalescing_same_region
-  openshmem.init
+  openshmem.region {
   
   %size = arith.constant 64 : index
   %pe = arith.constant 1 : i32
@@ -18,14 +18,14 @@ func.func @test_putmem_coalescing_same_region() {
   openshmem.putmem(%sym_mem, %local_data, %size, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<16xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test operations with different memory regions - should NOT be coalesced
 func.func @test_putmem_no_coalescing_different_regions() {
   // CHECK-LABEL: func.func @test_putmem_no_coalescing_different_regions
-  openshmem.init
+  openshmem.region {
   
   %size1 = arith.constant 64 : index
   %size2 = arith.constant 128 : index  
@@ -43,14 +43,14 @@ func.func @test_putmem_no_coalescing_different_regions() {
   openshmem.putmem(%sym_mem2, %local_data2, %size2, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<32xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test that operations targeting different PEs are NOT coalesced
 func.func @test_different_pe_no_coalescing() {
   // CHECK-LABEL: func.func @test_different_pe_no_coalescing
-  openshmem.init
+  openshmem.region {
   
   %size = arith.constant 64 : index
   %pe1 = arith.constant 1 : i32
@@ -68,14 +68,14 @@ func.func @test_different_pe_no_coalescing() {
   openshmem.putmem(%sym_mem2, %local_data2, %size, %pe2) : memref<i32, #openshmem.symmetric_memory>, memref<16xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test coalescing of typed operations
 func.func @test_typed_put_coalescing() {
   // CHECK-LABEL: func.func @test_typed_put_coalescing
-  openshmem.init
+  openshmem.region {
   
   %nelems = arith.constant 16 : index
   %pe = arith.constant 1 : i32
@@ -90,14 +90,14 @@ func.func @test_typed_put_coalescing() {
   openshmem.put(%sym_mem, %local_data, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<16xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test coalescing of non-blocking operations
 func.func @test_nbi_coalescing() {
   // CHECK-LABEL: func.func @test_nbi_coalescing
-  openshmem.init
+  openshmem.region {
   
   %nelems = arith.constant 16 : index
   %pe = arith.constant 1 : i32
@@ -112,14 +112,14 @@ func.func @test_nbi_coalescing() {
   openshmem.put_nbi(%sym_mem, %local_data, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<16xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test that blocking and non-blocking operations are NOT coalesced
 func.func @test_blocking_nbi_no_coalescing() {
   // CHECK-LABEL: func.func @test_blocking_nbi_no_coalescing
-  openshmem.init
+  openshmem.region {
   
   %nelems = arith.constant 16 : index
   %pe = arith.constant 1 : i32
@@ -134,14 +134,14 @@ func.func @test_blocking_nbi_no_coalescing() {
   openshmem.put_nbi(%sym_mem, %local_data, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<16xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test context-aware operations
 func.func @test_context_aware_coalescing(%ctx: !openshmem.ctx) {
   // CHECK-LABEL: func.func @test_context_aware_coalescing
-  openshmem.init
+  openshmem.region {
   
   %nelems = arith.constant 16 : index
   %pe = arith.constant 1 : i32
@@ -156,14 +156,14 @@ func.func @test_context_aware_coalescing(%ctx: !openshmem.ctx) {
   openshmem.ctx_put(%ctx, %sym_mem, %local_data, %nelems, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, memref<16xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test that operations with different contexts are NOT coalesced
 func.func @test_different_context_no_coalescing(%ctx1: !openshmem.ctx, %ctx2: !openshmem.ctx) {
   // CHECK-LABEL: func.func @test_different_context_no_coalescing
-  openshmem.init
+  openshmem.region {
   
   %nelems = arith.constant 16 : index
   %pe = arith.constant 1 : i32
@@ -178,14 +178,14 @@ func.func @test_different_context_no_coalescing(%ctx1: !openshmem.ctx, %ctx2: !o
   openshmem.ctx_put(%ctx2, %sym_mem, %local_data, %nelems, %pe) : !openshmem.ctx, memref<i32, #openshmem.symmetric_memory>, memref<16xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test sized operations coalescing
 func.func @test_sized_operations_coalescing() {
   // CHECK-LABEL: func.func @test_sized_operations_coalescing
-  openshmem.init
+  openshmem.region {
   
   %nelems = arith.constant 8 : index
   %pe = arith.constant 1 : i32
@@ -200,14 +200,14 @@ func.func @test_sized_operations_coalescing() {
   openshmem.put32(%sym_mem, %local_data, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<8xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test that different sized operations are NOT coalesced
 func.func @test_different_sized_no_coalescing() {
   // CHECK-LABEL: func.func @test_different_sized_no_coalescing
-  openshmem.init
+  openshmem.region {
   
   %nelems = arith.constant 8 : index
   %pe = arith.constant 1 : i32
@@ -222,14 +222,14 @@ func.func @test_different_sized_no_coalescing() {
   openshmem.put64(%sym_mem, %local_data, %nelems, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<8xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test GET operations coalescing
 func.func @test_get_coalescing() {
   // CHECK-LABEL: func.func @test_get_coalescing
-  openshmem.init
+  openshmem.region {
   
   %size = arith.constant 64 : index
   %pe = arith.constant 1 : i32
@@ -244,14 +244,14 @@ func.func @test_get_coalescing() {
   openshmem.getmem(%local_data, %sym_mem, %size, %pe) : memref<16xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test that PUT and GET operations are NOT coalesced
 func.func @test_put_get_no_coalescing() {
   // CHECK-LABEL: func.func @test_put_get_no_coalescing
-  openshmem.init
+  openshmem.region {
   
   %size = arith.constant 64 : index
   %pe = arith.constant 1 : i32
@@ -267,14 +267,14 @@ func.func @test_put_get_no_coalescing() {
   openshmem.getmem(%local_data2, %sym_mem, %size, %pe) : memref<16xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test small message size (should NOT be coalesced due to threshold)
 func.func @test_small_message_size_no_coalescing() {
   // CHECK-LABEL: func.func @test_small_message_size_no_coalescing
-  openshmem.init
+  openshmem.region {
   
   %c4 = arith.constant 4 : index  // Small size below typical threshold
   %pe = arith.constant 1 : i32
@@ -293,14 +293,14 @@ func.func @test_small_message_size_no_coalescing() {
   openshmem.putmem(%sym_mem, %local_data1, %size, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<1xi32>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }
 
 // Test mixed operation types with same memory (should NOT be coalesced)
 func.func @test_mixed_memory_operations_no_coalescing() {
   // CHECK-LABEL: func.func @test_mixed_memory_operations_no_coalescing
-  openshmem.init
+  openshmem.region {
   
   %c64 = arith.constant 64 : index
   %pe = arith.constant 1 : i32
@@ -316,6 +316,6 @@ func.func @test_mixed_memory_operations_no_coalescing() {
   openshmem.getmem(%local_data, %sym_mem2, %c64, %pe) : memref<16xi32>, memref<i32, #openshmem.symmetric_memory>, index, i32
   
   openshmem.quiet
-  openshmem.finalize
+  }
   return
 }

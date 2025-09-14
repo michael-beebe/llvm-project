@@ -25,6 +25,59 @@ using namespace mlir::openshmem;
 namespace {
 
 //===----------------------------------------------------------------------===//
+// RegionOp Lowering
+//===----------------------------------------------------------------------===//
+
+struct RegionOpLowering : public ConvertOpToLLVMPattern<openshmem::Region> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::Region op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    auto moduleOp = op->getParentOfType<ModuleOp>();
+
+    // Create init call
+    auto initFuncType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()), {});
+    LLVM::LLVMFuncOp initFuncDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_init", initFuncType);
+    rewriter.create<LLVM::CallOp>(loc, initFuncDecl, ValueRange{});
+
+    // Convert the region body by moving operations one by one
+    // This ensures the openshmem.yield terminators are handled properly
+    Block &regionBlock = op.getBody().front();
+    Block *parentBlock = op->getBlock();
+    auto insertionPoint = rewriter.getInsertionPoint();
+
+    // Move all operations except the terminator
+    for (auto it = regionBlock.begin(); it != regionBlock.end();) {
+      Operation &operation = *it;
+      ++it; // Increment before moving to avoid invalidating iterator
+
+      if (isa<openshmem::YieldOp>(operation)) {
+        // Erase yield operations - they're just terminators for the region
+        rewriter.eraseOp(&operation);
+      } else {
+        // Move other operations to the parent block
+        operation.moveBefore(parentBlock, insertionPoint);
+      }
+    }
+
+    // Create finalize call
+    auto finalizeFuncType = LLVM::LLVMFunctionType::get(
+        mlir::LLVM::LLVMVoidType::get(rewriter.getContext()), {});
+    LLVM::LLVMFuncOp finalizeFuncDecl = getOrDefineFunction(
+        moduleOp, loc, rewriter, "shmem_finalize", finalizeFuncType);
+    rewriter.create<LLVM::CallOp>(loc, finalizeFuncDecl, ValueRange{});
+
+    // Remove the region operation
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
+//===----------------------------------------------------------------------===//
 // InitOp Lowering
 //===----------------------------------------------------------------------===//
 
@@ -135,9 +188,21 @@ struct NPesOpLowering : public ConvertOpToLLVMPattern<openshmem::NPesOp> {
 // Pattern population
 //===----------------------------------------------------------------------===//
 
+struct OpenSHMEMYieldOpLowering
+    : public ConvertOpToLLVMPattern<openshmem::YieldOp> {
+  using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
+
+  LogicalResult
+  matchAndRewrite(openshmem::YieldOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    // Yield operations are erased during region inlining
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
 void openshmem::populateSetupOpsToLLVMConversionPatterns(
     LLVMTypeConverter &converter, RewritePatternSet &patterns) {
-  patterns
-      .add<InitOpLowering, FinalizeOpLowering, MyPeOpLowering, NPesOpLowering>(
-          converter);
+  patterns.add<RegionOpLowering, OpenSHMEMYieldOpLowering, InitOpLowering,
+               FinalizeOpLowering, MyPeOpLowering, NPesOpLowering>(converter);
 }

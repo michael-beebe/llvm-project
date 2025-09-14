@@ -33,6 +33,13 @@ using namespace mlir::openshmem;
 // Message Aggregation Pass - Status & Future Work
 // ===========================================
 //
+// REGION-BASED APPROACH:
+// This pass now operates on openshmem.region operations instead of function-level
+// analysis. This ensures that:
+// - All OpenSHMEM operations are properly scoped within regions
+// - Message aggregation respects region boundaries
+// - The pass works with the new region-based OpenSHMEM dialect design
+//
 // IN PROGRESS / PARTIALLY IMPLEMENTED:
 // - Memory layout analysis for complex patterns
 // - Cross-operation type coalescing (put32 + put32 -> put64)
@@ -47,6 +54,7 @@ using namespace mlir::openshmem;
 // disabled)
 // - Add synchronization boundary analysis (quiet, fence, barriers)
 // - Respect context isolation boundaries for team-based operations
+// - Ensure region boundary respect in all analysis functions
 //
 // MEDIUM PRIORITY TODO:
 // - Implement non-contiguous but optimizable patterns
@@ -62,11 +70,12 @@ using namespace mlir::openshmem;
 // - Integration with other OpenSHMEM optimization passes
 //
 // TESTING NEEDS:
-// - Add tests for strided access patterns
+// - Add tests for strided access patterns within regions
 // - Add tests for synchronization boundary respect
 // - Add performance regression tests
-// - Add tests for edge cases (empty functions, single operations, etc.)
+// - Add tests for edge cases (empty regions, single operations, etc.)
 // - Add integration tests with real OpenSHMEM applications
+// - Update existing tests to use region-based approach
 
 namespace {
 
@@ -1448,6 +1457,9 @@ private:
         }
       }
     }
+    
+    // If we reach here, no valid operation could be created
+    return nullptr;
   }
 
   PatternRewriter &rewriter;
@@ -1465,45 +1477,45 @@ namespace openshmem {
 //===----------------------------------------------------------------------===//
 
 /// Pattern that applies message aggregation optimizations
-struct MessageAggregationPattern : public OpRewritePattern<func::FuncOp> {
+struct MessageAggregationPattern : public OpRewritePattern<openshmem::Region> {
   MessageAggregationPattern(MLIRContext *context, unsigned minMsgSize,
                             unsigned maxDistance, bool enablePut,
                             bool enableGet, bool debug)
-      : OpRewritePattern<func::FuncOp>(context), minMessageSize(minMsgSize),
+      : OpRewritePattern<openshmem::Region>(context), minMessageSize(minMsgSize),
         maxCoalescingDistance(maxDistance), enablePutCoalescing(enablePut),
         enableGetCoalescing(enableGet), debugMode(debug) {}
 
-  LogicalResult matchAndRewrite(func::FuncOp func,
+  LogicalResult matchAndRewrite(openshmem::Region region,
                                 PatternRewriter &rewriter) const override {
     bool madeChanges = false;
 
-    // Apply message aggregation to all blocks in the function
-    func.walk([&](Block *block) {
-      MemoryAccessAnalyzer analyzer(minMessageSize, maxCoalescingDistance,
-                                    debugMode);
-      analyzer.analyzeBlock(*block);
+    // Apply message aggregation to the region's body block
+    Block &regionBlock = region.getBody().front();
+    
+    MemoryAccessAnalyzer analyzer(minMessageSize, maxCoalescingDistance,
+                                  debugMode);
+    analyzer.analyzeBlock(regionBlock);
 
-      CommunicationPatternDetector detector(analyzer.getMemoryAccesses(),
-                                            debugMode);
-      auto groups = detector.detectPatterns();
+    CommunicationPatternDetector detector(analyzer.getMemoryAccesses(),
+                                          debugMode);
+    auto groups = detector.detectPatterns();
 
-      TransformationEngine engine(rewriter, debugMode,
-                                  analyzer.getMemoryAccesses());
+    TransformationEngine engine(rewriter, debugMode,
+                                analyzer.getMemoryAccesses());
 
-      for (const auto &group : groups) {
-        // Skip groups based on configuration
-        if (group->opType == MemoryAccess::PUT && !enablePutCoalescing)
-          continue;
-        if (group->opType == MemoryAccess::GET && !enableGetCoalescing)
-          continue;
+    for (const auto &group : groups) {
+      // Skip groups based on configuration
+      if (group->opType == MemoryAccess::PUT && !enablePutCoalescing)
+        continue;
+      if (group->opType == MemoryAccess::GET && !enableGetCoalescing)
+        continue;
 
-        if (engine.canCoalesceGroup(*group)) {
-          if (engine.coalesceGroup(*group).succeeded()) {
-            madeChanges = true;
-          }
+      if (engine.canCoalesceGroup(*group)) {
+        if (engine.coalesceGroup(*group).succeeded()) {
+          madeChanges = true;
         }
       }
-    });
+    }
 
     return madeChanges ? success() : failure();
   }
@@ -1537,6 +1549,7 @@ struct MessageAggregationPass
       unsigned groupsSuccessfullyCoalesced = 0;
       unsigned validationFailures = 0;
       unsigned costModelRejections = 0;
+      unsigned regionsProcessed = 0;
     } stats;
 
     if (debugMode) {
@@ -1559,7 +1572,7 @@ struct MessageAggregationPass
       return;
     }
 
-    // Apply message aggregation patterns with enhanced error handling
+    // Apply message aggregation patterns to all OpenSHMEM regions
     RewritePatternSet patterns(context);
     patterns.add<MessageAggregationPattern>(
         context, minMessageSize, maxCoalescingDistance, enablePutCoalescing,
@@ -1574,10 +1587,16 @@ struct MessageAggregationPass
       return;
     }
 
+    // Count regions processed for statistics
+    op->walk([&](openshmem::Region region) {
+      stats.regionsProcessed++;
+    });
+
     // Report final statistics
     if (debugMode) {
       llvm::outs() << "MessageAggregation pass completed successfully\n";
       llvm::outs() << "Statistics:\n";
+      llvm::outs() << "  Regions processed: " << stats.regionsProcessed << "\n";
       llvm::outs() << "  Total operations processed: " << stats.totalOperations
                    << "\n";
       llvm::outs() << "  Operations aggregated: " << stats.operationsAggregated

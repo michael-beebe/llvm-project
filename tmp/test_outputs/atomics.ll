@@ -207,13 +207,13 @@ declare i32 @shmem_float_atomic_fetch(ptr, i32)
 
 declare i64 @shmem_long_atomic_fetch(ptr, i32)
 
-declare void @shmem_finalize()
-
 declare void @shmem_free(ptr)
 
 declare i32 @shmem_int_atomic_fetch(ptr, i32)
 
 declare ptr @shmem_malloc(i64)
+
+declare void @shmem_finalize()
 
 declare void @shmem_init()
 

@@ -16,8 +16,6 @@ declare void @shmem_putmem(ptr, ptr, i64, i32)
 
 declare ptr @shmem_malloc(i64)
 
-declare void @shmem_finalize()
-
 declare void @shmem_barrier_all()
 
 declare void @shmem_team_destroy(ptr)
@@ -35,6 +33,8 @@ declare i32 @shmem_team_my_pe(ptr)
 declare i32 @shmem_n_pes()
 
 declare i32 @shmem_my_pe()
+
+declare void @shmem_finalize()
 
 declare void @shmem_init()
 
@@ -67,8 +67,10 @@ define void @test_teams() {
 }
 
 define void @test_predefined_teams() {
+  call void @shmem_init()
   %1 = call i32 @shmem_team_my_pe(ptr @SHMEM_TEAM_WORLD)
   %2 = call i32 @shmem_team_my_pe(ptr @SHMEM_TEAM_SHARED)
+  call void @shmem_finalize()
   ret void
 }
 

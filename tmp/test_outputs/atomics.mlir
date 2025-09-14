@@ -102,10 +102,10 @@ module {
   llvm.func @shmem_double_atomic_fetch(!llvm.ptr, i32) -> i64
   llvm.func @shmem_float_atomic_fetch(!llvm.ptr, i32) -> i32
   llvm.func @shmem_long_atomic_fetch(!llvm.ptr, i32) -> i64
-  llvm.func @shmem_finalize()
   llvm.func @shmem_free(!llvm.ptr)
   llvm.func @shmem_int_atomic_fetch(!llvm.ptr, i32) -> i32
   llvm.func @shmem_malloc(i64) -> !llvm.ptr
+  llvm.func @shmem_finalize()
   llvm.func @shmem_init()
   llvm.func @test_i32_atomic_fetch() {
     llvm.call @shmem_init() : () -> ()

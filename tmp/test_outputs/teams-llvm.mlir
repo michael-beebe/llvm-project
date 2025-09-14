@@ -5,7 +5,6 @@ module {
   llvm.func @shmem_free(!llvm.ptr)
   llvm.func @shmem_putmem(!llvm.ptr, !llvm.ptr, i64, i32)
   llvm.func @shmem_malloc(i64) -> !llvm.ptr
-  llvm.func @shmem_finalize()
   llvm.func @shmem_barrier_all()
   llvm.func @shmem_team_destroy(!llvm.ptr)
   llvm.func @shmem_team_sync(!llvm.ptr)
@@ -17,6 +16,7 @@ module {
   llvm.mlir.global external constant @SHMEM_TEAM_WORLD() {addr_space = 0 : i32} : !llvm.ptr
   llvm.func @shmem_n_pes() -> i32
   llvm.func @shmem_my_pe() -> i32
+  llvm.func @shmem_finalize()
   llvm.func @shmem_init()
   llvm.func @test_teams() {
     llvm.call @shmem_init() : () -> ()
@@ -58,10 +58,12 @@ module {
     llvm.return
   }
   llvm.func @test_predefined_teams() {
+    llvm.call @shmem_init() : () -> ()
     %0 = llvm.mlir.addressof @SHMEM_TEAM_WORLD : !llvm.ptr
     %1 = llvm.mlir.addressof @SHMEM_TEAM_SHARED : !llvm.ptr
     %2 = llvm.call @shmem_team_my_pe(%0) : (!llvm.ptr) -> i32
     %3 = llvm.call @shmem_team_my_pe(%1) : (!llvm.ptr) -> i32
+    llvm.call @shmem_finalize() : () -> ()
     llvm.return
   }
   llvm.func @test_team_splits() {
