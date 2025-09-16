@@ -34,8 +34,8 @@ using namespace mlir::openshmem;
 // ===========================================
 //
 // REGION-BASED APPROACH:
-// This pass now operates on openshmem.region operations instead of function-level
-// analysis. This ensures that:
+// This pass now operates on openshmem.region operations instead of
+// function-level analysis. This ensures that:
 // - All OpenSHMEM operations are properly scoped within regions
 // - Message aggregation respects region boundaries
 // - The pass works with the new region-based OpenSHMEM dialect design
@@ -145,10 +145,12 @@ public:
   };
 
   /// Check if two memory accesses are contiguous
-  bool areContiguous(const MemoryAccess &a, const MemoryAccess &b) const {
+  bool areContiguous(const MemoryAccess &a, const MemoryAccess &b,
+                     const DenseMap<Value, std::optional<int64_t>>
+                         *constantCache = nullptr) const {
     // Get memory regions for both accesses (dest side)
-    auto regionA = getMemoryRegion(a);
-    auto regionB = getMemoryRegion(b);
+    auto regionA = getMemoryRegion(a, constantCache);
+    auto regionB = getMemoryRegion(b, constantCache);
 
     if (!regionA || !regionB)
       return false;
@@ -170,14 +172,15 @@ public:
   }
 
   /// Check if accesses follow a strided pattern
-  bool areStrided(const MemoryAccess &a, const MemoryAccess &b,
-                  int64_t &stride) const {
+  bool areStrided(const MemoryAccess &a, const MemoryAccess &b, int64_t &stride,
+                  const DenseMap<Value, std::optional<int64_t>> *constantCache =
+                      nullptr) const {
     // Must access same base memory references
     if (a.destMemRef != b.destMemRef || a.srcMemRef != b.srcMemRef)
       return false;
 
-    auto regionA = getMemoryRegion(a);
-    auto regionB = getMemoryRegion(b);
+    auto regionA = getMemoryRegion(a, constantCache);
+    auto regionB = getMemoryRegion(b, constantCache);
 
     if (!regionA || !regionB)
       return false;
@@ -195,8 +198,10 @@ public:
 
   /// Extract memory region information from a memory access
   std::optional<MemoryRegion>
-  getMemoryRegion(const MemoryAccess &access) const {
-    int64_t size = getConstantSize(access.size).value_or(-1);
+  getMemoryRegion(const MemoryAccess &access,
+                  const DenseMap<Value, std::optional<int64_t>> *constantCache =
+                      nullptr) const {
+    int64_t size = getConstantSize(access.size, constantCache).value_or(-1);
     if (size <= 0)
       return std::nullopt;
 
@@ -313,8 +318,20 @@ private:
   }
 
 public:
-  /// Extract constant size if available
-  std::optional<int64_t> getConstantSize(Value size) const {
+  /// Extract constant size if available, using cache if provided
+  std::optional<int64_t>
+  getConstantSize(Value size,
+                  const DenseMap<Value, std::optional<int64_t>> *constantCache =
+                      nullptr) const {
+    // First try the cache if available
+    if (constantCache) {
+      auto it = constantCache->find(size);
+      if (it != constantCache->end()) {
+        return it->second;
+      }
+    }
+
+    // Fallback to getDefiningOp if not in cache
     if (auto constOp = size.getDefiningOp<arith::ConstantOp>()) {
       if (auto intAttr = llvm::dyn_cast<IntegerAttr>(constOp.getValue())) {
         return intAttr.getInt();
@@ -360,6 +377,10 @@ public:
   /// Analyze a block and extract memory access patterns
   void analyzeBlock(Block &block) {
     memoryAccesses.clear();
+    constantCache.clear();
+
+    // Pre-compute constant values to avoid repeated getDefiningOp calls
+    precomputeConstants(block);
 
     for (Operation &op : block) {
       if (auto memAccess = extractMemoryAccess(&op)) {
@@ -371,6 +392,11 @@ public:
   /// Get the collected memory accesses
   const SmallVector<MemoryAccess, 8> &getMemoryAccesses() const {
     return memoryAccesses;
+  }
+
+  /// Get the constant cache
+  const DenseMap<Value, std::optional<int64_t>> &getConstantCache() const {
+    return constantCache;
   }
 
 private:
@@ -552,6 +578,26 @@ private:
   unsigned maxCoalescingDistance;
   bool debugMode;
   SmallVector<MemoryAccess, 8> memoryAccesses;
+
+  // Cache for constant values to avoid repeated getDefiningOp calls
+  DenseMap<Value, std::optional<int64_t>> constantCache;
+
+  /// Pre-compute constant values in the block to avoid repeated getDefiningOp
+  /// calls
+  void precomputeConstants(Block &block) {
+    for (Operation &op : block) {
+      // Walk up from constant operations to their uses
+      if (auto constOp = dyn_cast<arith::ConstantOp>(&op)) {
+        if (auto intAttr = dyn_cast<IntegerAttr>(constOp.getValue())) {
+          int64_t value = intAttr.getInt();
+          // Cache the constant value for all uses of this constant
+          for (OpOperand &use : constOp->getUses()) {
+            constantCache[use.get()] = value;
+          }
+        }
+      }
+    }
+  }
 };
 
 /// Communication pattern detector
@@ -757,9 +803,12 @@ private:
 /// Transformation engine that applies coalescing optimizations
 class TransformationEngine {
 public:
-  TransformationEngine(PatternRewriter &rewriter, bool debug,
-                       const SmallVector<MemoryAccess, 8> &accesses)
-      : rewriter(rewriter), debugMode(debug), memoryAccesses(accesses) {}
+  TransformationEngine(
+      PatternRewriter &rewriter, bool debug,
+      const SmallVector<MemoryAccess, 8> &accesses,
+      const DenseMap<Value, std::optional<int64_t>> &constantCache)
+      : rewriter(rewriter), debugMode(debug), memoryAccesses(accesses),
+        constantCache(constantCache) {}
 
   /// Check if a group can be coalesced
   bool canCoalesceGroup(const CoalescingGroup &group) {
@@ -803,7 +852,7 @@ public:
           llvm::dbgs() << "Cannot coalesce: missing memory access info\n";
         return false;
       }
-      if (!layoutAnalyzer.areContiguous(*prev, *curr)) {
+      if (!layoutAnalyzer.areContiguous(*prev, *curr, &constantCache)) {
         // Allow identical operations as a fallback (duplicate
         // removal/aggregation)
         if (!(prev->srcMemRef == curr->srcMemRef &&
@@ -996,7 +1045,7 @@ private:
       if (!access)
         return false;
 
-      auto size = layoutAnalyzer.getConstantSize(access->size);
+      auto size = layoutAnalyzer.getConstantSize(access->size, &constantCache);
       if (!size)
         return false; // Can't determine if beneficial without constant size
 
@@ -1008,7 +1057,8 @@ private:
     if (!firstAccess)
       return false;
 
-    auto firstSize = layoutAnalyzer.getConstantSize(firstAccess->size);
+    auto firstSize =
+        layoutAnalyzer.getConstantSize(firstAccess->size, &constantCache);
     if (!firstSize)
       return false;
 
@@ -1219,7 +1269,8 @@ private:
     for (size_t i = 1; i < group.operations.size(); ++i) {
       auto *prev = opToAccess.lookup(group.operations[i - 1]);
       auto *curr = opToAccess.lookup(group.operations[i]);
-      if (!prev || !curr || !layoutAnalyzer.areContiguous(*prev, *curr)) {
+      if (!prev || !curr ||
+          !layoutAnalyzer.areContiguous(*prev, *curr, &constantCache)) {
         isContiguous = false;
         break;
       }
@@ -1227,9 +1278,11 @@ private:
 
     if (isContiguous && group.operations.size() > 1) {
       // For contiguous operations, calculate span from first to last
-      auto firstRegion = layoutAnalyzer.getMemoryRegion(*firstAccess);
+      auto firstRegion =
+          layoutAnalyzer.getMemoryRegion(*firstAccess, &constantCache);
       auto *lastAccess = opToAccess.lookup(group.operations.back());
-      auto lastRegion = layoutAnalyzer.getMemoryRegion(*lastAccess);
+      auto lastRegion =
+          layoutAnalyzer.getMemoryRegion(*lastAccess, &constantCache);
 
       if (firstRegion && lastRegion && firstRegion->hasConstantOffset &&
           lastRegion->hasConstantOffset) {
@@ -1243,7 +1296,8 @@ private:
     // Fallback: sum individual sizes (for identical or non-contiguous
     // operations)
     MemoryLayoutAnalyzer analyzer;
-    if (auto constSize = analyzer.getConstantSize(firstAccess->size)) {
+    if (auto constSize =
+            analyzer.getConstantSize(firstAccess->size, &constantCache)) {
       int64_t totalSize = *constSize * group.operations.size();
       return rewriter.create<arith::ConstantOp>(
           loc, rewriter.getIndexAttr(totalSize));
@@ -1457,7 +1511,7 @@ private:
         }
       }
     }
-    
+
     // If we reach here, no valid operation could be created
     return nullptr;
   }
@@ -1465,6 +1519,7 @@ private:
   PatternRewriter &rewriter;
   bool debugMode;
   const SmallVector<MemoryAccess, 8> &memoryAccesses;
+  const DenseMap<Value, std::optional<int64_t>> &constantCache;
 };
 
 } // namespace
@@ -1481,9 +1536,10 @@ struct MessageAggregationPattern : public OpRewritePattern<openshmem::Region> {
   MessageAggregationPattern(MLIRContext *context, unsigned minMsgSize,
                             unsigned maxDistance, bool enablePut,
                             bool enableGet, bool debug)
-      : OpRewritePattern<openshmem::Region>(context), minMessageSize(minMsgSize),
-        maxCoalescingDistance(maxDistance), enablePutCoalescing(enablePut),
-        enableGetCoalescing(enableGet), debugMode(debug) {}
+      : OpRewritePattern<openshmem::Region>(context),
+        minMessageSize(minMsgSize), maxCoalescingDistance(maxDistance),
+        enablePutCoalescing(enablePut), enableGetCoalescing(enableGet),
+        debugMode(debug) {}
 
   LogicalResult matchAndRewrite(openshmem::Region region,
                                 PatternRewriter &rewriter) const override {
@@ -1491,7 +1547,7 @@ struct MessageAggregationPattern : public OpRewritePattern<openshmem::Region> {
 
     // Apply message aggregation to the region's body block
     Block &regionBlock = region.getBody().front();
-    
+
     MemoryAccessAnalyzer analyzer(minMessageSize, maxCoalescingDistance,
                                   debugMode);
     analyzer.analyzeBlock(regionBlock);
@@ -1501,7 +1557,8 @@ struct MessageAggregationPattern : public OpRewritePattern<openshmem::Region> {
     auto groups = detector.detectPatterns();
 
     TransformationEngine engine(rewriter, debugMode,
-                                analyzer.getMemoryAccesses());
+                                analyzer.getMemoryAccesses(),
+                                analyzer.getConstantCache());
 
     for (const auto &group : groups) {
       // Skip groups based on configuration
@@ -1588,9 +1645,7 @@ struct MessageAggregationPass
     }
 
     // Count regions processed for statistics
-    op->walk([&](openshmem::Region region) {
-      stats.regionsProcessed++;
-    });
+    op->walk([&](openshmem::Region region) { stats.regionsProcessed++; });
 
     // Report final statistics
     if (debugMode) {

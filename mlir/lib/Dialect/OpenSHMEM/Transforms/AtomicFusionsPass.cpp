@@ -35,47 +35,80 @@ struct AtomicFusionPass : public ::impl::AtomicFusionBase<AtomicFusionPass> {
     RewritePatternSet patterns(ctx);
 
     // Pattern 1: Fuse a chain of atomic_add with constant values
+    // More efficient approach: walk UP from constants to find all their uses
     struct FuseAdd final : OpRewritePattern<AtomicAddOp> {
       using OpRewritePattern::OpRewritePattern;
       LogicalResult matchAndRewrite(AtomicAddOp head,
                                     PatternRewriter &rewriter) const override {
-        auto cHead = head.getValue().getDefiningOp<arith::ConstantOp>();
-        auto attrHead = dyn_cast_or_null<IntegerAttr>(cHead ? cHead.getValue()
-                                                            : Attribute());
-        if (!attrHead)
-          return failure();
-        APInt sum = attrHead.getValue();
-        SmallVector<Operation *> toErase;
-        Operation *cursor = head->getNextNode();
-
-        // Check if we're inside a region - if so, only look within the region
-        auto region = head->getParentOfType<openshmem::Region>();
-
-        while (auto addN = dyn_cast_or_null<AtomicAddOp>(cursor)) {
-          // If we're in a region, stop if we go outside the region
-          if (region && !region->isAncestor(cursor))
-            break;
-
-          if (addN.getDest() != head.getDest() || addN.getPe() != head.getPe())
-            break;
-          auto cN = addN.getValue().getDefiningOp<arith::ConstantOp>();
-          auto aN =
-              dyn_cast_or_null<IntegerAttr>(cN ? cN.getValue() : Attribute());
-          if (!aN || aN.getType() != attrHead.getType())
-            break;
-          sum += aN.getValue();
-          toErase.push_back(addN);
-          cursor = addN->getNextNode();
+        // Instead of walking down from each operation, collect all atomic_add ops
+        // that use constants, then process them together
+        SmallVector<AtomicAddOp> constantAddOps;
+        
+        // Find all atomic_add operations with constant values in the same block
+        Block *block = head->getBlock();
+        for (Operation &op : *block) {
+          if (auto addOp = dyn_cast<AtomicAddOp>(&op)) {
+            if (addOp.getValue().getDefiningOp<arith::ConstantOp>()) {
+              constantAddOps.push_back(addOp);
+            }
+          }
         }
-        if (toErase.empty())
+        
+        if (constantAddOps.size() < 2)
           return failure();
-        auto newConst = rewriter.create<arith::ConstantOp>(
-            head.getLoc(), IntegerAttr::get(attrHead.getType(), sum));
-        rewriter.modifyOpInPlace(
-            head, [&] { head.getValueMutable().assign(newConst.getResult()); });
-        for (Operation *op : toErase)
-          rewriter.eraseOp(op);
-        return success();
+          
+        // Group operations by destination and PE
+        llvm::DenseMap<std::pair<Value, Value>, SmallVector<AtomicAddOp>> groups;
+        for (auto addOp : constantAddOps) {
+          auto key = std::make_pair(addOp.getDest(), addOp.getPe());
+          groups[key].push_back(addOp);
+        }
+        
+        bool madeChanges = false;
+        for (auto &[key, ops] : groups) {
+          if (ops.size() < 2) continue;
+          
+          // Sort operations by their position in the block
+          std::sort(ops.begin(), ops.end(), [](AtomicAddOp a, AtomicAddOp b) {
+            return a->isBeforeInBlock(b);
+          });
+          
+          // Process consecutive operations
+          for (size_t i = 0; i < ops.size() - 1; ++i) {
+            AtomicAddOp current = ops[i];
+            AtomicAddOp next = ops[i + 1];
+            
+            // Check if they are consecutive in the block
+            if (current->getNextNode() != next) continue;
+            
+            // Get constant values
+            auto c1 = current.getValue().getDefiningOp<arith::ConstantOp>();
+            auto c2 = next.getValue().getDefiningOp<arith::ConstantOp>();
+            if (!c1 || !c2) continue;
+            
+            auto a1 = dyn_cast<IntegerAttr>(c1.getValue());
+            auto a2 = dyn_cast<IntegerAttr>(c2.getValue());
+            if (!a1 || !a2 || a1.getType() != a2.getType()) continue;
+            
+            // Combine the constants
+            APInt sum = a1.getValue() + a2.getValue();
+            auto newConst = rewriter.create<arith::ConstantOp>(
+                current.getLoc(), IntegerAttr::get(a1.getType(), sum));
+            
+            // Update the first operation and erase the second
+            rewriter.modifyOpInPlace(current, [&] {
+              current.getValueMutable().assign(newConst.getResult());
+            });
+            rewriter.eraseOp(next);
+            madeChanges = true;
+            
+            // Remove the erased operation from our list
+            ops.erase(ops.begin() + i + 1);
+            --i; // Adjust index since we removed an element
+          }
+        }
+        
+        return madeChanges ? success() : failure();
       }
     };
 
