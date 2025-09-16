@@ -3,27 +3,20 @@
 // Test OpenSHMEM RMA operations
 
 module {
+  
   func.func @test_putmem() {
-    // Initialize OpenSHMEM
     openshmem.region {
+      %nelems = arith.constant 10 : index 
+      %size = arith.constant 40 : index 
+      %pe = arith.constant 1 : i32 
 
-    // Set SHMEM_TEAM_WORLD to a team handle (not needed for putmem)
-    %nelems = arith.constant 10 : index // 10 elements
-    %size = arith.constant 40 : index // 10 elements * 4 bytes each = 40 bytes
-    %pe = arith.constant 1 : i32 // Target PE
+      %dest = openshmem.malloc(%size) : index -> memref<10xi32, #openshmem.symmetric_memory>
+      %src = memref.alloc() : memref<10xi32>
 
-    // Allocate symmetric memory for dest
-    %dest = openshmem.malloc(%size) : index -> memref<i32, #openshmem.symmetric_memory>
-    // Allocate local memory for src
-    %src = memref.alloc() : memref<10xi32>
+      openshmem.putmem(%dest, %src, %size, %pe) : memref<10xi32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
 
-    // Perform putmem operation
-    openshmem.putmem(%dest, %src, %size, %pe) : memref<i32, #openshmem.symmetric_memory>, memref<10xi32>, index, i32
-
-    // Free symmetric memory
-    openshmem.free(%dest) : memref<i32, #openshmem.symmetric_memory>
-
-    // Finalize OpenSHMEM
+      openshmem.free(%dest) : memref<10xi32, #openshmem.symmetric_memory>
+      memref.dealloc %src : memref<10xi32>
     }
     return
   }
